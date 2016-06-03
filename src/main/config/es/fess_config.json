@@ -416,7 +416,7 @@
             "type" : "string",
             "index" : "not_analyzed"
           },
-          "targetRole" : {
+          "permissions" : {
             "type" : "string",
             "index" : "not_analyzed"
           },
@@ -677,7 +677,7 @@
             "type" : "string",
             "index" : "not_analyzed"
           },
-          "targetRole" : {
+          "permissions" : {
             "type" : "string",
             "index" : "not_analyzed"
           },
@@ -939,6 +939,20 @@
             }
           },
           "web_config" : {
+            "properties" : {
+              "permissions" : {
+                "array" : "true"
+              }
+            }
+          },
+          "elevate_word" : {
+            "properties" : {
+              "permissions" : {
+                "array" : "true"
+              }
+            }
+          },
+          "bad_word" : {
             "properties" : {
               "permissions" : {
                 "array" : "true"

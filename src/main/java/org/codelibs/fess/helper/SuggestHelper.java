@@ -197,7 +197,7 @@ public class SuggestHelper {
 
         for (final ElevateWord elevateWord : list) {
             addElevateWord(elevateWord.getSuggestWord(), elevateWord.getReading(), elevateWord.getLabelTypeValues(),
-                    elevateWord.getTargetRole(), elevateWord.getBoost(), false);
+                    elevateWord.getPermissions(), elevateWord.getBoost(), false);
         }
         suggester.refresh();
     }
@@ -219,20 +219,19 @@ public class SuggestHelper {
         suggester.refresh();
     }
 
-    public void addElevateWord(final String word, final String reading, final String[] tags, final String roles, final float boost) {
-        addElevateWord(word, reading, tags, roles, boost, true);
+    public void addElevateWord(final String word, final String reading, final String[] tags, final String[] permissions, final Float boost) {
+        addElevateWord(word, reading, tags, permissions, boost, true);
     }
 
-    public void addElevateWord(final String word, final String reading, final String[] tags, final String roles, final float boost,
+    public void addElevateWord(final String word, final String reading, final String[] tags, final String[] roles, final float boost,
             final boolean commit) {
         final List<String> labelList = new ArrayList<>();
         for (final String label : tags) {
             labelList.add(label);
         }
         final List<String> roleList = new ArrayList<>();
-        if (StringUtil.isNotBlank(roles)) {
-            final String[] array = roles.trim().split(",");
-            for (final String role : array) {
+        for (final String role : roles) {
+            if (StringUtil.isNotBlank(role)) {
                 roleList.add(role);
             }
         }
