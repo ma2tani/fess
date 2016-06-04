@@ -41,9 +41,10 @@ public class CreateForm implements Serializable {
 
     public String reading;
 
-    public String targetRole;
-
     public String targetLabel;
+
+    @Size(max = 4000)
+    public String permissions;
 
     @Required
     @ValidateTypeFailure
