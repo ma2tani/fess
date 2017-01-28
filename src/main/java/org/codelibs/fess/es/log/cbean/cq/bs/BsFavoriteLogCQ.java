@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codelibs.fess.es.log.cbean.cq.bs;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.codelibs.fess.es.log.allcommon.EsAbstractConditionQuery;
@@ -24,15 +25,19 @@ import org.dbflute.cbean.ckey.ConditionKey;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.PrefixQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 
 /**
  * @author ESFlute (using FreeGen)
@@ -57,6 +62,25 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     // ===================================================================================
     //                                                                       Query Control
     //                                                                       =============
+    public void functionScore(OperatorCall<FavoriteLogCQ> queryLambda,
+            ScoreFunctionCall<ScoreFunctionCreator<FavoriteLogCQ>> functionsLambda,
+            final ConditionOptionCall<FunctionScoreQueryBuilder> opLambda) {
+        FavoriteLogCQ cq = new FavoriteLogCQ();
+        queryLambda.callback(cq);
+        final Collection<FilterFunctionBuilder> list = new ArrayList<>();
+        if (functionsLambda != null) {
+            functionsLambda.callback((cqLambda, scoreFunctionBuilder) -> {
+                FavoriteLogCQ cf = new FavoriteLogCQ();
+                cqLambda.callback(cf);
+                list.add(new FilterFunctionBuilder(cf.getQuery(), scoreFunctionBuilder));
+            });
+        }
+        final FunctionScoreQueryBuilder builder = regFunctionScoreQ(cq.getQuery(), list);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void filtered(FilteredCall<FavoriteLogCQ, FavoriteLogCQ> filteredLambda) {
         filtered(filteredLambda, null);
     }
@@ -153,12 +177,12 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public BsFavoriteLogCQ addOrderBy_Id_Asc() {
-        regOBA("_id");
+        regOBA("_uid");
         return this;
     }
 
     public BsFavoriteLogCQ addOrderBy_Id_Desc() {
-        regOBD("_id");
+        regOBD("_uid");
         return this;
     }
 
@@ -231,8 +255,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setCreatedAt_MatchPhrase(createdAt, null);
     }
 
-    public void setCreatedAt_MatchPhrase(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("createdAt", createdAt);
+    public void setCreatedAt_MatchPhrase(LocalDateTime createdAt, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -242,8 +266,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setCreatedAt_MatchPhrasePrefix(createdAt, null);
     }
 
-    public void setCreatedAt_MatchPhrasePrefix(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("createdAt", createdAt);
+    public void setCreatedAt_MatchPhrasePrefix(LocalDateTime createdAt, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -253,8 +277,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setCreatedAt_Fuzzy(createdAt, null);
     }
 
-    public void setCreatedAt_Fuzzy(LocalDateTime createdAt, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("createdAt", createdAt);
+    public void setCreatedAt_Fuzzy(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -265,7 +289,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_GreaterThan(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_THAN, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -276,7 +301,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_LessThan(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_THAN, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -287,7 +313,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_GreaterEqual(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_EQUAL, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -298,7 +325,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_LessEqual(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_EQUAL, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -405,8 +433,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUrl_MatchPhrase(url, null);
     }
 
-    public void setUrl_MatchPhrase(String url, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("url", url);
+    public void setUrl_MatchPhrase(String url, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("url", url);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -416,8 +444,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUrl_MatchPhrasePrefix(url, null);
     }
 
-    public void setUrl_MatchPhrasePrefix(String url, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("url", url);
+    public void setUrl_MatchPhrasePrefix(String url, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("url", url);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -427,8 +455,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUrl_Fuzzy(url, null);
     }
 
-    public void setUrl_Fuzzy(String url, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("url", url);
+    public void setUrl_Fuzzy(String url, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("url", url);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -467,12 +495,24 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setUrl_SpanTerm(String url) {
+        setUrl_SpanTerm("url", null);
+    }
+
+    public void setUrl_SpanTerm(String url, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("url", url);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setUrl_GreaterThan(String url) {
         setUrl_GreaterThan(url, null);
     }
 
     public void setUrl_GreaterThan(String url, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_GREATER_THAN, url);
+        final Object _value = url;
+        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -483,7 +523,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUrl_LessThan(String url, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_LESS_THAN, url);
+        final Object _value = url;
+        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -494,7 +535,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUrl_GreaterEqual(String url, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_GREATER_EQUAL, url);
+        final Object _value = url;
+        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -505,7 +547,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUrl_LessEqual(String url, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_LESS_EQUAL, url);
+        final Object _value = url;
+        RangeQueryBuilder builder = regRangeQ("url", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -612,8 +655,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setDocId_MatchPhrase(docId, null);
     }
 
-    public void setDocId_MatchPhrase(String docId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("docId", docId);
+    public void setDocId_MatchPhrase(String docId, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("docId", docId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -623,8 +666,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setDocId_MatchPhrasePrefix(docId, null);
     }
 
-    public void setDocId_MatchPhrasePrefix(String docId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("docId", docId);
+    public void setDocId_MatchPhrasePrefix(String docId, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("docId", docId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -634,8 +677,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setDocId_Fuzzy(docId, null);
     }
 
-    public void setDocId_Fuzzy(String docId, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("docId", docId);
+    public void setDocId_Fuzzy(String docId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("docId", docId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -674,12 +717,24 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setDocId_SpanTerm(String docId) {
+        setDocId_SpanTerm("docId", null);
+    }
+
+    public void setDocId_SpanTerm(String docId, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("docId", docId);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setDocId_GreaterThan(String docId) {
         setDocId_GreaterThan(docId, null);
     }
 
     public void setDocId_GreaterThan(String docId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_GREATER_THAN, docId);
+        final Object _value = docId;
+        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -690,7 +745,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setDocId_LessThan(String docId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_LESS_THAN, docId);
+        final Object _value = docId;
+        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -701,7 +757,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setDocId_GreaterEqual(String docId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_GREATER_EQUAL, docId);
+        final Object _value = docId;
+        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -712,7 +769,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setDocId_LessEqual(String docId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_LESS_EQUAL, docId);
+        final Object _value = docId;
+        RangeQueryBuilder builder = regRangeQ("docId", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -819,8 +877,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setQueryId_MatchPhrase(queryId, null);
     }
 
-    public void setQueryId_MatchPhrase(String queryId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("queryId", queryId);
+    public void setQueryId_MatchPhrase(String queryId, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("queryId", queryId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -830,8 +888,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setQueryId_MatchPhrasePrefix(queryId, null);
     }
 
-    public void setQueryId_MatchPhrasePrefix(String queryId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("queryId", queryId);
+    public void setQueryId_MatchPhrasePrefix(String queryId, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("queryId", queryId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -841,8 +899,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setQueryId_Fuzzy(queryId, null);
     }
 
-    public void setQueryId_Fuzzy(String queryId, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("queryId", queryId);
+    public void setQueryId_Fuzzy(String queryId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("queryId", queryId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -881,12 +939,24 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setQueryId_SpanTerm(String queryId) {
+        setQueryId_SpanTerm("queryId", null);
+    }
+
+    public void setQueryId_SpanTerm(String queryId, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("queryId", queryId);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setQueryId_GreaterThan(String queryId) {
         setQueryId_GreaterThan(queryId, null);
     }
 
     public void setQueryId_GreaterThan(String queryId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_GREATER_THAN, queryId);
+        final Object _value = queryId;
+        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -897,7 +967,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setQueryId_LessThan(String queryId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_LESS_THAN, queryId);
+        final Object _value = queryId;
+        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -908,7 +979,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setQueryId_GreaterEqual(String queryId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_GREATER_EQUAL, queryId);
+        final Object _value = queryId;
+        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -919,7 +991,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setQueryId_LessEqual(String queryId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_LESS_EQUAL, queryId);
+        final Object _value = queryId;
+        RangeQueryBuilder builder = regRangeQ("queryId", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1026,8 +1099,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUserInfoId_MatchPhrase(userInfoId, null);
     }
 
-    public void setUserInfoId_MatchPhrase(String userInfoId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("userInfoId", userInfoId);
+    public void setUserInfoId_MatchPhrase(String userInfoId, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("userInfoId", userInfoId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1037,8 +1110,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUserInfoId_MatchPhrasePrefix(userInfoId, null);
     }
 
-    public void setUserInfoId_MatchPhrasePrefix(String userInfoId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("userInfoId", userInfoId);
+    public void setUserInfoId_MatchPhrasePrefix(String userInfoId, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("userInfoId", userInfoId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1048,8 +1121,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         setUserInfoId_Fuzzy(userInfoId, null);
     }
 
-    public void setUserInfoId_Fuzzy(String userInfoId, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("userInfoId", userInfoId);
+    public void setUserInfoId_Fuzzy(String userInfoId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("userInfoId", userInfoId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1088,12 +1161,24 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setUserInfoId_SpanTerm(String userInfoId) {
+        setUserInfoId_SpanTerm("userInfoId", null);
+    }
+
+    public void setUserInfoId_SpanTerm(String userInfoId, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("userInfoId", userInfoId);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setUserInfoId_GreaterThan(String userInfoId) {
         setUserInfoId_GreaterThan(userInfoId, null);
     }
 
     public void setUserInfoId_GreaterThan(String userInfoId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_GREATER_THAN, userInfoId);
+        final Object _value = userInfoId;
+        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1104,7 +1189,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUserInfoId_LessThan(String userInfoId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_LESS_THAN, userInfoId);
+        final Object _value = userInfoId;
+        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1115,7 +1201,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUserInfoId_GreaterEqual(String userInfoId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_GREATER_EQUAL, userInfoId);
+        final Object _value = userInfoId;
+        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1126,7 +1213,8 @@ public abstract class BsFavoriteLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setUserInfoId_LessEqual(String userInfoId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_LESS_EQUAL, userInfoId);
+        final Object _value = userInfoId;
+        RangeQueryBuilder builder = regRangeQ("userInfoId", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }

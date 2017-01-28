@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codelibs.fess.es.config.cbean.cq.bs;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.codelibs.fess.es.config.allcommon.EsAbstractConditionQuery;
@@ -24,15 +25,19 @@ import org.dbflute.cbean.ckey.ConditionKey;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.PrefixQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 
 /**
  * @author ESFlute (using FreeGen)
@@ -57,6 +62,25 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     // ===================================================================================
     //                                                                       Query Control
     //                                                                       =============
+    public void functionScore(OperatorCall<FileConfigToLabelCQ> queryLambda,
+            ScoreFunctionCall<ScoreFunctionCreator<FileConfigToLabelCQ>> functionsLambda,
+            final ConditionOptionCall<FunctionScoreQueryBuilder> opLambda) {
+        FileConfigToLabelCQ cq = new FileConfigToLabelCQ();
+        queryLambda.callback(cq);
+        final Collection<FilterFunctionBuilder> list = new ArrayList<>();
+        if (functionsLambda != null) {
+            functionsLambda.callback((cqLambda, scoreFunctionBuilder) -> {
+                FileConfigToLabelCQ cf = new FileConfigToLabelCQ();
+                cqLambda.callback(cf);
+                list.add(new FilterFunctionBuilder(cf.getQuery(), scoreFunctionBuilder));
+            });
+        }
+        final FunctionScoreQueryBuilder builder = regFunctionScoreQ(cq.getQuery(), list);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void filtered(FilteredCall<FileConfigToLabelCQ, FileConfigToLabelCQ> filteredLambda) {
         filtered(filteredLambda, null);
     }
@@ -154,12 +178,12 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public BsFileConfigToLabelCQ addOrderBy_Id_Asc() {
-        regOBA("_id");
+        regOBA("_uid");
         return this;
     }
 
     public BsFileConfigToLabelCQ addOrderBy_Id_Desc() {
-        regOBD("_id");
+        regOBD("_uid");
         return this;
     }
 
@@ -232,8 +256,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setFileConfigId_MatchPhrase(fileConfigId, null);
     }
 
-    public void setFileConfigId_MatchPhrase(String fileConfigId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("fileConfigId", fileConfigId);
+    public void setFileConfigId_MatchPhrase(String fileConfigId, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("fileConfigId", fileConfigId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -243,8 +267,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setFileConfigId_MatchPhrasePrefix(fileConfigId, null);
     }
 
-    public void setFileConfigId_MatchPhrasePrefix(String fileConfigId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("fileConfigId", fileConfigId);
+    public void setFileConfigId_MatchPhrasePrefix(String fileConfigId, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("fileConfigId", fileConfigId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -254,8 +278,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setFileConfigId_Fuzzy(fileConfigId, null);
     }
 
-    public void setFileConfigId_Fuzzy(String fileConfigId, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("fileConfigId", fileConfigId);
+    public void setFileConfigId_Fuzzy(String fileConfigId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("fileConfigId", fileConfigId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -294,12 +318,24 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setFileConfigId_SpanTerm(String fileConfigId) {
+        setFileConfigId_SpanTerm("fileConfigId", null);
+    }
+
+    public void setFileConfigId_SpanTerm(String fileConfigId, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("fileConfigId", fileConfigId);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setFileConfigId_GreaterThan(String fileConfigId) {
         setFileConfigId_GreaterThan(fileConfigId, null);
     }
 
     public void setFileConfigId_GreaterThan(String fileConfigId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_GREATER_THAN, fileConfigId);
+        final Object _value = fileConfigId;
+        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -310,7 +346,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setFileConfigId_LessThan(String fileConfigId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_LESS_THAN, fileConfigId);
+        final Object _value = fileConfigId;
+        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -321,7 +358,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setFileConfigId_GreaterEqual(String fileConfigId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_GREATER_EQUAL, fileConfigId);
+        final Object _value = fileConfigId;
+        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -332,7 +370,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setFileConfigId_LessEqual(String fileConfigId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_LESS_EQUAL, fileConfigId);
+        final Object _value = fileConfigId;
+        RangeQueryBuilder builder = regRangeQ("fileConfigId", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -439,8 +478,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setLabelTypeId_MatchPhrase(labelTypeId, null);
     }
 
-    public void setLabelTypeId_MatchPhrase(String labelTypeId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("labelTypeId", labelTypeId);
+    public void setLabelTypeId_MatchPhrase(String labelTypeId, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("labelTypeId", labelTypeId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -450,8 +489,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setLabelTypeId_MatchPhrasePrefix(labelTypeId, null);
     }
 
-    public void setLabelTypeId_MatchPhrasePrefix(String labelTypeId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("labelTypeId", labelTypeId);
+    public void setLabelTypeId_MatchPhrasePrefix(String labelTypeId, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("labelTypeId", labelTypeId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -461,8 +500,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         setLabelTypeId_Fuzzy(labelTypeId, null);
     }
 
-    public void setLabelTypeId_Fuzzy(String labelTypeId, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("labelTypeId", labelTypeId);
+    public void setLabelTypeId_Fuzzy(String labelTypeId, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("labelTypeId", labelTypeId);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -501,12 +540,24 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setLabelTypeId_SpanTerm(String labelTypeId) {
+        setLabelTypeId_SpanTerm("labelTypeId", null);
+    }
+
+    public void setLabelTypeId_SpanTerm(String labelTypeId, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("labelTypeId", labelTypeId);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setLabelTypeId_GreaterThan(String labelTypeId) {
         setLabelTypeId_GreaterThan(labelTypeId, null);
     }
 
     public void setLabelTypeId_GreaterThan(String labelTypeId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_GREATER_THAN, labelTypeId);
+        final Object _value = labelTypeId;
+        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -517,7 +568,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setLabelTypeId_LessThan(String labelTypeId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_LESS_THAN, labelTypeId);
+        final Object _value = labelTypeId;
+        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -528,7 +580,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setLabelTypeId_GreaterEqual(String labelTypeId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_GREATER_EQUAL, labelTypeId);
+        final Object _value = labelTypeId;
+        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -539,7 +592,8 @@ public abstract class BsFileConfigToLabelCQ extends EsAbstractConditionQuery {
     }
 
     public void setLabelTypeId_LessEqual(String labelTypeId, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_LESS_EQUAL, labelTypeId);
+        final Object _value = labelTypeId;
+        RangeQueryBuilder builder = regRangeQ("labelTypeId", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,16 @@
  */
 package org.codelibs.fess.es.config.allcommon;
 
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.dbflute.cbean.ConditionBean;
 import org.dbflute.cbean.ConditionQuery;
@@ -32,12 +38,14 @@ import org.dbflute.dbmeta.name.ColumnRealName;
 import org.dbflute.dbmeta.name.ColumnSqlName;
 import org.dbflute.exception.InvalidQueryRegisteredException;
 import org.dbflute.util.Srl;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.MatchAllQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.PrefixQueryBuilder;
@@ -46,9 +54,13 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -150,6 +162,13 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
     //                                                                            Register
     //                                                                            ========
 
+    protected FunctionScoreQueryBuilder regFunctionScoreQ(QueryBuilder queryBuilder, Collection<FilterFunctionBuilder> list) {
+        FunctionScoreQueryBuilder functionScoreQuery =
+                QueryBuilders.functionScoreQuery(queryBuilder, list.toArray(new FilterFunctionBuilder[list.size()]));
+        regQ(functionScoreQuery);
+        return functionScoreQuery;
+    }
+
     protected BoolQueryBuilder regBoolCQ(List<QueryBuilder> mustList, List<QueryBuilder> shouldList, List<QueryBuilder> mustNotList,
             List<QueryBuilder> filterList) {
         assertObjectNotNull("mustList", mustList);
@@ -189,7 +208,7 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
 
     protected IdsQueryBuilder regIdsQ(Collection<String> values) {
         checkEsInvalidQueryCollection("_id", values);
-        IdsQueryBuilder idsQuery = QueryBuilders.idsQuery(asTableDbName()).addIds(values);
+        IdsQueryBuilder idsQuery = QueryBuilders.idsQuery(asTableDbName()).addIds(values.toArray(new String[values.size()]));
         regQ(idsQuery);
         return idsQuery;
     }
@@ -201,23 +220,23 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
         return matchQuery;
     }
 
-    protected MatchQueryBuilder regMatchPhraseQ(String name, Object value) {
+    protected MatchPhraseQueryBuilder regMatchPhraseQ(String name, Object value) {
         checkEsInvalidQuery(name, value);
-        MatchQueryBuilder matchQuery = QueryBuilders.matchPhraseQuery(name, value);
+        MatchPhraseQueryBuilder matchQuery = QueryBuilders.matchPhraseQuery(name, value);
         regQ(matchQuery);
         return matchQuery;
     }
 
-    protected MatchQueryBuilder regMatchPhrasePrefixQ(String name, Object value) {
+    protected MatchPhrasePrefixQueryBuilder regMatchPhrasePrefixQ(String name, Object value) {
         checkEsInvalidQuery(name, value);
-        MatchQueryBuilder matchQuery = QueryBuilders.matchPhrasePrefixQuery(name, value);
+        MatchPhrasePrefixQueryBuilder matchQuery = QueryBuilders.matchPhrasePrefixQuery(name, value);
         regQ(matchQuery);
         return matchQuery;
     }
 
-    protected FuzzyQueryBuilder regFuzzyQ(String name, Object value) {
+    protected MatchQueryBuilder regFuzzyQ(String name, Object value) {
         checkEsInvalidQuery(name, value);
-        FuzzyQueryBuilder fuzzyQuery = QueryBuilders.fuzzyQuery(name, value);
+        MatchQueryBuilder fuzzyQuery = QueryBuilders.matchQuery(name, value).fuzziness(Fuzziness.AUTO);
         regQ(fuzzyQuery);
         return fuzzyQuery;
     }
@@ -289,10 +308,17 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
         return commonTermsQuery;
     }
 
-    protected MoreLikeThisQueryBuilder regMoreLikeThisQueryQ(String name) {
-        MoreLikeThisQueryBuilder moreLikeThisQuery = QueryBuilders.moreLikeThisQuery(name);
+    protected MoreLikeThisQueryBuilder regMoreLikeThisQueryQ(String name, String[] likeTexts) {
+        MoreLikeThisQueryBuilder moreLikeThisQuery = QueryBuilders.moreLikeThisQuery(new String[] { name }, likeTexts, null);
         regQ(moreLikeThisQuery);
         return moreLikeThisQuery;
+    }
+
+    protected SpanTermQueryBuilder regSpanTermQ(String name, String value) {
+        checkEsInvalidQuery(name, value);
+        SpanTermQueryBuilder spanTermQuery = QueryBuilders.spanTermQuery(name, value);
+        regQ(spanTermQuery);
+        return spanTermQuery;
     }
 
     protected void regQ(QueryBuilder builder) {
@@ -480,6 +506,28 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
         }
     }
 
+    protected String toRangeDateString(Date date, String format) {
+        if (format.contains("epoch_millis")) {
+            return Long.toString(date.getTime());
+        } else if (format.contains("date_optional_time")) {
+            final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return sdf.format(date);
+        } else {
+            return Long.toString(date.getTime());
+        }
+    }
+
+    protected String toRangeLocalDateTimeString(LocalDateTime date, String format) {
+        if (format.contains("epoch_millis")) {
+            return Long.toString(date.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        } else if (format.contains("date_optional_time")) {
+            return DateTimeFormatter.ISO_DATE_TIME.format(date);
+        } else {
+            return Long.toString(date.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        }
+    }
+
     // ===================================================================================
     //                                                                        Assist Class
     //                                                                        ============
@@ -515,5 +563,16 @@ public abstract class EsAbstractConditionQuery implements ConditionQuery {
     public interface OperatorCall<CQ extends EsAbstractConditionQuery> {
 
         void callback(CQ query);
+    }
+
+    @FunctionalInterface
+    public interface ScoreFunctionCall<CC extends ScoreFunctionCreator<?>> {
+
+        void callback(CC creator);
+    }
+
+    @FunctionalInterface
+    public interface ScoreFunctionCreator<T extends EsAbstractConditionQuery> {
+        void filter(final OperatorCall<T> cqLambda, final ScoreFunctionBuilder scoreFunctionBuilder);
     }
 }

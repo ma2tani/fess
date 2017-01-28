@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import javax.validation.constraints.Size;
 
 import org.codelibs.fess.app.web.CrudMode;
 import org.codelibs.fess.util.ComponentUtil;
+import org.codelibs.fess.validation.CustomSize;
 import org.lastaflute.web.validation.Required;
 import org.lastaflute.web.validation.theme.conversion.ValidateTypeFailure;
 
@@ -38,7 +39,7 @@ public class CreateForm {
     public String term;
 
     @Required
-    @Size(max = 4000)
+    @CustomSize(maxKey = "form.admin.max.input.size")
     public String query;
 
     @Required

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.es.config.cbean.BadWordCB;
 import org.codelibs.fess.es.config.exbhv.BadWordBhv;
 import org.codelibs.fess.es.config.exentity.BadWord;
+import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.bhv.readable.EntityRowHandler;
 import org.dbflute.cbean.result.PagingResultBean;
@@ -54,6 +55,9 @@ public class BadWordService {
     @Resource
     protected FessEsClient fessEsClient;
 
+    @Resource
+    protected FessConfig fessConfig;
+
     public List<BadWord> getBadWordList(final BadWordPager badWordPager) {
 
         final PagingResultBean<BadWord> badWordList = badWordBhv.selectPage(cb -> {
@@ -63,7 +67,8 @@ public class BadWordService {
 
         // update pager
         BeanUtil.copyBeanToBean(badWordList, badWordPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
-        badWordPager.setPageNumberList(badWordList.pageRange(op -> op.rangeSize(5)).createPageNumberList());
+        badWordPager.setPageNumberList(badWordList.pageRange(op -> op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger()))
+                .createPageNumberList());
 
         return badWordList;
     }
@@ -74,13 +79,13 @@ public class BadWordService {
 
     public void store(final BadWord badWord) {
 
-        badWordBhv.insertOrUpdate(badWord, op -> op.setRefresh(true));
+        badWordBhv.insertOrUpdate(badWord, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
     public void delete(final BadWord badWord) {
 
-        badWordBhv.delete(badWord, op -> op.setRefresh(true));
+        badWordBhv.delete(badWord, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
@@ -123,11 +128,11 @@ public class BadWordService {
                     } else if (badWord == null) {
                         badWord = new BadWord();
                         badWord.setSuggestWord(targetWord);
-                        badWord.setCreatedBy("system");
+                        badWord.setCreatedBy(Constants.SYSTEM_USER);
                         badWord.setCreatedTime(now);
                         badWordBhv.insert(badWord);
                     } else {
-                        badWord.setUpdatedBy("system");
+                        badWord.setUpdatedBy(Constants.SYSTEM_USER);
                         badWord.setUpdatedTime(now);
                         badWordBhv.update(badWord);
                     }

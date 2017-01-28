@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.codelibs.core.CoreLibConstants;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
@@ -317,9 +317,9 @@ public class GsaApiManager extends BaseApiManager implements WebApiManager {
             buf.append("</data>");
         } else if (obj instanceof Date) {
             final SimpleDateFormat sdf = new SimpleDateFormat(CoreLibConstants.DATE_FORMAT_ISO_8601_EXTEND);
-            buf.append(StringEscapeUtils.escapeXml(sdf.format(obj)));
+            buf.append(StringEscapeUtils.escapeXml10(sdf.format(obj)));
         } else if (obj != null) {
-            buf.append(StringEscapeUtils.escapeXml(obj.toString()));
+            buf.append(StringEscapeUtils.escapeXml10(obj.toString()));
         }
         return buf.toString();
     }

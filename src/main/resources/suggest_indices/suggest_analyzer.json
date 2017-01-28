@@ -1,4 +1,9 @@
 {
+  "index": {
+    "refresh_interval": "1s",
+    "number_of_shards": 5,
+    "number_of_replicas": 0
+  },
   "analysis" : {
     "tokenizer" : {
       "fess_japanese_normal" : {
@@ -26,6 +31,7 @@
       "contents_analyzer" : {
         "type" : "custom",
         "tokenizer" : "fess_japanese_normal",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "pos_filter", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_ja" : {
@@ -46,6 +52,7 @@
       "contents_analyzer_ja" : {
         "type" : "custom",
         "tokenizer" : "fess_japanese_normal",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "pos_filter", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_en" : {
@@ -65,6 +72,7 @@
       "contents_analyzer_en" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "english_keywords"]
       },
       "reading_analyzer_ko" : {
@@ -84,6 +92,7 @@
       "contents_analyzer_ko" : {
         "type" : "custom",
         "tokenizer" : "fess_korean_tokenizer",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "english_keywords"]
       },
       "reading_analyzer_ar" : {
@@ -122,6 +131,7 @@
       "contents_analyzer_bg" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter", "bulgarian_stop", "bulgarian_keywords", "bulgarian_stemmer"]
       },
       "reading_analyzer_ca" : {
@@ -141,6 +151,7 @@
       "contents_analyzer_ca" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "catalan_elision", "catalan_stop", "catalan_keywords"]
       },
       "reading_analyzer_cs" : {
@@ -160,6 +171,7 @@
       "contents_analyzer_cs" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "czech_stop", "czech_keywords"]
       },
       "reading_analyzer_da" : {
@@ -179,6 +191,7 @@
       "contents_analyzer_da" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "danish_stop", "danish_keywords"]
       },
       "reading_analyzer_nl" : {
@@ -198,6 +211,7 @@
       "contents_analyzer_nl" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "dutch_stop", "dutch_keywords", "dutch_override"]
       },
       "reading_analyzer_fi" : {
@@ -217,6 +231,7 @@
       "contents_analyzer_fi" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "finnish_stop", "finnish_keywords"]
       },
       "reading_analyzer_fr" : {
@@ -236,6 +251,7 @@
       "contents_analyzer_fr" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "french_elision", "french_stop", "french_keywords"]
       },
       "reading_analyzer_de" : {
@@ -255,6 +271,7 @@
       "contents_analyzer_de" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "german_stop", "german_keywords", "german_normalization"]
       },
       "reading_analyzer_el" : {
@@ -274,7 +291,8 @@
       "contents_analyzer_el" : {
         "type" : "custom",
         "tokenizer" : "standard",
-        "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "greek_stop", "greek_keywords"]
+        "char_filter" : ["mapping_char"],
+        "filter" : ["greek_lowercase", "lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "greek_stop", "greek_keywords"]
       },
       "reading_analyzer_hu" : {
         "type" : "custom",
@@ -293,6 +311,7 @@
       "contents_analyzer_hu" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "hungarian_stop", "hungarian_keywords"]
       },
       "reading_analyzer_id" : {
@@ -312,6 +331,7 @@
       "contents_analyzer_id" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "indonesian_stop", "indonesian_keywords"]
       },
       "reading_analyzer_it" : {
@@ -331,6 +351,7 @@
       "contents_analyzer_it" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "italian_elision", "italian_stop", "italian_keywords"]
       },
       "reading_analyzer_lv" : {
@@ -350,6 +371,7 @@
       "contents_analyzer_lv" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "latvian_stop", "latvian_keywords"]
       },
       "reading_analyzer_lt" : {
@@ -369,6 +391,7 @@
       "contents_analyzer_lt" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "lithuanian_stop", "lithuanian_keywords"]
       },
       "reading_analyzer_no" : {
@@ -388,6 +411,7 @@
       "contents_analyzer_no" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "norwegian_stop", "norwegian_keywords"]
       },
       "reading_analyzer_fa" : {
@@ -407,6 +431,7 @@
       "contents_analyzer_fa" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "arabic_normalization", "persian_normalization", "persian_stop"]
       },
       "reading_analyzer_pt" : {
@@ -426,6 +451,7 @@
       "contents_analyzer_pt" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "portuguese_stop", "portuguese_keywords"]
       },
       "reading_analyzer_ro" : {
@@ -445,6 +471,7 @@
       "contents_analyzer_ro" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "romanian_stop", "romanian_keywords"]
       },
       "reading_analyzer_ru" : {
@@ -464,6 +491,7 @@
       "contents_analyzer_ru" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "russian_stop", "russian_keywords"]
       },
       "reading_analyzer_es" : {
@@ -483,6 +511,7 @@
       "contents_analyzer_es" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "spanish_stop", "spanish_keywords"]
       },
       "reading_analyzer_sv" : {
@@ -502,6 +531,7 @@
       "contents_analyzer_sv" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "swedish_stop", "swedish_keywords"]
       },
       "reading_analyzer_tr" : {
@@ -521,6 +551,7 @@
       "contents_analyzer_tr" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "apostrophe", "turkish_lowercase", "turkish_stop", "turkish_keywords"]
       },
       "reading_analyzer_th" : {
@@ -540,6 +571,7 @@
       "contents_analyzer_th" : {
         "type" : "custom",
         "tokenizer" : "thai",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "stopword_en_filter", "content_length_filter", "limit_token_count_filter", "thai_stop"]
       },
       "reading_analyzer_bn" : {
@@ -559,6 +591,7 @@
       "contents_analyzer_bn" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_et" : {
@@ -578,6 +611,7 @@
       "contents_analyzer_et" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_gu" : {
@@ -597,6 +631,7 @@
       "contents_analyzer_gu" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_he" : {
@@ -616,6 +651,7 @@
       "contents_analyzer_he" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_hi" : {
@@ -635,6 +671,7 @@
       "contents_analyzer_hi" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_hr" : {
@@ -654,6 +691,7 @@
       "contents_analyzer_hr" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_mk" : {
@@ -673,6 +711,7 @@
       "contents_analyzer_mk" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_ml" : {
@@ -692,6 +731,7 @@
       "contents_analyzer_ml" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_pa" : {
@@ -711,6 +751,7 @@
       "contents_analyzer_pa" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_pl" : {
@@ -730,6 +771,7 @@
       "contents_analyzer_pl" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_si" : {
@@ -749,6 +791,7 @@
       "contents_analyzer_si" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_sq" : {
@@ -768,6 +811,7 @@
       "contents_analyzer_sq" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_ta" : {
@@ -787,6 +831,7 @@
       "contents_analyzer_ta" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_te" : {
@@ -806,6 +851,7 @@
       "contents_analyzer_te" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_tl" : {
@@ -825,6 +871,7 @@
       "contents_analyzer_tl" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_uk" : {
@@ -844,6 +891,7 @@
       "contents_analyzer_uk" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_ur" : {
@@ -863,6 +911,7 @@
       "contents_analyzer_ur" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_vi" : {
@@ -882,6 +931,7 @@
       "contents_analyzer_vi" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_zh-cn" : {
@@ -901,6 +951,7 @@
       "contents_analyzer_zh-cn" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       },
       "reading_analyzer_zh-tw" : {
@@ -920,6 +971,7 @@
       "contents_analyzer_zh-tw" : {
         "type" : "custom",
         "tokenizer" : "standard",
+        "char_filter" : ["mapping_char"],
         "filter" : ["lowercase", "content_length_filter", "limit_token_count_filter"]
       }
     },

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.codelibs.fess.es.config.allcommon;
 
 import org.dbflute.cbean.result.PagingResultBean;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.search.aggregations.Aggregations;
 
 /**
  * @param <ENTITY> The type of entity.
@@ -29,6 +31,17 @@ public class EsPagingResultBean<ENTITY> extends PagingResultBean<ENTITY> {
     private int totalShards;
     private int successfulShards;
     private int failedShards;
+    private Aggregations aggregations;
+
+    private SearchRequestBuilder builder;
+
+    public EsPagingResultBean(final SearchRequestBuilder builder) {
+        this.builder = builder;
+    }
+
+    public String getQueryDsl() {
+        return builder.toString();
+    }
 
     public long getTook() {
         return took;
@@ -61,4 +74,13 @@ public class EsPagingResultBean<ENTITY> extends PagingResultBean<ENTITY> {
     public void setFailedShards(int failedShards) {
         this.failedShards = failedShards;
     }
+
+    public Aggregations getAggregations() {
+        return aggregations;
+    }
+
+    public void setAggregation(Aggregations aggregations) {
+        this.aggregations = aggregations;
+    }
+
 }

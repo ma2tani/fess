@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.codelibs.fess.Constants;
 import org.codelibs.fess.entity.QueryContext;
 import org.codelibs.fess.entity.SearchRenderData;
 import org.codelibs.fess.entity.SearchRequestParams;
+import org.codelibs.fess.entity.SearchRequestParams.SearchRequestType;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.es.client.FessEsClient.SearchConditionBuilder;
 import org.codelibs.fess.es.client.FessEsClientException;
@@ -47,10 +48,12 @@ import org.dbflute.optional.OptionalEntity;
 import org.dbflute.optional.OptionalThing;
 import org.dbflute.util.DfTypeUtil;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.action.update.UpdateResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.lastaflute.taglib.function.LaFunctions;
 
@@ -213,23 +216,50 @@ public class SearchService {
 
     public OptionalEntity<Map<String, Object>> getDocumentByDocId(final String docId, final String[] fields,
             final OptionalThing<FessUserBean> userBean) {
-        return fessEsClient.getDocument(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(), builder -> {
-            builder.setQuery(QueryBuilders.termQuery(fessConfig.getIndexFieldDocId(), docId));
-            builder.addFields(fields);
-            fessConfig.processSearchPreference(builder, userBean);
-            return true;
-        });
+        return fessEsClient.getDocument(
+                fessConfig.getIndexDocumentSearchIndex(),
+                fessConfig.getIndexDocumentType(),
+                builder -> {
+                    final BoolQueryBuilder boolQuery =
+                            QueryBuilders.boolQuery().must(QueryBuilders.termQuery(fessConfig.getIndexFieldDocId(), docId));
+                    final Set<String> roleSet = ComponentUtil.getRoleQueryHelper().build(SearchRequestType.JSON); // TODO SearchRequestType?
+                    if (!roleSet.isEmpty()) {
+                        final BoolQueryBuilder roleQuery = QueryBuilders.boolQuery();
+                        roleSet.stream().forEach(name -> {
+                            roleQuery.should(QueryBuilders.termQuery(fessConfig.getIndexFieldRole(), name));
+                        });
+                        boolQuery.filter(roleQuery);
+                    }
+                    builder.setQuery(boolQuery);
+                    builder.setFetchSource(fields, null);
+                    fessConfig.processSearchPreference(builder, userBean);
+                    return true;
+                });
+
     }
 
     public List<Map<String, Object>> getDocumentListByDocIds(final String[] docIds, final String[] fields,
             final OptionalThing<FessUserBean> userBean) {
-        return fessEsClient.getDocumentList(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(), builder -> {
-            builder.setQuery(QueryBuilders.termsQuery(fessConfig.getIndexFieldDocId(), docIds));
-            builder.setSize(fessConfig.getPagingSearchPageMaxSizeAsInteger().intValue());
-            builder.addFields(fields);
-            fessConfig.processSearchPreference(builder, userBean);
-            return true;
-        });
+        return fessEsClient.getDocumentList(
+                fessConfig.getIndexDocumentSearchIndex(),
+                fessConfig.getIndexDocumentType(),
+                builder -> {
+                    final BoolQueryBuilder boolQuery =
+                            QueryBuilders.boolQuery().must(QueryBuilders.termsQuery(fessConfig.getIndexFieldDocId(), docIds));
+                    final Set<String> roleSet = ComponentUtil.getRoleQueryHelper().build(SearchRequestType.JSON); // TODO SearchRequestType?
+                    if (!roleSet.isEmpty()) {
+                        final BoolQueryBuilder roleQuery = QueryBuilders.boolQuery();
+                        roleSet.stream().forEach(name -> {
+                            roleQuery.should(QueryBuilders.termQuery(fessConfig.getIndexFieldRole(), name));
+                        });
+                        boolQuery.filter(roleQuery);
+                    }
+                    builder.setQuery(boolQuery);
+                    builder.setSize(fessConfig.getPagingSearchPageMaxSizeAsInteger().intValue());
+                    builder.setFetchSource(fields, null);
+                    fessConfig.processSearchPreference(builder, userBean);
+                    return true;
+                });
     }
 
     public boolean update(final String id, final String field, final Object value) {
@@ -242,7 +272,7 @@ public class SearchService {
                     fessEsClient.prepareUpdate(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), id);
             builderLambda.accept(builder);
             final UpdateResponse response = builder.execute().actionGet(fessConfig.getIndexIndexTimeout());
-            return response.isCreated();
+            return response.getResult() == Result.CREATED || response.getResult() == Result.UPDATED;
         } catch (final ElasticsearchException e) {
             throw new FessEsClientException("Failed to update doc  " + id, e);
         }

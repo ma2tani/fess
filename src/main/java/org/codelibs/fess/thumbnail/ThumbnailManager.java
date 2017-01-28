@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,44 +28,49 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpSession;
 
 import org.codelibs.core.collection.LruHashMap;
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.misc.Tuple3;
 import org.codelibs.fess.Constants;
+import org.codelibs.fess.es.config.exbhv.ThumbnailQueueBhv;
+import org.codelibs.fess.es.config.exentity.ThumbnailQueue;
 import org.codelibs.fess.exception.FessSystemException;
 import org.codelibs.fess.exception.JobProcessingException;
+import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.DocumentUtil;
+import org.codelibs.fess.util.ResourceUtil;
 import org.lastaflute.web.util.LaRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Lists;
+
 public class ThumbnailManager {
-    private static final String DEFAULT_SCREENSHOT_DIR = "/WEB-INF/thumbnails";
+    private static final String FESS_THUMBNAIL_PATH = "fess.thumbnail.path";
+
+    private static final String FESS_VAR_PATH = "fess.var.path";
 
     private static final String NOIMAGE_FILE_SUFFIX = ".txt";
 
     private static final Logger logger = LoggerFactory.getLogger(ThumbnailManager.class);
 
-    @Resource
-    protected ServletContext application;
-
     protected File baseDir;
 
     private final List<ThumbnailGenerator> generatorList = new ArrayList<>();
 
-    private BlockingQueue<ThumbnailTask> thumbnailTaskQueue;
+    private BlockingQueue<Tuple3<String, String, String>> thumbnailTaskQueue;
 
     private volatile boolean generating;
 
-    private Thread thumbnailGeneratorThread;
+    private Thread thumbnailQueueThread;
 
     protected int thumbnailPathCacheSize = 10;
 
@@ -75,19 +80,23 @@ public class ThumbnailManager {
 
     protected int thumbnailTaskQueueSize = 10000;
 
+    protected int thumbnailTaskBulkSize = 100;
+
+    protected long thumbnailTaskQueueTimeout = 60 * 1000L;
+
     protected long noImageExpired = 24 * 60 * 60 * 1000L; // 24 hours
 
     @PostConstruct
     public void init() {
-        final String varPath = System.getProperty("fess.var.path");
-        if (varPath != null) {
-            baseDir = new File(varPath, "thumbnails");
+        final String thumbnailPath = System.getProperty(FESS_THUMBNAIL_PATH);
+        if (thumbnailPath != null) {
+            baseDir = new File(thumbnailPath);
         } else {
-            final String path = application.getRealPath(DEFAULT_SCREENSHOT_DIR);
-            if (StringUtil.isNotBlank(path)) {
-                baseDir = new File(path);
+            final String varPath = System.getProperty(FESS_VAR_PATH);
+            if (varPath != null) {
+                baseDir = new File(varPath, "thumbnails");
             } else {
-                baseDir = new File("." + DEFAULT_SCREENSHOT_DIR);
+                baseDir = ResourceUtil.getThumbnailPath().toFile();
             }
         }
         if (baseDir.mkdirs()) {
@@ -103,10 +112,21 @@ public class ThumbnailManager {
 
         thumbnailTaskQueue = new LinkedBlockingQueue<>(thumbnailTaskQueueSize);
         generating = true;
-        thumbnailGeneratorThread = new Thread((Runnable) () -> {
+        thumbnailQueueThread = new Thread((Runnable) () -> {
+            final List<Tuple3<String, String, String>> taskList = new ArrayList<>();
             while (generating) {
                 try {
-                    thumbnailTaskQueue.take().generate();
+                    final Tuple3<String, String, String> task = thumbnailTaskQueue.poll(thumbnailTaskQueueTimeout, TimeUnit.MILLISECONDS);
+                    if (task == null) {
+                        if (!taskList.isEmpty()) {
+                            storeQueue(taskList);
+                        }
+                    } else if (!taskList.contains(task)) {
+                        taskList.add(task);
+                        if (taskList.size() > thumbnailTaskBulkSize) {
+                            storeQueue(taskList);
+                        }
+                    }
                 } catch (final InterruptedException e) {
                     logger.debug("Interupted task.", e);
                 } catch (final Exception e) {
@@ -116,15 +136,15 @@ public class ThumbnailManager {
                 }
             }
         }, "ThumbnailGenerator");
-        thumbnailGeneratorThread.start();
+        thumbnailQueueThread.start();
     }
 
     @PreDestroy
     public void destroy() {
         generating = false;
-        thumbnailGeneratorThread.interrupt();
+        thumbnailQueueThread.interrupt();
         try {
-            thumbnailGeneratorThread.join(10000);
+            thumbnailQueueThread.join(10000);
         } catch (final InterruptedException e) {
             logger.warn("Thumbnail thread is timeouted.", e);
         }
@@ -137,24 +157,82 @@ public class ThumbnailManager {
         });
     }
 
-    public void generate(final Map<String, Object> docMap) {
+    public String getThumbnailPathOption() {
+        return "-D" + FESS_THUMBNAIL_PATH + "=" + baseDir.getAbsolutePath();
+    }
+
+    protected void storeQueue(final List<Tuple3<String, String, String>> taskList) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
-        for (final ThumbnailGenerator generator : generatorList) {
-            if (generator.isTarget(docMap)) {
-                final String url = DocumentUtil.getValue(docMap, fessConfig.getIndexFieldUrl(), String.class);
-                final String path = getImageFilename(docMap);
-                final File outputFile = new File(baseDir, path);
+        final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
+        final String[] targets = fessConfig.getThumbnailGeneratorTargetsAsArray();
+        final List<ThumbnailQueue> list = new ArrayList<>();
+        taskList.stream().filter(entity -> entity != null).forEach(task -> {
+            for (final String target : targets) {
+                final ThumbnailQueue entity = new ThumbnailQueue();
+                entity.setGenerator(task.getValue1());
+                entity.setUrl(task.getValue2());
+                entity.setPath(task.getValue3());
+                entity.setTarget(target);
+                entity.setCreatedBy(Constants.SYSTEM_USER);
+                entity.setCreatedTime(systemHelper.getCurrentTimeAsLong());
+                list.add(entity);
+            }
+        });
+        taskList.clear();
+        final ThumbnailQueueBhv thumbnailQueueBhv = ComponentUtil.getComponent(ThumbnailQueueBhv.class);
+        thumbnailQueueBhv.batchInsert(list);
+    }
+
+    public int generate() {
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        final List<String> idList = new ArrayList<>();
+        final ThumbnailQueueBhv thumbnailQueueBhv = ComponentUtil.getComponent(ThumbnailQueueBhv.class);
+        thumbnailQueueBhv.selectList(cb -> {
+            if (StringUtil.isBlank(fessConfig.getSchedulerTargetName())) {
+                cb.query().setTarget_Equal(Constants.DEFAULT_JOB_TARGET);
+            } else {
+                cb.query().setTarget_InScope(Lists.newArrayList(Constants.DEFAULT_JOB_TARGET, fessConfig.getSchedulerTargetName()));
+            }
+            cb.query().addOrderBy_CreatedTime_Asc();
+            cb.fetchFirst(fessConfig.getPageThumbnailQueueMaxFetchSizeAsInteger());
+        }).forEach(entity -> {
+            idList.add(entity.getId());
+            final String generatorName = entity.getGenerator();
+            try {
+                final ThumbnailGenerator generator = ComponentUtil.getComponent(generatorName);
+                final File outputFile = new File(baseDir, entity.getPath());
                 final File noImageFile = new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX);
                 if (!noImageFile.isFile() || System.currentTimeMillis() - noImageFile.lastModified() > noImageExpired) {
                     if (noImageFile.isFile() && !noImageFile.delete()) {
                         logger.warn("Failed to delete " + noImageFile.getAbsolutePath());
                     }
-                    if (!thumbnailTaskQueue.offer(new ThumbnailTask(url, outputFile, generator))) {
-                        logger.warn("Failed to offer a thumbnail task: " + url + " -> " + path);
+                    if (!generator.generate(entity.getUrl(), outputFile)) {
+                        new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX).setLastModified(System.currentTimeMillis());
                     }
                 } else if (logger.isDebugEnabled()) {
                     logger.debug("No image file exists: " + noImageFile.getAbsolutePath());
                 }
+            } catch (final Exception e) {
+                logger.warn("Failed to create thumbnail for " + entity, e);
+            }
+        });
+        if (!idList.isEmpty()) {
+            thumbnailQueueBhv.queryDelete(cb -> {
+                cb.query().setId_InScope(idList);
+            });
+            thumbnailQueueBhv.refresh();
+        }
+        return idList.size();
+    }
+
+    public void offer(final Map<String, Object> docMap) {
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        for (final ThumbnailGenerator generator : generatorList) {
+            if (generator.isTarget(docMap)) {
+                final String url = DocumentUtil.getValue(docMap, fessConfig.getIndexFieldUrl(), String.class);
+                final String path = getImageFilename(docMap);
+                final Tuple3<String, String, String> task = new Tuple3<>(generator.getName(), url, path);
+                thumbnailTaskQueue.offer(task);
                 break;
             }
         }
@@ -279,66 +357,6 @@ public class ThumbnailManager {
                 Files.delete(dir);
             }
             return FileVisitResult.CONTINUE;
-        }
-
-    }
-
-    protected static class ThumbnailTask {
-
-        String url;
-
-        File outputFile;
-
-        ThumbnailGenerator generator;
-
-        protected ThumbnailTask(final String url, final File outputFile, final ThumbnailGenerator generator) {
-            this.url = url;
-            this.outputFile = outputFile;
-            this.generator = generator;
-        }
-
-        public void generate() {
-            if (!generator.generate(url, outputFile)) {
-                new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX).setLastModified(System.currentTimeMillis());
-            }
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + (outputFile == null ? 0 : outputFile.hashCode());
-            result = prime * result + (url == null ? 0 : url.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final ThumbnailTask other = (ThumbnailTask) obj;
-            if (outputFile == null) {
-                if (other.outputFile != null) {
-                    return false;
-                }
-            } else if (!outputFile.equals(other.outputFile)) {
-                return false;
-            }
-            if (url == null) {
-                if (other.url != null) {
-                    return false;
-                }
-            } else if (!url.equals(other.url)) {
-                return false;
-            }
-            return true;
         }
 
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public class ScheduledJobService {
         // update pager
         BeanUtil.copyBeanToBean(scheduledJobList, scheduledJobPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         scheduledJobPager.setPageNumberList(scheduledJobList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return scheduledJobList;
@@ -73,7 +73,7 @@ public class ScheduledJobService {
 
     public void delete(final ScheduledJob scheduledJob) {
         scheduledJobBhv.delete(scheduledJob, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
     }
 
@@ -101,7 +101,7 @@ public class ScheduledJobService {
 
     public void store(final ScheduledJob scheduledJob) {
         scheduledJobBhv.insertOrUpdate(scheduledJob, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
     }
 

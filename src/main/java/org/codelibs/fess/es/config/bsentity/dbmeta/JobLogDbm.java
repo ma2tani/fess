@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,19 +131,19 @@ public class JobLogDbm extends AbstractDBMeta {
     protected final ColumnInfo _columnEndTime = cci("endTime", "endTime", null, null, Long.class, "endTime", null, false, false, false,
             "Long", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnJobName = cci("jobName", "jobName", null, null, String.class, "jobName", null, false, false, false,
-            "String", 0, 0, null, false, null, null, null, null, null, false);
+            "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnJobStatus = cci("jobStatus", "jobStatus", null, null, String.class, "jobStatus", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnScriptData = cci("scriptData", "scriptData", null, null, String.class, "scriptData", null, false,
-            false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnScriptResult = cci("scriptResult", "scriptResult", null, null, String.class, "scriptResult", null,
-            false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnScriptType = cci("scriptType", "scriptType", null, null, String.class, "scriptType", null, false,
-            false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnStartTime = cci("startTime", "startTime", null, null, Long.class, "startTime", null, false, false,
             false, "Long", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnTarget = cci("target", "target", null, null, String.class, "target", null, false, false, false,
-            "String", 0, 0, null, false, null, null, null, null, null, false);
+            "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnLastUpdated = cci("lastUpdated", "lastUpdated", null, null, Long.class, "lastUpdated", null, false,
             false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
 

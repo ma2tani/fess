@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -49,7 +50,6 @@ import org.codelibs.fess.util.ComponentUtil;
 import org.lastaflute.web.TypicalAction;
 import org.lastaflute.web.ruts.process.ActionRuntime;
 import org.lastaflute.web.servlet.request.RequestManager;
-import org.lastaflute.web.util.LaRequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +74,8 @@ public class SystemHelper {
     protected List<Runnable> shutdownHookList = new ArrayList<>();
 
     protected Random random = new SecureRandom();
+
+    protected AtomicInteger previousClusterState = new AtomicInteger(0);
 
     @PostConstruct
     public void init() {
@@ -173,19 +175,15 @@ public class SystemHelper {
 
     public String getHelpLink(final String name) {
         final String url = ComponentUtil.getFessConfig().getOnlineHelpBaseLink() + name + "-guide.html";
-        return LaRequestUtil
-                .getOptionalRequest()
-                .map(request -> {
-                    final Locale locale = request.getLocale();
-                    if (locale != null) {
-                        final String lang = locale.getLanguage();
-                        if (ComponentUtil.getFessConfig().isOnlineHelpSupportedLang(lang)) {
-                            return url.replaceFirst("\\{lang\\}", lang).replaceFirst("\\{version\\}",
-                                    Constants.MAJOR_VERSION + "." + Constants.MINOR_VERSION);
-                        }
-                    }
-                    return getDefaultHelpLink(url);
-                }).orElse(getDefaultHelpLink(url));
+        final Locale locale = ComponentUtil.getRequestManager().getUserLocale();
+        if (locale != null) {
+            final String lang = locale.getLanguage();
+            if (ComponentUtil.getFessConfig().isOnlineHelpSupportedLang(lang)) {
+                return url.replaceFirst("\\{lang\\}", lang).replaceFirst("\\{version\\}",
+                        Constants.MAJOR_VERSION + "." + Constants.MINOR_VERSION);
+            }
+        }
+        return getDefaultHelpLink(url);
     }
 
     protected String getDefaultHelpLink(final String url) {
@@ -296,6 +294,7 @@ public class SystemHelper {
     }
 
     public void reloadConfiguration() {
+        ComponentUtil.getFessEsClient().refresh();
         ComponentUtil.getLabelTypeHelper().init();
         ComponentUtil.getPathMappingHelper().init();
         ComponentUtil.getSuggestHelper().init();
@@ -311,6 +310,10 @@ public class SystemHelper {
 
     public void setRandom(final Random random) {
         this.random = random;
+    }
+
+    public boolean isChangedClusterState(final int status) {
+        return previousClusterState.getAndSet(status) != status;
     }
 
 }

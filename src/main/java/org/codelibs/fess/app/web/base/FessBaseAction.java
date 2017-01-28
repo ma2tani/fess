@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,12 +156,12 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
     protected void saveInfo(final VaMessenger<FessMessages> validationMessagesLambda) {
         final FessMessages messages = createMessages();
         validationMessagesLambda.message(messages);
-        sessionManager.info().save(messages);
+        sessionManager.info().saveMessages(messages);
     }
 
     protected void saveError(final VaMessenger<FessMessages> validationMessagesLambda) {
         final FessMessages messages = createMessages();
         validationMessagesLambda.message(messages);
-        sessionManager.errors().save(messages);
+        sessionManager.errors().saveMessages(messages);
     }
 }

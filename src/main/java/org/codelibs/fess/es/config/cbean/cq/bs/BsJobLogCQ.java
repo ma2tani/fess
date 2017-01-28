@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codelibs.fess.es.config.cbean.cq.bs;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.codelibs.fess.es.config.allcommon.EsAbstractConditionQuery;
@@ -24,15 +25,19 @@ import org.dbflute.cbean.ckey.ConditionKey;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.PrefixQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 
 /**
  * @author ESFlute (using FreeGen)
@@ -57,6 +62,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     // ===================================================================================
     //                                                                       Query Control
     //                                                                       =============
+    public void functionScore(OperatorCall<JobLogCQ> queryLambda, ScoreFunctionCall<ScoreFunctionCreator<JobLogCQ>> functionsLambda,
+            final ConditionOptionCall<FunctionScoreQueryBuilder> opLambda) {
+        JobLogCQ cq = new JobLogCQ();
+        queryLambda.callback(cq);
+        final Collection<FilterFunctionBuilder> list = new ArrayList<>();
+        if (functionsLambda != null) {
+            functionsLambda.callback((cqLambda, scoreFunctionBuilder) -> {
+                JobLogCQ cf = new JobLogCQ();
+                cqLambda.callback(cf);
+                list.add(new FilterFunctionBuilder(cf.getQuery(), scoreFunctionBuilder));
+            });
+        }
+        final FunctionScoreQueryBuilder builder = regFunctionScoreQ(cq.getQuery(), list);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void filtered(FilteredCall<JobLogCQ, JobLogCQ> filteredLambda) {
         filtered(filteredLambda, null);
     }
@@ -153,12 +176,12 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public BsJobLogCQ addOrderBy_Id_Asc() {
-        regOBA("_id");
+        regOBA("_uid");
         return this;
     }
 
     public BsJobLogCQ addOrderBy_Id_Desc() {
-        regOBD("_id");
+        regOBD("_uid");
         return this;
     }
 
@@ -231,8 +254,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setEndTime_MatchPhrase(endTime, null);
     }
 
-    public void setEndTime_MatchPhrase(Long endTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("endTime", endTime);
+    public void setEndTime_MatchPhrase(Long endTime, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("endTime", endTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -242,8 +265,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setEndTime_MatchPhrasePrefix(endTime, null);
     }
 
-    public void setEndTime_MatchPhrasePrefix(Long endTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("endTime", endTime);
+    public void setEndTime_MatchPhrasePrefix(Long endTime, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("endTime", endTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -253,8 +276,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setEndTime_Fuzzy(endTime, null);
     }
 
-    public void setEndTime_Fuzzy(Long endTime, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("endTime", endTime);
+    public void setEndTime_Fuzzy(Long endTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("endTime", endTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -265,7 +288,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setEndTime_GreaterThan(Long endTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_GREATER_THAN, endTime);
+        final Object _value = endTime;
+        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -276,7 +300,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setEndTime_LessThan(Long endTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_LESS_THAN, endTime);
+        final Object _value = endTime;
+        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -287,7 +312,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setEndTime_GreaterEqual(Long endTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_GREATER_EQUAL, endTime);
+        final Object _value = endTime;
+        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -298,7 +324,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setEndTime_LessEqual(Long endTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_LESS_EQUAL, endTime);
+        final Object _value = endTime;
+        RangeQueryBuilder builder = regRangeQ("endTime", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -405,8 +432,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobName_MatchPhrase(jobName, null);
     }
 
-    public void setJobName_MatchPhrase(String jobName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("jobName", jobName);
+    public void setJobName_MatchPhrase(String jobName, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("jobName", jobName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -416,8 +443,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobName_MatchPhrasePrefix(jobName, null);
     }
 
-    public void setJobName_MatchPhrasePrefix(String jobName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("jobName", jobName);
+    public void setJobName_MatchPhrasePrefix(String jobName, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("jobName", jobName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -427,8 +454,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobName_Fuzzy(jobName, null);
     }
 
-    public void setJobName_Fuzzy(String jobName, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("jobName", jobName);
+    public void setJobName_Fuzzy(String jobName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("jobName", jobName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -467,12 +494,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setJobName_SpanTerm(String jobName) {
+        setJobName_SpanTerm("jobName", null);
+    }
+
+    public void setJobName_SpanTerm(String jobName, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("jobName", jobName);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setJobName_GreaterThan(String jobName) {
         setJobName_GreaterThan(jobName, null);
     }
 
     public void setJobName_GreaterThan(String jobName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_GREATER_THAN, jobName);
+        final Object _value = jobName;
+        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -483,7 +522,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobName_LessThan(String jobName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_LESS_THAN, jobName);
+        final Object _value = jobName;
+        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -494,7 +534,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobName_GreaterEqual(String jobName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_GREATER_EQUAL, jobName);
+        final Object _value = jobName;
+        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -505,7 +546,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobName_LessEqual(String jobName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_LESS_EQUAL, jobName);
+        final Object _value = jobName;
+        RangeQueryBuilder builder = regRangeQ("jobName", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -612,8 +654,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobStatus_MatchPhrase(jobStatus, null);
     }
 
-    public void setJobStatus_MatchPhrase(String jobStatus, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("jobStatus", jobStatus);
+    public void setJobStatus_MatchPhrase(String jobStatus, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("jobStatus", jobStatus);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -623,8 +665,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobStatus_MatchPhrasePrefix(jobStatus, null);
     }
 
-    public void setJobStatus_MatchPhrasePrefix(String jobStatus, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("jobStatus", jobStatus);
+    public void setJobStatus_MatchPhrasePrefix(String jobStatus, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("jobStatus", jobStatus);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -634,8 +676,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setJobStatus_Fuzzy(jobStatus, null);
     }
 
-    public void setJobStatus_Fuzzy(String jobStatus, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("jobStatus", jobStatus);
+    public void setJobStatus_Fuzzy(String jobStatus, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("jobStatus", jobStatus);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -674,12 +716,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setJobStatus_SpanTerm(String jobStatus) {
+        setJobStatus_SpanTerm("jobStatus", null);
+    }
+
+    public void setJobStatus_SpanTerm(String jobStatus, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("jobStatus", jobStatus);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setJobStatus_GreaterThan(String jobStatus) {
         setJobStatus_GreaterThan(jobStatus, null);
     }
 
     public void setJobStatus_GreaterThan(String jobStatus, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_GREATER_THAN, jobStatus);
+        final Object _value = jobStatus;
+        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -690,7 +744,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobStatus_LessThan(String jobStatus, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_LESS_THAN, jobStatus);
+        final Object _value = jobStatus;
+        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -701,7 +756,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobStatus_GreaterEqual(String jobStatus, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_GREATER_EQUAL, jobStatus);
+        final Object _value = jobStatus;
+        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -712,7 +768,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setJobStatus_LessEqual(String jobStatus, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_LESS_EQUAL, jobStatus);
+        final Object _value = jobStatus;
+        RangeQueryBuilder builder = regRangeQ("jobStatus", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -819,8 +876,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptData_MatchPhrase(scriptData, null);
     }
 
-    public void setScriptData_MatchPhrase(String scriptData, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("scriptData", scriptData);
+    public void setScriptData_MatchPhrase(String scriptData, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("scriptData", scriptData);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -830,8 +887,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptData_MatchPhrasePrefix(scriptData, null);
     }
 
-    public void setScriptData_MatchPhrasePrefix(String scriptData, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("scriptData", scriptData);
+    public void setScriptData_MatchPhrasePrefix(String scriptData, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("scriptData", scriptData);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -841,8 +898,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptData_Fuzzy(scriptData, null);
     }
 
-    public void setScriptData_Fuzzy(String scriptData, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("scriptData", scriptData);
+    public void setScriptData_Fuzzy(String scriptData, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("scriptData", scriptData);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -881,12 +938,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setScriptData_SpanTerm(String scriptData) {
+        setScriptData_SpanTerm("scriptData", null);
+    }
+
+    public void setScriptData_SpanTerm(String scriptData, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("scriptData", scriptData);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setScriptData_GreaterThan(String scriptData) {
         setScriptData_GreaterThan(scriptData, null);
     }
 
     public void setScriptData_GreaterThan(String scriptData, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_GREATER_THAN, scriptData);
+        final Object _value = scriptData;
+        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -897,7 +966,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptData_LessThan(String scriptData, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_LESS_THAN, scriptData);
+        final Object _value = scriptData;
+        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -908,7 +978,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptData_GreaterEqual(String scriptData, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_GREATER_EQUAL, scriptData);
+        final Object _value = scriptData;
+        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -919,7 +990,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptData_LessEqual(String scriptData, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_LESS_EQUAL, scriptData);
+        final Object _value = scriptData;
+        RangeQueryBuilder builder = regRangeQ("scriptData", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1026,8 +1098,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptResult_MatchPhrase(scriptResult, null);
     }
 
-    public void setScriptResult_MatchPhrase(String scriptResult, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("scriptResult", scriptResult);
+    public void setScriptResult_MatchPhrase(String scriptResult, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("scriptResult", scriptResult);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1037,8 +1109,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptResult_MatchPhrasePrefix(scriptResult, null);
     }
 
-    public void setScriptResult_MatchPhrasePrefix(String scriptResult, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("scriptResult", scriptResult);
+    public void setScriptResult_MatchPhrasePrefix(String scriptResult, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("scriptResult", scriptResult);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1048,8 +1120,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptResult_Fuzzy(scriptResult, null);
     }
 
-    public void setScriptResult_Fuzzy(String scriptResult, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("scriptResult", scriptResult);
+    public void setScriptResult_Fuzzy(String scriptResult, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("scriptResult", scriptResult);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1088,12 +1160,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setScriptResult_SpanTerm(String scriptResult) {
+        setScriptResult_SpanTerm("scriptResult", null);
+    }
+
+    public void setScriptResult_SpanTerm(String scriptResult, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("scriptResult", scriptResult);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setScriptResult_GreaterThan(String scriptResult) {
         setScriptResult_GreaterThan(scriptResult, null);
     }
 
     public void setScriptResult_GreaterThan(String scriptResult, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_GREATER_THAN, scriptResult);
+        final Object _value = scriptResult;
+        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1104,7 +1188,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptResult_LessThan(String scriptResult, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_LESS_THAN, scriptResult);
+        final Object _value = scriptResult;
+        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1115,7 +1200,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptResult_GreaterEqual(String scriptResult, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_GREATER_EQUAL, scriptResult);
+        final Object _value = scriptResult;
+        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1126,7 +1212,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptResult_LessEqual(String scriptResult, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_LESS_EQUAL, scriptResult);
+        final Object _value = scriptResult;
+        RangeQueryBuilder builder = regRangeQ("scriptResult", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1233,8 +1320,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptType_MatchPhrase(scriptType, null);
     }
 
-    public void setScriptType_MatchPhrase(String scriptType, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("scriptType", scriptType);
+    public void setScriptType_MatchPhrase(String scriptType, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("scriptType", scriptType);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1244,8 +1331,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptType_MatchPhrasePrefix(scriptType, null);
     }
 
-    public void setScriptType_MatchPhrasePrefix(String scriptType, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("scriptType", scriptType);
+    public void setScriptType_MatchPhrasePrefix(String scriptType, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("scriptType", scriptType);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1255,8 +1342,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setScriptType_Fuzzy(scriptType, null);
     }
 
-    public void setScriptType_Fuzzy(String scriptType, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("scriptType", scriptType);
+    public void setScriptType_Fuzzy(String scriptType, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("scriptType", scriptType);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1295,12 +1382,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setScriptType_SpanTerm(String scriptType) {
+        setScriptType_SpanTerm("scriptType", null);
+    }
+
+    public void setScriptType_SpanTerm(String scriptType, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("scriptType", scriptType);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setScriptType_GreaterThan(String scriptType) {
         setScriptType_GreaterThan(scriptType, null);
     }
 
     public void setScriptType_GreaterThan(String scriptType, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_GREATER_THAN, scriptType);
+        final Object _value = scriptType;
+        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1311,7 +1410,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptType_LessThan(String scriptType, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_LESS_THAN, scriptType);
+        final Object _value = scriptType;
+        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1322,7 +1422,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptType_GreaterEqual(String scriptType, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_GREATER_EQUAL, scriptType);
+        final Object _value = scriptType;
+        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1333,7 +1434,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setScriptType_LessEqual(String scriptType, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_LESS_EQUAL, scriptType);
+        final Object _value = scriptType;
+        RangeQueryBuilder builder = regRangeQ("scriptType", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1440,8 +1542,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setStartTime_MatchPhrase(startTime, null);
     }
 
-    public void setStartTime_MatchPhrase(Long startTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("startTime", startTime);
+    public void setStartTime_MatchPhrase(Long startTime, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("startTime", startTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1451,8 +1553,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setStartTime_MatchPhrasePrefix(startTime, null);
     }
 
-    public void setStartTime_MatchPhrasePrefix(Long startTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("startTime", startTime);
+    public void setStartTime_MatchPhrasePrefix(Long startTime, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("startTime", startTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1462,8 +1564,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setStartTime_Fuzzy(startTime, null);
     }
 
-    public void setStartTime_Fuzzy(Long startTime, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("startTime", startTime);
+    public void setStartTime_Fuzzy(Long startTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("startTime", startTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1474,7 +1576,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setStartTime_GreaterThan(Long startTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_GREATER_THAN, startTime);
+        final Object _value = startTime;
+        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1485,7 +1588,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setStartTime_LessThan(Long startTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_LESS_THAN, startTime);
+        final Object _value = startTime;
+        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1496,7 +1600,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setStartTime_GreaterEqual(Long startTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_GREATER_EQUAL, startTime);
+        final Object _value = startTime;
+        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1507,7 +1612,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setStartTime_LessEqual(Long startTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_LESS_EQUAL, startTime);
+        final Object _value = startTime;
+        RangeQueryBuilder builder = regRangeQ("startTime", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1614,8 +1720,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setTarget_MatchPhrase(target, null);
     }
 
-    public void setTarget_MatchPhrase(String target, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("target", target);
+    public void setTarget_MatchPhrase(String target, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("target", target);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1625,8 +1731,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setTarget_MatchPhrasePrefix(target, null);
     }
 
-    public void setTarget_MatchPhrasePrefix(String target, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("target", target);
+    public void setTarget_MatchPhrasePrefix(String target, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("target", target);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1636,8 +1742,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setTarget_Fuzzy(target, null);
     }
 
-    public void setTarget_Fuzzy(String target, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("target", target);
+    public void setTarget_Fuzzy(String target, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("target", target);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1676,12 +1782,24 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setTarget_SpanTerm(String target) {
+        setTarget_SpanTerm("target", null);
+    }
+
+    public void setTarget_SpanTerm(String target, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("target", target);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setTarget_GreaterThan(String target) {
         setTarget_GreaterThan(target, null);
     }
 
     public void setTarget_GreaterThan(String target, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_GREATER_THAN, target);
+        final Object _value = target;
+        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1692,7 +1810,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setTarget_LessThan(String target, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_LESS_THAN, target);
+        final Object _value = target;
+        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1703,7 +1822,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setTarget_GreaterEqual(String target, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_GREATER_EQUAL, target);
+        final Object _value = target;
+        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1714,7 +1834,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setTarget_LessEqual(String target, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_LESS_EQUAL, target);
+        final Object _value = target;
+        RangeQueryBuilder builder = regRangeQ("target", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1821,8 +1942,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setLastUpdated_MatchPhrase(lastUpdated, null);
     }
 
-    public void setLastUpdated_MatchPhrase(Long lastUpdated, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("lastUpdated", lastUpdated);
+    public void setLastUpdated_MatchPhrase(Long lastUpdated, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("lastUpdated", lastUpdated);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1832,8 +1953,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setLastUpdated_MatchPhrasePrefix(lastUpdated, null);
     }
 
-    public void setLastUpdated_MatchPhrasePrefix(Long lastUpdated, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("lastUpdated", lastUpdated);
+    public void setLastUpdated_MatchPhrasePrefix(Long lastUpdated, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("lastUpdated", lastUpdated);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1843,8 +1964,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
         setLastUpdated_Fuzzy(lastUpdated, null);
     }
 
-    public void setLastUpdated_Fuzzy(Long lastUpdated, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("lastUpdated", lastUpdated);
+    public void setLastUpdated_Fuzzy(Long lastUpdated, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("lastUpdated", lastUpdated);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1855,7 +1976,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setLastUpdated_GreaterThan(Long lastUpdated, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_GREATER_THAN, lastUpdated);
+        final Object _value = lastUpdated;
+        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1866,7 +1988,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setLastUpdated_LessThan(Long lastUpdated, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_LESS_THAN, lastUpdated);
+        final Object _value = lastUpdated;
+        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1877,7 +2000,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setLastUpdated_GreaterEqual(Long lastUpdated, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_GREATER_EQUAL, lastUpdated);
+        final Object _value = lastUpdated;
+        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1888,7 +2012,8 @@ public abstract class BsJobLogCQ extends EsAbstractConditionQuery {
     }
 
     public void setLastUpdated_LessEqual(Long lastUpdated, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_LESS_EQUAL, lastUpdated);
+        final Object _value = lastUpdated;
+        RangeQueryBuilder builder = regRangeQ("lastUpdated", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }

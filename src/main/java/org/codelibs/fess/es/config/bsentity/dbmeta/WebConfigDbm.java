@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,8 @@ public class WebConfigDbm extends AbstractDBMeta {
         setupEpg(_epgMap, et -> ((WebConfig) et).getCreatedTime(), (et, vl) -> ((WebConfig) et).setCreatedTime(DfTypeUtil.toLong(vl)),
                 "createdTime");
         setupEpg(_epgMap, et -> ((WebConfig) et).getDepth(), (et, vl) -> ((WebConfig) et).setDepth(DfTypeUtil.toInteger(vl)), "depth");
+        setupEpg(_epgMap, et -> ((WebConfig) et).getDescription(), (et, vl) -> ((WebConfig) et).setDescription(DfTypeUtil.toString(vl)),
+                "description");
         setupEpg(_epgMap, et -> ((WebConfig) et).getExcludedDocUrls(),
                 (et, vl) -> ((WebConfig) et).setExcludedDocUrls(DfTypeUtil.toString(vl)), "excludedDocUrls");
         setupEpg(_epgMap, et -> ((WebConfig) et).getExcludedUrls(), (et, vl) -> ((WebConfig) et).setExcludedUrls(DfTypeUtil.toString(vl)),
@@ -158,43 +160,45 @@ public class WebConfigDbm extends AbstractDBMeta {
     protected final ColumnInfo _columnBoost = cci("boost", "boost", null, null, Float.class, "boost", null, false, false, false, "Float",
             0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnConfigParameter = cci("configParameter", "configParameter", null, null, String.class,
-            "configParameter", null, false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            "configParameter", null, false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnCreatedBy = cci("createdBy", "createdBy", null, null, String.class, "createdBy", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnCreatedTime = cci("createdTime", "createdTime", null, null, Long.class, "createdTime", null, false,
             false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnDepth = cci("depth", "depth", null, null, Integer.class, "depth", null, false, false, false,
             "Integer", 0, 0, null, false, null, null, null, null, null, false);
+    protected final ColumnInfo _columnDescription = cci("description", "description", null, null, String.class, "description", null, false,
+            false, false, "text", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnExcludedDocUrls = cci("excludedDocUrls", "excludedDocUrls", null, null, String.class,
-            "excludedDocUrls", null, false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            "excludedDocUrls", null, false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnExcludedUrls = cci("excludedUrls", "excludedUrls", null, null, String.class, "excludedUrls", null,
-            false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnIncludedDocUrls = cci("includedDocUrls", "includedDocUrls", null, null, String.class,
-            "includedDocUrls", null, false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            "includedDocUrls", null, false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnIncludedUrls = cci("includedUrls", "includedUrls", null, null, String.class, "includedUrls", null,
-            false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnIntervalTime = cci("intervalTime", "intervalTime", null, null, Integer.class, "intervalTime", null,
             false, false, false, "Integer", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnTimeToLive = cci("timeToLive", "timeToLive", null, null, Integer.class, "timeToLive", null, false,
             false, false, "Integer", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnMaxAccessCount = cci("maxAccessCount", "maxAccessCount", null, null, Long.class, "maxAccessCount",
             null, false, false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "String", 0,
+    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "keyword", 0,
             0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnNumOfThread = cci("numOfThread", "numOfThread", null, null, Integer.class, "numOfThread", null,
             false, false, false, "Integer", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnPermissions = cci("permissions", "permissions", null, null, String[].class, "permissions", null,
-            false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnSortOrder = cci("sortOrder", "sortOrder", null, null, Integer.class, "sortOrder", null, false, false,
             false, "Integer", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUpdatedBy = cci("updatedBy", "updatedBy", null, null, String.class, "updatedBy", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUpdatedTime = cci("updatedTime", "updatedTime", null, null, Long.class, "updatedTime", null, false,
             false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnUrls = cci("urls", "urls", null, null, String.class, "urls", null, false, false, false, "String", 0,
+    protected final ColumnInfo _columnUrls = cci("urls", "urls", null, null, String.class, "urls", null, false, false, false, "keyword", 0,
             0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUserAgent = cci("userAgent", "userAgent", null, null, String.class, "userAgent", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
 
     public ColumnInfo columnAvailable() {
         return _columnAvailable;
@@ -218,6 +222,10 @@ public class WebConfigDbm extends AbstractDBMeta {
 
     public ColumnInfo columnDepth() {
         return _columnDepth;
+    }
+
+    public ColumnInfo columnDescription() {
+        return _columnDescription;
     }
 
     public ColumnInfo columnExcludedDocUrls() {
@@ -288,6 +296,7 @@ public class WebConfigDbm extends AbstractDBMeta {
         ls.add(columnCreatedBy());
         ls.add(columnCreatedTime());
         ls.add(columnDepth());
+        ls.add(columnDescription());
         ls.add(columnExcludedDocUrls());
         ls.add(columnExcludedUrls());
         ls.add(columnIncludedDocUrls());

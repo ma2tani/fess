@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,13 @@ import java.io.BufferedInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,6 +38,7 @@ import org.apache.xpath.objects.XObject;
 import org.codelibs.core.io.InputStreamUtil;
 import org.codelibs.core.io.SerializeUtil;
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.misc.ValueHolder;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.crawler.builder.RequestDataBuilder;
 import org.codelibs.fess.crawler.entity.AccessResultData;
@@ -48,7 +51,6 @@ import org.codelibs.fess.crawler.exception.CrawlerSystemException;
 import org.codelibs.fess.crawler.exception.CrawlingAccessException;
 import org.codelibs.fess.crawler.transformer.impl.XpathTransformer;
 import org.codelibs.fess.crawler.util.CrawlingParameterUtil;
-import org.codelibs.fess.crawler.util.UnsafeStringBuilder;
 import org.codelibs.fess.es.config.exentity.CrawlingConfig;
 import org.codelibs.fess.es.config.exentity.CrawlingConfig.ConfigName;
 import org.codelibs.fess.helper.CrawlingConfigHelper;
@@ -61,6 +63,7 @@ import org.codelibs.fess.helper.PathMappingHelper;
 import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
+import org.codelibs.fess.util.PrunedTag;
 import org.cyberneko.html.parsers.DOMParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +75,14 @@ import org.xml.sax.InputSource;
 public class FessXpathTransformer extends XpathTransformer implements FessTransformer {
     private static final Logger logger = LoggerFactory.getLogger(FessXpathTransformer.class);
 
+    private static final String META_NAME_ROBOTS_CONTENT = "//META[@name=\"robots\" or @name=\"ROBOTS\"]/@content";
+
+    private static final String META_ROBOTS_NONE = "none";
+
+    private static final String META_ROBOTS_NOINDEX = "noindex";
+
+    private static final String META_ROBOTS_NOFOLLOW = "nofollow";
+
     private static final int UTF8_BOM_SIZE = 3;
 
     public boolean prunedContent = true;
@@ -79,6 +90,8 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
     public Map<String, String> convertUrlMap = new HashMap<>();
 
     protected FessConfig fessConfig;
+
+    protected boolean useGoogleOffOn = true;
 
     @PostConstruct
     public void init() {
@@ -115,6 +128,10 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         }
 
         final Document document = parser.getDocument();
+
+        if (!fessConfig.isCrawlerIgnoreMetaRobots()) {
+            processMetaRobots(responseData, resultData, document);
+        }
 
         final Map<String, Object> dataMap = new LinkedHashMap<>();
         for (final Map.Entry<String, String> entry : fieldRuleMap.entrySet()) {
@@ -160,6 +177,43 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         resultData.setEncoding(charsetName);
     }
 
+    protected void processMetaRobots(final ResponseData responseData, final ResultData resultData, final Document document) {
+        try {
+            final Node value = getXPathAPI().selectSingleNode(document, META_NAME_ROBOTS_CONTENT);
+            if (value != null) {
+                final String content = value.getTextContent().toLowerCase(Locale.ROOT);
+                boolean noindex = false;
+                boolean nofollow = false;
+                if (content.contains(META_ROBOTS_NONE)) {
+                    noindex = true;
+                    nofollow = true;
+                } else {
+                    if (content.contains(META_ROBOTS_NOINDEX)) {
+                        noindex = true;
+                    }
+                    if (content.contains(META_ROBOTS_NOFOLLOW)) {
+                        nofollow = true;
+                    }
+                }
+
+                if (noindex && nofollow) {
+                    logger.info("META(robots=noindex,nofollow): " + responseData.getUrl());
+                    throw new ChildUrlsException(Collections.emptySet(), "#processMetaRobots(Document)");
+                } else if (noindex) {
+                    logger.info("META(robots=noindex): " + responseData.getUrl());
+                    storeChildUrls(responseData, resultData);
+                    throw new ChildUrlsException(resultData.getChildUrlSet(), "#processMetaRobots(Document)");
+                } else if (nofollow) {
+                    logger.info("META(robots=nofollow): " + responseData.getUrl());
+                    responseData.setNoFollow(true);
+                }
+            }
+        } catch (final TransformerException e) {
+            logger.warn("Could not parse a value of " + META_NAME_ROBOTS_CONTENT);
+        }
+
+    }
+
     protected void putAdditionalData(final Map<String, Object> dataMap, final ResponseData responseData, final Document document) {
         // canonical
         if (StringUtil.isNotBlank(fessConfig.getCrawlerDocumentHtmlCannonicalXpath())) {
@@ -182,6 +236,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
         final FileTypeHelper fileTypeHelper = ComponentUtil.getFileTypeHelper();
         final DocumentHelper documentHelper = ComponentUtil.getDocumentHelper();
+        final LabelTypeHelper labelTypeHelper = ComponentUtil.getLabelTypeHelper();
         String url = responseData.getUrl();
         final String indexingTarget = crawlingConfig.getIndexingTarget(url);
         url = pathMappingHelper.replaceUrl(sessionId, url);
@@ -289,7 +344,6 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         for (final String labelType : crawlingConfig.getLabelTypeValues()) {
             labelTypeSet.add(labelType);
         }
-        final LabelTypeHelper labelTypeHelper = ComponentUtil.getLabelTypeHelper();
         labelTypeSet.addAll(labelTypeHelper.getMatchedLabelValueSet(url));
         putResultDataBody(dataMap, fessConfig.getIndexFieldLabel(), labelTypeSet);
         // role: roleType
@@ -388,23 +442,22 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
     }
 
     protected String getSingleNodeValue(final Document document, final String xpath, final boolean pruned) {
-        UnsafeStringBuilder buf = null;
+        StringBuilder buf = null;
         NodeList list = null;
         try {
             list = getXPathAPI().selectNodeList(document, xpath);
             for (int i = 0; i < list.getLength(); i++) {
                 if (buf == null) {
-                    buf = new UnsafeStringBuilder(1000);
-                } else {
-                    buf.append(' ');
+                    buf = new StringBuilder(1000);
                 }
-                final Node node = list.item(i);
+                Node node = list.item(i).cloneNode(true);
+                if (useGoogleOffOn) {
+                    node = processGoogleOffOn(node, new ValueHolder<>(true));
+                }
                 if (pruned) {
-                    final Node n = pruneNode(node.cloneNode(true));
-                    buf.append(n.getTextContent());
-                } else {
-                    buf.append(node.getTextContent());
+                    node = pruneNode(node);
                 }
+                parseTextContent(node, buf);
             }
         } catch (final Exception e) {
             logger.warn("Could not parse a value of " + xpath);
@@ -412,7 +465,56 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         if (buf == null) {
             return null;
         }
-        return buf.toUnsafeString().trim();
+        return buf.toString().trim();
+    }
+
+    protected void parseTextContent(final Node node, final StringBuilder buf) {
+        if (node.hasChildNodes()) {
+            final NodeList nodeList = node.getChildNodes();
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                final Node childNode = nodeList.item(i);
+                parseTextContent(childNode, buf);
+            }
+        } else if (node.getNodeType() == Node.TEXT_NODE) {
+            final String value = node.getTextContent();
+            if (value != null) {
+                final String content = value.trim();
+                if (content.length() > 0) {
+                    buf.append(' ').append(content);
+                }
+            }
+        }
+    }
+
+    protected Node processGoogleOffOn(final Node node, final ValueHolder<Boolean> flag) {
+        final NodeList nodeList = node.getChildNodes();
+        List<Node> removedNodeList = null;
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            final Node childNode = nodeList.item(i);
+            if (childNode.getNodeType() == Node.COMMENT_NODE) {
+                final String comment = childNode.getNodeValue().trim();
+                if (comment.startsWith("googleoff:")) {
+                    flag.setValue(false);
+                } else if (comment.startsWith("googleon:")) {
+                    flag.setValue(true);
+                }
+            }
+
+            if (!flag.getValue() && childNode.getNodeType() == Node.TEXT_NODE) {
+                if (removedNodeList == null) {
+                    removedNodeList = new ArrayList<>();
+                }
+                removedNodeList.add(childNode);
+            } else {
+                processGoogleOffOn(childNode, flag);
+            }
+        }
+
+        if (removedNodeList != null) {
+            removedNodeList.stream().forEach(n -> node.removeChild(n));
+        }
+
+        return node;
     }
 
     protected Node pruneNode(final Node node) {
@@ -421,7 +523,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         final List<Node> removedNodeList = new ArrayList<>();
         for (int i = 0; i < nodeList.getLength(); i++) {
             final Node childNode = nodeList.item(i);
-            if (isPrunedTag(childNode.getNodeName())) {
+            if (isPrunedTag(childNode)) {
                 removedNodeList.add(childNode);
             } else {
                 childNodeList.add(childNode);
@@ -439,9 +541,9 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         return node;
     }
 
-    protected boolean isPrunedTag(final String tagName) {
-        for (final String name : getCrawlerDocumentHtmlPrunedTags()) {
-            if (name.equalsIgnoreCase(tagName)) {
+    protected boolean isPrunedTag(final Node node) {
+        for (final PrunedTag prunedTag : fessConfig.getCrawlerDocumentHtmlPrunedTagsAsArray()) {
+            if (prunedTag.matches(node)) {
                 return true;
             }
         }
@@ -450,7 +552,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
 
     protected String getMultipleNodeValue(final Document document, final String xpath) {
         NodeList nodeList = null;
-        final UnsafeStringBuilder buf = new UnsafeStringBuilder(100);
+        final StringBuilder buf = new StringBuilder(100);
         try {
             nodeList = getXPathAPI().selectNodeList(document, xpath);
             for (int i = 0; i < nodeList.getLength(); i++) {
@@ -461,7 +563,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         } catch (final Exception e) {
             logger.warn("Could not parse a value of " + xpath);
         }
-        return buf.toUnsafeString().trim();
+        return buf.toString().trim();
     }
 
     protected String replaceDuplicateHost(final String url) {
@@ -569,8 +671,8 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         return b[0] == (byte) 0xEF && b[1] == (byte) 0xBB && b[2] == (byte) 0xBF;
     }
 
-    protected String[] getCrawlerDocumentHtmlPrunedTags() {
-        return fessConfig.getCrawlerDocumentHtmlPrunedTagsAsArray();
+    public void setUseGoogleOffOn(final boolean useGoogleOffOn) {
+        this.useGoogleOffOn = useGoogleOffOn;
     }
 
 }

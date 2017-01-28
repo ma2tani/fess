@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,8 @@ public class AccessTokenService {
 
         // update pager
         BeanUtil.copyBeanToBean(accessTokenList, accessTokenPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
-        accessTokenPager.setPageNumberList(accessTokenList.pageRange(op -> op.rangeSize(5)).createPageNumberList());
+        accessTokenPager.setPageNumberList(accessTokenList.pageRange(op -> op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger()))
+                .createPageNumberList());
 
         return accessTokenList;
     }
@@ -57,13 +58,13 @@ public class AccessTokenService {
 
     public void store(final AccessToken accessToken) {
 
-        accessTokenBhv.insertOrUpdate(accessToken, op -> op.setRefresh(true));
+        accessTokenBhv.insertOrUpdate(accessToken, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
     public void delete(final AccessToken accessToken) {
 
-        accessTokenBhv.delete(accessToken, op -> op.setRefresh(true));
+        accessTokenBhv.delete(accessToken, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
@@ -83,7 +84,7 @@ public class AccessTokenService {
 
     public OptionalEntity<AccessToken> getAccessTokenByToken(final String token) {
         return accessTokenBhv.selectEntity(cb -> {
-            cb.query().setToken_CommonTerms(token);
+            cb.query().setToken_Term(token);
         });
     }
 

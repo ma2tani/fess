@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,11 +59,14 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.get.GetFieldMappingsResponse.FieldMappingMetaData;
+import org.elasticsearch.action.admin.indices.mapping.get.GetMappingsResponse;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.client.IndicesAdminClient;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
@@ -169,7 +172,7 @@ public class AdminUpgradeAction extends FessAdminAction {
 
                 saveInfo(messages -> messages.addSuccessUpgradeFrom(GLOBAL));
 
-                fessEsClient.refresh();
+                systemHelper.reloadConfiguration();
             } catch (final Exception e) {
                 logger.warn("Failed to upgrade data.", e);
                 saveError(messages -> messages.addErrorsFailedToUpgradeFrom(GLOBAL, VERSION_10_1, e.getLocalizedMessage()));
@@ -182,7 +185,7 @@ public class AdminUpgradeAction extends FessAdminAction {
 
                 saveInfo(messages -> messages.addSuccessUpgradeFrom(GLOBAL));
 
-                fessEsClient.refresh();
+                systemHelper.reloadConfiguration();
             } catch (final Exception e) {
                 logger.warn("Failed to upgrade data.", e);
                 saveError(messages -> messages.addErrorsFailedToUpgradeFrom(GLOBAL, VERSION_10_1, e.getLocalizedMessage()));
@@ -196,7 +199,7 @@ public class AdminUpgradeAction extends FessAdminAction {
 
                 saveInfo(messages -> messages.addSuccessUpgradeFrom(GLOBAL));
 
-                fessEsClient.refresh();
+                systemHelper.reloadConfiguration();
             } catch (final Exception e) {
                 logger.warn("Failed to upgrade data.", e);
                 saveError(messages -> messages.addErrorsFailedToUpgradeFrom(GLOBAL, VERSION_10_0, e.getLocalizedMessage()));
@@ -224,11 +227,37 @@ public class AdminUpgradeAction extends FessAdminAction {
         final String searchIndex = fessConfig.getIndexDocumentSearchIndex();
 
         // update mapping
+        addMapping(indicesClient, updateIndex, "access_token", "fess_indices/.fess_config");
+        addMapping(indicesClient, updateIndex, "thumbnail_queue", "fess_indices/.fess_config");
+
         addFieldMapping(indicesClient, updateIndex, "doc", "filename",
                 "{\"properties\":{\"filename\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}");
         addFieldMapping(indicesClient, searchIndex, "doc", "filename",
                 "{\"properties\":{\"filename\":{\"type\":\"string\",\"index\":\"not_analyzed\"}}}");
+        addFieldMapping(
+                indicesClient,
+                updateIndex,
+                "doc",
+                "important_content",
+                "{\"properties\":{\"important_content\":{\"type\":\"langstring\",\"lang_field\":\"lang\",\"lang_base_name\":\"content\",\"index\":\"no\"}}}");
+        addFieldMapping(
+                indicesClient,
+                searchIndex,
+                "doc",
+                "important_content",
+                "{\"properties\":{\"important_content\":{\"type\":\"langstring\",\"lang_field\":\"lang\",\"lang_base_name\":\"content\",\"index\":\"no\"}}}");
         addFieldMapping(indicesClient, configIndex, "job_log", "lastUpdated", "{\"properties\":{\"lastUpdated\":{\"type\":\"long\"}}}");
+
+        // data migration
+        addData(configIndex,
+                "scheduled_job",
+                "thumbnail_generate",
+                "{\"name\":\"Thumbnail Generator\",\"target\":\"all\",\"cronExpression\":\"* * * * *\",\"scriptType\":\"groovy\",\"scriptData\":\"return container.getComponent(\\\"generateThumbnailJob\\\").execute();\",\"jobLogging\":false,\"crawler\":false,\"available\":true,\"sortOrder\":7,\"createdBy\":\"system\",\"createdTime\":0,\"updatedBy\":\"system\",\"updatedTime\":0}");
+        addData(configIndex,
+                "scheduled_job",
+                "ping_es",
+                "{\"name\":\"Ping Elasticsearch\",\"target\":\"all\",\"cronExpression\":\"* * * * *\",\"scriptType\":\"groovy\",\"scriptData\":\"return container.getComponent(\\\"pingEsJob\\\").execute();\",\"jobLogging\":false,\"crawler\":false,\"available\":true,\"sortOrder\":8,\"createdBy\":\"system\",\"createdTime\":0,\"updatedBy\":\"system\",\"updatedTime\":0}");
+
     }
 
     private void upgradeFrom10_1() {
@@ -1030,6 +1059,34 @@ public class AdminUpgradeAction extends FessAdminAction {
         }
     }
 
+    private void addMapping(final IndicesAdminClient indicesClient, final String index, final String type, final String indexResourcePath) {
+        final GetMappingsResponse getMappingsResponse =
+                indicesClient.prepareGetMappings(index).execute().actionGet(fessConfig.getIndexIndicesTimeout());
+        final ImmutableOpenMap<String, MappingMetaData> indexMappings = getMappingsResponse.mappings().get(index);
+        if (indexMappings == null || !indexMappings.containsKey(type)) {
+            String source = null;
+            final String mappingFile = indexResourcePath + "/" + type + ".json";
+            try {
+                source = FileUtil.readUTF8(mappingFile);
+            } catch (final Exception e) {
+                logger.warn(mappingFile + " is not found.", e);
+            }
+            try {
+                final PutMappingResponse putMappingResponse =
+                        indicesClient.preparePutMapping(index).setType(type).setSource(source).execute()
+                                .actionGet(fessConfig.getIndexIndicesTimeout());
+                if (putMappingResponse.isAcknowledged()) {
+                    logger.info("Created " + index + "/" + type + " mapping.");
+                } else {
+                    logger.warn("Failed to create " + index + "/" + type + " mapping.");
+                }
+                // TODO bulk
+            } catch (final Exception e) {
+                logger.warn("Failed to create " + index + "/" + type + " mapping.", e);
+            }
+        }
+    }
+
     private void addFieldMapping(final IndicesAdminClient indicesClient, final String index, final String type, final String field,
             final String source) {
         final GetFieldMappingsResponse gfmResponse =
@@ -1095,7 +1152,7 @@ public class AdminUpgradeAction extends FessAdminAction {
             }
 
             @Override
-            public void onFailure(final Throwable e) {
+            public void onFailure(final Exception e) {
                 logger.warn("Failed to delete " + index + " index.", e);
             }
         });

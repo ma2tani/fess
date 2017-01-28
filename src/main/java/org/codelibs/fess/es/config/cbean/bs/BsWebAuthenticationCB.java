@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import java.util.Map;
 import org.codelibs.fess.es.config.allcommon.EsAbstractConditionBean;
 import org.codelibs.fess.es.config.bsentity.dbmeta.WebAuthenticationDbm;
 import org.codelibs.fess.es.config.cbean.WebAuthenticationCB;
+import org.codelibs.fess.es.config.cbean.ca.WebAuthenticationCA;
+import org.codelibs.fess.es.config.cbean.ca.bs.BsWebAuthenticationCA;
 import org.codelibs.fess.es.config.cbean.cq.WebAuthenticationCQ;
 import org.codelibs.fess.es.config.cbean.cq.bs.BsWebAuthenticationCQ;
 import org.dbflute.cbean.ConditionQuery;
@@ -37,6 +39,7 @@ public class BsWebAuthenticationCB extends EsAbstractConditionBean {
     //                                                                           Attribute
     //                                                                           =========
     protected BsWebAuthenticationCQ _conditionQuery;
+    protected BsWebAuthenticationCA _conditionAggregation;
     protected HpSpecification _specification;
 
     // ===================================================================================
@@ -93,6 +96,10 @@ public class BsWebAuthenticationCB extends EsAbstractConditionBean {
             });
         }
 
+        if (_conditionAggregation != null) {
+            _conditionAggregation.getAggregationBuilderList().forEach(builder::addAggregation);
+        }
+
         if (_specification != null) {
             builder.setFetchSource(_specification.columnList.toArray(new String[_specification.columnList.size()]), null);
         }
@@ -120,6 +127,25 @@ public class BsWebAuthenticationCB extends EsAbstractConditionBean {
     }
 
     // ===================================================================================
+    //                                                                         Aggregation
+    //                                                                         ===========
+    public BsWebAuthenticationCA aggregation() {
+        assertAggregationPurpose();
+        return doGetConditionAggregation();
+    }
+
+    protected BsWebAuthenticationCA doGetConditionAggregation() {
+        if (_conditionAggregation == null) {
+            _conditionAggregation = createLocalCA();
+        }
+        return _conditionAggregation;
+    }
+
+    protected BsWebAuthenticationCA createLocalCA() {
+        return new WebAuthenticationCA();
+    }
+
+    // ===================================================================================
     //                                                                             Specify
     //                                                                             =======
     public HpSpecification specify() {
@@ -131,6 +157,9 @@ public class BsWebAuthenticationCB extends EsAbstractConditionBean {
     }
 
     protected void assertQueryPurpose() {
+    }
+
+    protected void assertAggregationPurpose() {
     }
 
     protected void assertSpecifyPurpose() {

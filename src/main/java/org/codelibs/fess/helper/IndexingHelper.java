@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,11 @@ import java.util.Map;
 
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.mylasta.direction.FessConfig;
+import org.codelibs.fess.thumbnail.ThumbnailManager;
 import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.DocList;
 import org.codelibs.fess.util.MemoryUtil;
-import org.elasticsearch.action.count.CountResponse;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
@@ -43,6 +44,7 @@ public class IndexingHelper {
         if (docList.isEmpty()) {
             return;
         }
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
         final long execTime = System.currentTimeMillis();
         if (logger.isDebugEnabled()) {
             logger.debug("Sending " + docList.size() + " documents to a server.");
@@ -50,8 +52,11 @@ public class IndexingHelper {
         try {
             synchronized (fessEsClient) {
                 deleteOldDocuments(fessEsClient, docList);
-                final FessConfig fessConfig = ComponentUtil.getFessConfig();
                 fessEsClient.addAll(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), docList);
+            }
+            if (fessConfig.isThumbnailCrawlerEnabled()) {
+                final ThumbnailManager thumbnailManager = ComponentUtil.getThumbnailManager();
+                docList.stream().forEach(doc -> thumbnailManager.offer(doc));
             }
             if (logger.isInfoEnabled()) {
                 if (docList.getContentSize() > 0) {
@@ -106,7 +111,7 @@ public class IndexingHelper {
         }
         if (!docIdList.isEmpty()) {
             fessEsClient.deleteByQuery(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(),
-                    QueryBuilders.idsQuery(fessConfig.getIndexDocumentType()).ids(docIdList.stream().toArray(n -> new String[n])));
+                    QueryBuilders.idsQuery(fessConfig.getIndexDocumentType()).addIds(docIdList.stream().toArray(n -> new String[n])));
 
         }
     }
@@ -125,15 +130,16 @@ public class IndexingHelper {
     public int deleteDocumentsByDocId(final FessEsClient fessEsClient, final List<String> docIdList) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         return fessEsClient.deleteByQuery(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), QueryBuilders
-                .idsQuery(fessConfig.getIndexDocumentType()).ids(docIdList.stream().toArray(n -> new String[n])));
+                .idsQuery(fessConfig.getIndexDocumentType()).addIds(docIdList.stream().toArray(n -> new String[n])));
     }
 
     public Map<String, Object> getDocument(final FessEsClient fessEsClient, final String id, final String[] fields) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
-        return fessEsClient.getDocument(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(), id,
-                requestBuilder -> {
-                    return true;
-                }).orElse(null);
+        return fessEsClient.getDocument(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), builder -> {
+            builder.setQuery(QueryBuilders.idsQuery(fessConfig.getIndexDocumentType()).addIds(id));
+            builder.setFetchSource(fields, null);
+            return true;
+        }).orElse(null);
     }
 
     public List<Map<String, Object>> getDocumentListByPrefixId(final FessEsClient fessEsClient, final String id, final String[] fields) {
@@ -158,17 +164,17 @@ public class IndexingHelper {
             final String[] fields) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
 
-        final CountResponse countResponse =
-                fessEsClient.prepareCount(fessConfig.getIndexDocumentSearchIndex()).setTypes(fessConfig.getIndexDocumentType())
-                        .setQuery(queryBuilder).execute().actionGet(fessConfig.getIndexSearchTimeout());
-        final long numFound = countResponse.getCount();
+        final SearchResponse countResponse =
+                fessEsClient.prepareSearch(fessConfig.getIndexDocumentUpdateIndex()).setTypes(fessConfig.getIndexDocumentType())
+                        .setQuery(queryBuilder).setSize(0).execute().actionGet(fessConfig.getIndexSearchTimeout());
+        final long numFound = countResponse.getHits().getTotalHits();
         // TODO max threshold
 
-        return fessEsClient.getDocumentList(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(),
+        return fessEsClient.getDocumentList(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(),
                 requestBuilder -> {
                     requestBuilder.setQuery(queryBuilder).setSize((int) numFound);
                     if (fields != null) {
-                        requestBuilder.addFields(fields);
+                        requestBuilder.setFetchSource(fields, null);
                     }
                     return true;
                 });

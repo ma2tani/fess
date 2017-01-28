@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.codelibs.fess.app.pager;
 import java.io.Serializable;
 import java.util.List;
 
-import org.codelibs.fess.Constants;
+import org.codelibs.fess.util.ComponentUtil;
 
 public class UserPager implements Serializable {
 
@@ -134,7 +134,7 @@ public class UserPager implements Serializable {
     }
 
     protected int getDefaultPageSize() {
-        return Constants.DEFAULT_ADMIN_PAGE_SIZE;
+        return ComponentUtil.getFessConfig().getPagingPageSizeAsInteger();
     }
 
 }

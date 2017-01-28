@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,6 +86,8 @@ public class DataConfigDbm extends AbstractDBMeta {
                 "createdBy");
         setupEpg(_epgMap, et -> ((DataConfig) et).getCreatedTime(), (et, vl) -> ((DataConfig) et).setCreatedTime(DfTypeUtil.toLong(vl)),
                 "createdTime");
+        setupEpg(_epgMap, et -> ((DataConfig) et).getDescription(), (et, vl) -> ((DataConfig) et).setDescription(DfTypeUtil.toString(vl)),
+                "description");
         setupEpg(_epgMap, et -> ((DataConfig) et).getHandlerName(), (et, vl) -> ((DataConfig) et).setHandlerName(DfTypeUtil.toString(vl)),
                 "handlerName");
         setupEpg(_epgMap, et -> ((DataConfig) et).getHandlerParameter(),
@@ -142,23 +144,25 @@ public class DataConfigDbm extends AbstractDBMeta {
     protected final ColumnInfo _columnBoost = cci("boost", "boost", null, null, Float.class, "boost", null, false, false, false, "Float",
             0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnCreatedBy = cci("createdBy", "createdBy", null, null, String.class, "createdBy", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnCreatedTime = cci("createdTime", "createdTime", null, null, Long.class, "createdTime", null, false,
             false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
+    protected final ColumnInfo _columnDescription = cci("description", "description", null, null, String.class, "description", null, false,
+            false, false, "text", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnHandlerName = cci("handlerName", "handlerName", null, null, String.class, "handlerName", null, false,
-            false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnHandlerParameter = cci("handlerParameter", "handlerParameter", null, null, String.class,
-            "handlerParameter", null, false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            "handlerParameter", null, false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnHandlerScript = cci("handlerScript", "handlerScript", null, null, String.class, "handlerScript",
-            null, false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "String", 0,
+            null, false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
+    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "keyword", 0,
             0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnPermissions = cci("permissions", "permissions", null, null, String[].class, "permissions", null,
-            false, false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnSortOrder = cci("sortOrder", "sortOrder", null, null, Integer.class, "sortOrder", null, false, false,
             false, "Integer", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUpdatedBy = cci("updatedBy", "updatedBy", null, null, String.class, "updatedBy", null, false, false,
-            false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUpdatedTime = cci("updatedTime", "updatedTime", null, null, Long.class, "updatedTime", null, false,
             false, false, "Long", 0, 0, null, false, null, null, null, null, null, false);
 
@@ -176,6 +180,10 @@ public class DataConfigDbm extends AbstractDBMeta {
 
     public ColumnInfo columnCreatedTime() {
         return _columnCreatedTime;
+    }
+
+    public ColumnInfo columnDescription() {
+        return _columnDescription;
     }
 
     public ColumnInfo columnHandlerName() {
@@ -216,6 +224,7 @@ public class DataConfigDbm extends AbstractDBMeta {
         ls.add(columnBoost());
         ls.add(columnCreatedBy());
         ls.add(columnCreatedTime());
+        ls.add(columnDescription());
         ls.add(columnHandlerName());
         ls.add(columnHandlerParameter());
         ls.add(columnHandlerScript());

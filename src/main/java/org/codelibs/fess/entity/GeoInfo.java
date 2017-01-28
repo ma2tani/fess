@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,8 +64,8 @@ public class GeoInfo {
                                                         try {
                                                             final double lat = Double.parseDouble(values[0]);
                                                             final double lon = Double.parseDouble(values[1]);
-                                                            list.add(QueryBuilders.geoDistanceQuery(geoField).distance(distance).lat(lat)
-                                                                    .lon(lon));
+                                                            list.add(QueryBuilders.geoDistanceQuery(geoField).distance(distance)
+                                                                    .point(lat, lon));
                                                         } catch (final Exception ex) {
                                                             throw new InvalidQueryException(messages -> messages
                                                                     .addErrorsInvalidQueryUnknown(UserMessages.GLOBAL_PROPERTY_KEY), ex

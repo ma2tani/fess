@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public class FileConfigService {
         // update pager
         BeanUtil.copyBeanToBean(fileConfigList, fileConfigPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         fileConfigPager.setPageNumberList(fileConfigList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return fileConfigList;
@@ -68,7 +68,7 @@ public class FileConfigService {
         final String fileConfigId = fileConfig.getId();
 
         fileConfigBhv.delete(fileConfig, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
         fileConfigToLabelBhv.queryDelete(cb -> {
@@ -129,7 +129,7 @@ public class FileConfigService {
         final String[] labelTypeIds = fileConfig.getLabelTypeIds();
 
         fileConfigBhv.insertOrUpdate(fileConfig, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
         final String fileConfigId = fileConfig.getId();
         if (isNew) {
@@ -143,7 +143,7 @@ public class FileConfigService {
                     fctltmList.add(mapping);
                 }
                 fileConfigToLabelBhv.batchInsert(fctltmList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         } else {
@@ -174,10 +174,10 @@ public class FileConfigService {
                 }
                 fctltmList.removeAll(matchedList);
                 fileConfigToLabelBhv.batchInsert(newList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
                 fileConfigToLabelBhv.batchDelete(fctltmList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         }

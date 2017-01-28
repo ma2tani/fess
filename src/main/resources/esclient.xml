@@ -6,8 +6,7 @@
 		<property name="settings">
 			{"http.cors.enabled":"true",
 			 "http.cors.allow-origin":"*",
-			 "script.engine.groovy.inline.update":"on",
-			  "index.number_of_replicas":"0"}
+			 "script.engine.groovy.inline.update":"on"}
 		</property>
 		<!-- Dictionaries -->
 		<postConstruct name="addConfigFile">
@@ -203,6 +202,9 @@
 		</postConstruct>
 		<postConstruct name="addIndexConfig">
 			<arg>".fess_config/web_config_to_role"</arg>
+		</postConstruct>
+		<postConstruct name="addIndexConfig">
+			<arg>".fess_config/thumbnail_queue"</arg>
 		</postConstruct>
 		<!-- .fess_user index -->
 		<postConstruct name="addIndexConfig">

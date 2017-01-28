@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.service.RequestHeaderService;
@@ -236,6 +237,12 @@ public class WebConfig extends BsWebConfig implements CrawlingConfig {
         }
         paramMap.put(HcHttpClient.REQUERT_HEADERS_PROPERTY,
                 rhList.toArray(new org.codelibs.fess.crawler.client.http.RequestHeader[rhList.size()]));
+
+        // proxy credentials
+        if (paramMap.get("proxyUsername") != null && paramMap.get("proxyPassword") != null) {
+            paramMap.put(HcHttpClient.PROXY_CREDENTIALS_PROPERTY, new UsernamePasswordCredentials(paramMap.remove("proxyUsername")
+                    .toString(), paramMap.remove("proxyPassword").toString()));
+        }
 
         return paramMap;
     }

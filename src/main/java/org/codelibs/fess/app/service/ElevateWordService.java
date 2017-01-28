@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ public class ElevateWordService {
         // update pager
         BeanUtil.copyBeanToBean(elevateWordList, elevateWordPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         elevateWordPager.setPageNumberList(elevateWordList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return elevateWordList;
@@ -105,7 +105,7 @@ public class ElevateWordService {
         final String[] labelTypeIds = elevateWord.getLabelTypeIds();
 
         elevateWordBhv.insertOrUpdate(elevateWord, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
         final String elevateWordId = elevateWord.getId();
         if (isNew) {
@@ -119,7 +119,7 @@ public class ElevateWordService {
                     wctltmList.add(mapping);
                 }
                 elevateWordToLabelBhv.batchInsert(wctltmList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         } else {
@@ -150,10 +150,10 @@ public class ElevateWordService {
                 }
                 list.removeAll(matchedList);
                 elevateWordToLabelBhv.batchInsert(newList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
                 elevateWordToLabelBhv.batchDelete(list, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         }
@@ -162,7 +162,7 @@ public class ElevateWordService {
     public void delete(final ElevateWord elevateWord) {
 
         elevateWordBhv.delete(elevateWord, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }
@@ -221,7 +221,7 @@ public class ElevateWordService {
                         elevateWord.setPermissions(permissions);
                         elevateWord.setTargetLabel(label);
                         elevateWord.setBoost(StringUtil.isBlank(boost) ? 1.0f : Float.parseFloat(boost));
-                        elevateWord.setCreatedBy("system");
+                        elevateWord.setCreatedBy(Constants.SYSTEM_USER);
                         elevateWord.setCreatedTime(now);
                         elevateWordBhv.insert(elevateWord);
                     } else if (StringUtil.isBlank(reading) && StringUtil.isBlank(boost)) {
@@ -230,7 +230,7 @@ public class ElevateWordService {
                         elevateWord.setReading(reading);
                         elevateWord.setPermissions(permissions);
                         elevateWord.setBoost(StringUtil.isBlank(boost) ? 1.0f : Float.parseFloat(boost));
-                        elevateWord.setUpdatedBy("system");
+                        elevateWord.setUpdatedBy(Constants.SYSTEM_USER);
                         elevateWord.setUpdatedTime(now);
                         elevateWordBhv.update(elevateWord);
                     }

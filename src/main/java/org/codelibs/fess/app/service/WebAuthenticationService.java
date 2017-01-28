@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ public class WebAuthenticationService {
         // update pager
         BeanUtil.copyBeanToBean(webAuthenticationList, webAuthenticationPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         webAuthenticationPager.setPageNumberList(webAuthenticationList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return webAuthenticationList;
@@ -60,7 +60,7 @@ public class WebAuthenticationService {
     public void store(final WebAuthentication webAuthentication) {
 
         webAuthenticationBhv.insertOrUpdate(webAuthentication, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }
@@ -68,7 +68,7 @@ public class WebAuthenticationService {
     public void delete(final WebAuthentication webAuthentication) {
 
         webAuthenticationBhv.delete(webAuthentication, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }

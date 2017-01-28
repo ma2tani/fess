@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ import org.lastaflute.web.Execute;
 import org.lastaflute.web.response.HtmlResponse;
 import org.lastaflute.web.response.render.RenderData;
 import org.lastaflute.web.ruts.process.ActionRuntime;
-import org.lastaflute.web.util.LaRequestUtil;
 
 /**
  * @author shinsuke
@@ -274,7 +273,7 @@ public class AdminFileauthAction extends FessAdminAction {
 
     protected void registerProtocolSchemeItems(final RenderData data) {
         final List<Map<String, String>> itemList = new ArrayList<>();
-        final Locale locale = LaRequestUtil.getRequest().getLocale();
+        final Locale locale = ComponentUtil.getRequestManager().getUserLocale();
         itemList.add(createItem(ComponentUtil.getMessageManager().getMessage(locale, "labels.file_auth_scheme_samba"), Constants.SAMBA));
         itemList.add(createItem(ComponentUtil.getMessageManager().getMessage(locale, "labels.file_auth_scheme_ftp"), Constants.FTP));
         RenderDataUtil.register(data, "protocolSchemeItems", itemList);

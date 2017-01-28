@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codelibs.fess.es.log.cbean.cq.bs;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.codelibs.fess.es.log.allcommon.EsAbstractConditionQuery;
@@ -24,12 +25,15 @@ import org.dbflute.cbean.ckey.ConditionKey;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 
 /**
  * @author ESFlute (using FreeGen)
@@ -54,6 +58,24 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     // ===================================================================================
     //                                                                       Query Control
     //                                                                       =============
+    public void functionScore(OperatorCall<UserInfoCQ> queryLambda, ScoreFunctionCall<ScoreFunctionCreator<UserInfoCQ>> functionsLambda,
+            final ConditionOptionCall<FunctionScoreQueryBuilder> opLambda) {
+        UserInfoCQ cq = new UserInfoCQ();
+        queryLambda.callback(cq);
+        final Collection<FilterFunctionBuilder> list = new ArrayList<>();
+        if (functionsLambda != null) {
+            functionsLambda.callback((cqLambda, scoreFunctionBuilder) -> {
+                UserInfoCQ cf = new UserInfoCQ();
+                cqLambda.callback(cf);
+                list.add(new FilterFunctionBuilder(cf.getQuery(), scoreFunctionBuilder));
+            });
+        }
+        final FunctionScoreQueryBuilder builder = regFunctionScoreQ(cq.getQuery(), list);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void filtered(FilteredCall<UserInfoCQ, UserInfoCQ> filteredLambda) {
         filtered(filteredLambda, null);
     }
@@ -150,12 +172,12 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public BsUserInfoCQ addOrderBy_Id_Asc() {
-        regOBA("_id");
+        regOBA("_uid");
         return this;
     }
 
     public BsUserInfoCQ addOrderBy_Id_Desc() {
-        regOBD("_id");
+        regOBD("_uid");
         return this;
     }
 
@@ -228,8 +250,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setCreatedAt_MatchPhrase(createdAt, null);
     }
 
-    public void setCreatedAt_MatchPhrase(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("createdAt", createdAt);
+    public void setCreatedAt_MatchPhrase(LocalDateTime createdAt, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -239,8 +261,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setCreatedAt_MatchPhrasePrefix(createdAt, null);
     }
 
-    public void setCreatedAt_MatchPhrasePrefix(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("createdAt", createdAt);
+    public void setCreatedAt_MatchPhrasePrefix(LocalDateTime createdAt, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -250,8 +272,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setCreatedAt_Fuzzy(createdAt, null);
     }
 
-    public void setCreatedAt_Fuzzy(LocalDateTime createdAt, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("createdAt", createdAt);
+    public void setCreatedAt_Fuzzy(LocalDateTime createdAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("createdAt", createdAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -262,7 +284,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_GreaterThan(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_THAN, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -273,7 +296,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_LessThan(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_THAN, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -284,7 +308,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_GreaterEqual(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_EQUAL, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -295,7 +320,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedAt_LessEqual(LocalDateTime createdAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_EQUAL, createdAt);
+        final Object _value = toRangeLocalDateTimeString(createdAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("createdAt", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -402,8 +428,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setUpdatedAt_MatchPhrase(updatedAt, null);
     }
 
-    public void setUpdatedAt_MatchPhrase(LocalDateTime updatedAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("updatedAt", updatedAt);
+    public void setUpdatedAt_MatchPhrase(LocalDateTime updatedAt, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("updatedAt", updatedAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -413,8 +439,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setUpdatedAt_MatchPhrasePrefix(updatedAt, null);
     }
 
-    public void setUpdatedAt_MatchPhrasePrefix(LocalDateTime updatedAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("updatedAt", updatedAt);
+    public void setUpdatedAt_MatchPhrasePrefix(LocalDateTime updatedAt, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("updatedAt", updatedAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -424,8 +450,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
         setUpdatedAt_Fuzzy(updatedAt, null);
     }
 
-    public void setUpdatedAt_Fuzzy(LocalDateTime updatedAt, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("updatedAt", updatedAt);
+    public void setUpdatedAt_Fuzzy(LocalDateTime updatedAt, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("updatedAt", updatedAt);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -436,7 +462,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedAt_GreaterThan(LocalDateTime updatedAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_GREATER_THAN, updatedAt);
+        final Object _value = toRangeLocalDateTimeString(updatedAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -447,7 +474,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedAt_LessThan(LocalDateTime updatedAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_LESS_THAN, updatedAt);
+        final Object _value = toRangeLocalDateTimeString(updatedAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -458,7 +486,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedAt_GreaterEqual(LocalDateTime updatedAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_GREATER_EQUAL, updatedAt);
+        final Object _value = toRangeLocalDateTimeString(updatedAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -469,7 +498,8 @@ public abstract class BsUserInfoCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedAt_LessEqual(LocalDateTime updatedAt, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_LESS_EQUAL, updatedAt);
+        final Object _value = toRangeLocalDateTimeString(updatedAt, "date_optional_time");
+        RangeQueryBuilder builder = regRangeQ("updatedAt", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }

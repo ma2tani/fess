@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class UserService {
         // update pager
         BeanUtil.copyBeanToBean(userList, userPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         userPager.setPageNumberList(userList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return userList;
@@ -75,7 +75,7 @@ public class UserService {
         ComponentUtil.getLdapManager().insert(user);
 
         userBhv.insertOrUpdate(user, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }
@@ -88,7 +88,7 @@ public class UserService {
             userBhv.selectEntity(cb -> cb.query().setName_Equal(username)).ifPresent(entity -> {
                 final String encodedPassword = fessLoginAssist.encryptPassword(password);
                 entity.setPassword(encodedPassword);
-                userBhv.insertOrUpdate(entity, op -> op.setRefresh(true));
+                userBhv.insertOrUpdate(entity, op -> op.setRefreshPolicy(Constants.TRUE));
             }).orElse(() -> {
                 throw new FessUserNotFoundException(username);
             });
@@ -100,7 +100,7 @@ public class UserService {
         ComponentUtil.getLdapManager().delete(user);
 
         userBhv.delete(user, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }

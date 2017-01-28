@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.codelibs.fess.es.config.cbean.cq.bs;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.codelibs.fess.es.config.allcommon.EsAbstractConditionQuery;
@@ -24,15 +25,19 @@ import org.dbflute.cbean.ckey.ConditionKey;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.CommonTermsQueryBuilder;
 import org.elasticsearch.index.query.ExistsQueryBuilder;
-import org.elasticsearch.index.query.FuzzyQueryBuilder;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.index.query.MatchPhrasePrefixQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
 import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.PrefixQueryBuilder;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.RegexpQueryBuilder;
+import org.elasticsearch.index.query.SpanTermQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.query.WildcardQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 
 /**
  * @author ESFlute (using FreeGen)
@@ -57,6 +62,25 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     // ===================================================================================
     //                                                                       Query Control
     //                                                                       =============
+    public void functionScore(OperatorCall<DuplicateHostCQ> queryLambda,
+            ScoreFunctionCall<ScoreFunctionCreator<DuplicateHostCQ>> functionsLambda,
+            final ConditionOptionCall<FunctionScoreQueryBuilder> opLambda) {
+        DuplicateHostCQ cq = new DuplicateHostCQ();
+        queryLambda.callback(cq);
+        final Collection<FilterFunctionBuilder> list = new ArrayList<>();
+        if (functionsLambda != null) {
+            functionsLambda.callback((cqLambda, scoreFunctionBuilder) -> {
+                DuplicateHostCQ cf = new DuplicateHostCQ();
+                cqLambda.callback(cf);
+                list.add(new FilterFunctionBuilder(cf.getQuery(), scoreFunctionBuilder));
+            });
+        }
+        final FunctionScoreQueryBuilder builder = regFunctionScoreQ(cq.getQuery(), list);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void filtered(FilteredCall<DuplicateHostCQ, DuplicateHostCQ> filteredLambda) {
         filtered(filteredLambda, null);
     }
@@ -153,12 +177,12 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public BsDuplicateHostCQ addOrderBy_Id_Asc() {
-        regOBA("_id");
+        regOBA("_uid");
         return this;
     }
 
     public BsDuplicateHostCQ addOrderBy_Id_Desc() {
-        regOBD("_id");
+        regOBD("_uid");
         return this;
     }
 
@@ -231,8 +255,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedBy_MatchPhrase(createdBy, null);
     }
 
-    public void setCreatedBy_MatchPhrase(String createdBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("createdBy", createdBy);
+    public void setCreatedBy_MatchPhrase(String createdBy, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("createdBy", createdBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -242,8 +266,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedBy_MatchPhrasePrefix(createdBy, null);
     }
 
-    public void setCreatedBy_MatchPhrasePrefix(String createdBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("createdBy", createdBy);
+    public void setCreatedBy_MatchPhrasePrefix(String createdBy, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("createdBy", createdBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -253,8 +277,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedBy_Fuzzy(createdBy, null);
     }
 
-    public void setCreatedBy_Fuzzy(String createdBy, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("createdBy", createdBy);
+    public void setCreatedBy_Fuzzy(String createdBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("createdBy", createdBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -293,12 +317,24 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setCreatedBy_SpanTerm(String createdBy) {
+        setCreatedBy_SpanTerm("createdBy", null);
+    }
+
+    public void setCreatedBy_SpanTerm(String createdBy, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("createdBy", createdBy);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setCreatedBy_GreaterThan(String createdBy) {
         setCreatedBy_GreaterThan(createdBy, null);
     }
 
     public void setCreatedBy_GreaterThan(String createdBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_GREATER_THAN, createdBy);
+        final Object _value = createdBy;
+        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -309,7 +345,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedBy_LessThan(String createdBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_LESS_THAN, createdBy);
+        final Object _value = createdBy;
+        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -320,7 +357,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedBy_GreaterEqual(String createdBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_GREATER_EQUAL, createdBy);
+        final Object _value = createdBy;
+        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -331,7 +369,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedBy_LessEqual(String createdBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_LESS_EQUAL, createdBy);
+        final Object _value = createdBy;
+        RangeQueryBuilder builder = regRangeQ("createdBy", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -438,8 +477,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedTime_MatchPhrase(createdTime, null);
     }
 
-    public void setCreatedTime_MatchPhrase(Long createdTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("createdTime", createdTime);
+    public void setCreatedTime_MatchPhrase(Long createdTime, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("createdTime", createdTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -449,8 +488,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedTime_MatchPhrasePrefix(createdTime, null);
     }
 
-    public void setCreatedTime_MatchPhrasePrefix(Long createdTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("createdTime", createdTime);
+    public void setCreatedTime_MatchPhrasePrefix(Long createdTime, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("createdTime", createdTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -460,8 +499,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setCreatedTime_Fuzzy(createdTime, null);
     }
 
-    public void setCreatedTime_Fuzzy(Long createdTime, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("createdTime", createdTime);
+    public void setCreatedTime_Fuzzy(Long createdTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("createdTime", createdTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -472,7 +511,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedTime_GreaterThan(Long createdTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_GREATER_THAN, createdTime);
+        final Object _value = createdTime;
+        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -483,7 +523,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedTime_LessThan(Long createdTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_LESS_THAN, createdTime);
+        final Object _value = createdTime;
+        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -494,7 +535,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedTime_GreaterEqual(Long createdTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_GREATER_EQUAL, createdTime);
+        final Object _value = createdTime;
+        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -505,7 +547,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setCreatedTime_LessEqual(Long createdTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_LESS_EQUAL, createdTime);
+        final Object _value = createdTime;
+        RangeQueryBuilder builder = regRangeQ("createdTime", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -612,8 +655,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setDuplicateHostName_MatchPhrase(duplicateHostName, null);
     }
 
-    public void setDuplicateHostName_MatchPhrase(String duplicateHostName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("duplicateHostName", duplicateHostName);
+    public void setDuplicateHostName_MatchPhrase(String duplicateHostName, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("duplicateHostName", duplicateHostName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -623,8 +666,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setDuplicateHostName_MatchPhrasePrefix(duplicateHostName, null);
     }
 
-    public void setDuplicateHostName_MatchPhrasePrefix(String duplicateHostName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("duplicateHostName", duplicateHostName);
+    public void setDuplicateHostName_MatchPhrasePrefix(String duplicateHostName, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("duplicateHostName", duplicateHostName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -634,8 +677,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setDuplicateHostName_Fuzzy(duplicateHostName, null);
     }
 
-    public void setDuplicateHostName_Fuzzy(String duplicateHostName, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("duplicateHostName", duplicateHostName);
+    public void setDuplicateHostName_Fuzzy(String duplicateHostName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("duplicateHostName", duplicateHostName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -674,12 +717,24 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setDuplicateHostName_SpanTerm(String duplicateHostName) {
+        setDuplicateHostName_SpanTerm("duplicateHostName", null);
+    }
+
+    public void setDuplicateHostName_SpanTerm(String duplicateHostName, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("duplicateHostName", duplicateHostName);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setDuplicateHostName_GreaterThan(String duplicateHostName) {
         setDuplicateHostName_GreaterThan(duplicateHostName, null);
     }
 
     public void setDuplicateHostName_GreaterThan(String duplicateHostName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_GREATER_THAN, duplicateHostName);
+        final Object _value = duplicateHostName;
+        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -690,7 +745,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setDuplicateHostName_LessThan(String duplicateHostName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_LESS_THAN, duplicateHostName);
+        final Object _value = duplicateHostName;
+        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -701,7 +757,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setDuplicateHostName_GreaterEqual(String duplicateHostName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_GREATER_EQUAL, duplicateHostName);
+        final Object _value = duplicateHostName;
+        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -712,7 +769,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setDuplicateHostName_LessEqual(String duplicateHostName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_LESS_EQUAL, duplicateHostName);
+        final Object _value = duplicateHostName;
+        RangeQueryBuilder builder = regRangeQ("duplicateHostName", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -819,8 +877,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setRegularName_MatchPhrase(regularName, null);
     }
 
-    public void setRegularName_MatchPhrase(String regularName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("regularName", regularName);
+    public void setRegularName_MatchPhrase(String regularName, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("regularName", regularName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -830,8 +888,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setRegularName_MatchPhrasePrefix(regularName, null);
     }
 
-    public void setRegularName_MatchPhrasePrefix(String regularName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("regularName", regularName);
+    public void setRegularName_MatchPhrasePrefix(String regularName, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("regularName", regularName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -841,8 +899,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setRegularName_Fuzzy(regularName, null);
     }
 
-    public void setRegularName_Fuzzy(String regularName, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("regularName", regularName);
+    public void setRegularName_Fuzzy(String regularName, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("regularName", regularName);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -881,12 +939,24 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setRegularName_SpanTerm(String regularName) {
+        setRegularName_SpanTerm("regularName", null);
+    }
+
+    public void setRegularName_SpanTerm(String regularName, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("regularName", regularName);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setRegularName_GreaterThan(String regularName) {
         setRegularName_GreaterThan(regularName, null);
     }
 
     public void setRegularName_GreaterThan(String regularName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_GREATER_THAN, regularName);
+        final Object _value = regularName;
+        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -897,7 +967,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setRegularName_LessThan(String regularName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_LESS_THAN, regularName);
+        final Object _value = regularName;
+        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -908,7 +979,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setRegularName_GreaterEqual(String regularName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_GREATER_EQUAL, regularName);
+        final Object _value = regularName;
+        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -919,7 +991,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setRegularName_LessEqual(String regularName, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_LESS_EQUAL, regularName);
+        final Object _value = regularName;
+        RangeQueryBuilder builder = regRangeQ("regularName", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1026,8 +1099,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setSortOrder_MatchPhrase(sortOrder, null);
     }
 
-    public void setSortOrder_MatchPhrase(Integer sortOrder, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("sortOrder", sortOrder);
+    public void setSortOrder_MatchPhrase(Integer sortOrder, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("sortOrder", sortOrder);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1037,8 +1110,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setSortOrder_MatchPhrasePrefix(sortOrder, null);
     }
 
-    public void setSortOrder_MatchPhrasePrefix(Integer sortOrder, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("sortOrder", sortOrder);
+    public void setSortOrder_MatchPhrasePrefix(Integer sortOrder, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("sortOrder", sortOrder);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1048,8 +1121,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setSortOrder_Fuzzy(sortOrder, null);
     }
 
-    public void setSortOrder_Fuzzy(Integer sortOrder, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("sortOrder", sortOrder);
+    public void setSortOrder_Fuzzy(Integer sortOrder, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("sortOrder", sortOrder);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1060,7 +1133,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setSortOrder_GreaterThan(Integer sortOrder, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_GREATER_THAN, sortOrder);
+        final Object _value = sortOrder;
+        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1071,7 +1145,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setSortOrder_LessThan(Integer sortOrder, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_LESS_THAN, sortOrder);
+        final Object _value = sortOrder;
+        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1082,7 +1157,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setSortOrder_GreaterEqual(Integer sortOrder, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_GREATER_EQUAL, sortOrder);
+        final Object _value = sortOrder;
+        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1093,7 +1169,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setSortOrder_LessEqual(Integer sortOrder, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_LESS_EQUAL, sortOrder);
+        final Object _value = sortOrder;
+        RangeQueryBuilder builder = regRangeQ("sortOrder", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1200,8 +1277,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedBy_MatchPhrase(updatedBy, null);
     }
 
-    public void setUpdatedBy_MatchPhrase(String updatedBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("updatedBy", updatedBy);
+    public void setUpdatedBy_MatchPhrase(String updatedBy, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("updatedBy", updatedBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1211,8 +1288,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedBy_MatchPhrasePrefix(updatedBy, null);
     }
 
-    public void setUpdatedBy_MatchPhrasePrefix(String updatedBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("updatedBy", updatedBy);
+    public void setUpdatedBy_MatchPhrasePrefix(String updatedBy, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("updatedBy", updatedBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1222,8 +1299,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedBy_Fuzzy(updatedBy, null);
     }
 
-    public void setUpdatedBy_Fuzzy(String updatedBy, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("updatedBy", updatedBy);
+    public void setUpdatedBy_Fuzzy(String updatedBy, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("updatedBy", updatedBy);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1262,12 +1339,24 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         }
     }
 
+    public void setUpdatedBy_SpanTerm(String updatedBy) {
+        setUpdatedBy_SpanTerm("updatedBy", null);
+    }
+
+    public void setUpdatedBy_SpanTerm(String updatedBy, ConditionOptionCall<SpanTermQueryBuilder> opLambda) {
+        SpanTermQueryBuilder builder = regSpanTermQ("updatedBy", updatedBy);
+        if (opLambda != null) {
+            opLambda.callback(builder);
+        }
+    }
+
     public void setUpdatedBy_GreaterThan(String updatedBy) {
         setUpdatedBy_GreaterThan(updatedBy, null);
     }
 
     public void setUpdatedBy_GreaterThan(String updatedBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_GREATER_THAN, updatedBy);
+        final Object _value = updatedBy;
+        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1278,7 +1367,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedBy_LessThan(String updatedBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_LESS_THAN, updatedBy);
+        final Object _value = updatedBy;
+        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1289,7 +1379,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedBy_GreaterEqual(String updatedBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_GREATER_EQUAL, updatedBy);
+        final Object _value = updatedBy;
+        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1300,7 +1391,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedBy_LessEqual(String updatedBy, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_LESS_EQUAL, updatedBy);
+        final Object _value = updatedBy;
+        RangeQueryBuilder builder = regRangeQ("updatedBy", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1407,8 +1499,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedTime_MatchPhrase(updatedTime, null);
     }
 
-    public void setUpdatedTime_MatchPhrase(Long updatedTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhraseQ("updatedTime", updatedTime);
+    public void setUpdatedTime_MatchPhrase(Long updatedTime, ConditionOptionCall<MatchPhraseQueryBuilder> opLambda) {
+        MatchPhraseQueryBuilder builder = regMatchPhraseQ("updatedTime", updatedTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1418,8 +1510,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedTime_MatchPhrasePrefix(updatedTime, null);
     }
 
-    public void setUpdatedTime_MatchPhrasePrefix(Long updatedTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
-        MatchQueryBuilder builder = regMatchPhrasePrefixQ("updatedTime", updatedTime);
+    public void setUpdatedTime_MatchPhrasePrefix(Long updatedTime, ConditionOptionCall<MatchPhrasePrefixQueryBuilder> opLambda) {
+        MatchPhrasePrefixQueryBuilder builder = regMatchPhrasePrefixQ("updatedTime", updatedTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1429,8 +1521,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
         setUpdatedTime_Fuzzy(updatedTime, null);
     }
 
-    public void setUpdatedTime_Fuzzy(Long updatedTime, ConditionOptionCall<FuzzyQueryBuilder> opLambda) {
-        FuzzyQueryBuilder builder = regFuzzyQ("updatedTime", updatedTime);
+    public void setUpdatedTime_Fuzzy(Long updatedTime, ConditionOptionCall<MatchQueryBuilder> opLambda) {
+        MatchQueryBuilder builder = regFuzzyQ("updatedTime", updatedTime);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1441,7 +1533,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedTime_GreaterThan(Long updatedTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_GREATER_THAN, updatedTime);
+        final Object _value = updatedTime;
+        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_GREATER_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1452,7 +1545,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedTime_LessThan(Long updatedTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_LESS_THAN, updatedTime);
+        final Object _value = updatedTime;
+        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_LESS_THAN, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1463,7 +1557,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedTime_GreaterEqual(Long updatedTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_GREATER_EQUAL, updatedTime);
+        final Object _value = updatedTime;
+        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_GREATER_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }
@@ -1474,7 +1569,8 @@ public abstract class BsDuplicateHostCQ extends EsAbstractConditionQuery {
     }
 
     public void setUpdatedTime_LessEqual(Long updatedTime, ConditionOptionCall<RangeQueryBuilder> opLambda) {
-        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_LESS_EQUAL, updatedTime);
+        final Object _value = updatedTime;
+        RangeQueryBuilder builder = regRangeQ("updatedTime", ConditionKey.CK_LESS_EQUAL, _value);
         if (opLambda != null) {
             opLambda.callback(builder);
         }

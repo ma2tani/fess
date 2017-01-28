@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -99,8 +97,6 @@ public class ViewHelper {
     @Resource
     protected UserAgentHelper userAgentHelper;
 
-    public int descriptionLength = 200;
-
     public int titleLength = 50;
 
     public int sitePathLength = 50;
@@ -110,8 +106,6 @@ public class ViewHelper {
     public String urlLinkEncoding = Constants.UTF_8;
 
     public String[] highlightedFields = new String[] { "hl_content", "digest" };
-
-    public boolean useHighlight = false;
 
     public String originalHighlightTagPre = "<em>";
 
@@ -139,10 +133,8 @@ public class ViewHelper {
 
     @PostConstruct
     public void init() {
-        if (useHighlight) {
-            escapedHighlightPre = LaFunctions.h(originalHighlightTagPre);
-            escapedHighlightPost = LaFunctions.h(originalHighlightTagPost);
-        }
+        escapedHighlightPre = LaFunctions.h(originalHighlightTagPre);
+        escapedHighlightPost = LaFunctions.h(originalHighlightTagPost);
     }
 
     public String getContentTitle(final Map<String, Object> document) {
@@ -159,24 +151,10 @@ public class ViewHelper {
     }
 
     public String getContentDescription(final Map<String, Object> document) {
-        final Set<String> queries = new HashSet<>();
-        LaRequestUtil.getOptionalRequest().ifPresent(request -> {
-            @SuppressWarnings("unchecked")
-            final Set<String> set = (Set<String>) request.getAttribute(Constants.HIGHLIGHT_QUERIES);
-            if (set != null) {
-                queries.addAll(set);
-            }
-        });
-        final int size = descriptionLength;
-
         for (final String field : highlightedFields) {
             final String text = DocumentUtil.getValue(document, field, String.class);
             if (StringUtil.isNotBlank(text)) {
-                if (useHighlight) {
-                    return escapeHighlight(text);
-                } else {
-                    return highlight(LaFunctions.h(StringUtils.abbreviate(removeHighlightTag(text), size)), queries);
-                }
+                return escapeHighlight(text);
             }
         }
 
@@ -184,26 +162,11 @@ public class ViewHelper {
     }
 
     protected String escapeHighlight(final String text) {
-        return LaFunctions.h(text).replaceAll(escapedHighlightPre, originalHighlightTagPre)
-                .replaceAll(escapedHighlightPost, originalHighlightTagPost);
+        return LaFunctions.h(text).replaceAll(escapedHighlightPre, highlightTagPre).replaceAll(escapedHighlightPost, highlightTagPost);
     }
 
     protected String removeHighlightTag(final String str) {
         return str.replaceAll(originalHighlightTagPre, StringUtil.EMPTY).replaceAll(originalHighlightTagPost, StringUtil.EMPTY);
-    }
-
-    @Deprecated
-    protected String highlight(final String content, final Set<String> queries) {
-        if (StringUtil.isBlank(content) || queries.isEmpty()) {
-            return content;
-        }
-        String newContent = content;
-        for (final String query : queries) {
-            newContent =
-                    Pattern.compile(Pattern.quote(query), Pattern.CASE_INSENSITIVE).matcher(newContent)
-                            .replaceAll(highlightTagPre + query + highlightTagPost);
-        }
-        return newContent;
     }
 
     public String getUrlLink(final Map<String, Object> document) {
@@ -348,7 +311,7 @@ public class ViewHelper {
     }
 
     public String getPagePath(final String page) {
-        final Locale locale = LaRequestUtil.getRequest().getLocale();
+        final Locale locale = ComponentUtil.getRequestManager().getUserLocale();
         final String lang = locale.getLanguage();
         final String country = locale.getCountry();
 
@@ -409,7 +372,7 @@ public class ViewHelper {
         final FileTemplateLoader loader = new FileTemplateLoader(ResourceUtil.getViewTemplatePath().toFile());
         final Handlebars handlebars = new Handlebars(loader);
 
-        Locale locale = LaRequestUtil.getRequest().getLocale();
+        Locale locale = ComponentUtil.getRequestManager().getUserLocale();
         if (locale == null) {
             locale = Locale.ENGLISH;
         }
@@ -546,6 +509,10 @@ public class ViewHelper {
         if (client == null) {
             throw new FessSystemException("No CrawlerClient: " + configId + ", url: " + url);
         }
+        return writeContent(configId, url, client);
+    }
+
+    protected StreamResponse writeContent(final String configId, final String url, final CrawlerClient client) {
         final ResponseData responseData = client.execute(RequestDataBuilder.newRequestData().get().url(url).build());
         final StreamResponse response = new StreamResponse(StringUtil.EMPTY);
         writeFileName(response, responseData);
@@ -562,6 +529,8 @@ public class ViewHelper {
                 if (!(e.getCause() instanceof ClientAbortException)) {
                     throw new FessSystemException("Failed to write a content. configId: " + configId + ", url: " + url, e);
                 }
+            } finally {
+                responseData.close();
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("Finished to write " + url);

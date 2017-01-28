@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -125,14 +125,14 @@ public class FavoriteLogDbm extends AbstractDBMeta {
     //                                                                         ===========
     protected final ColumnInfo _columnCreatedAt = cci("createdAt", "createdAt", null, null, LocalDateTime.class, "createdAt", null, false,
             false, false, "LocalDateTime", 0, 0, null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnUrl = cci("url", "url", null, null, String.class, "url", null, false, false, false, "String", 0, 0,
+    protected final ColumnInfo _columnUrl = cci("url", "url", null, null, String.class, "url", null, false, false, false, "keyword", 0, 0,
             null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnDocId = cci("docId", "docId", null, null, String.class, "docId", null, false, false, false, "String",
-            0, 0, null, false, null, null, null, null, null, false);
+    protected final ColumnInfo _columnDocId = cci("docId", "docId", null, null, String.class, "docId", null, false, false, false,
+            "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnQueryId = cci("queryId", "queryId", null, null, String.class, "queryId", null, false, false, false,
-            "String", 0, 0, null, false, null, null, null, null, null, false);
+            "keyword", 0, 0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnUserInfoId = cci("userInfoId", "userInfoId", null, null, String.class, "userInfoId", null, false,
-            false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
+            false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
 
     public ColumnInfo columnCreatedAt() {
         return _columnCreatedAt;

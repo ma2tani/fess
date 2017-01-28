@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,12 +120,12 @@ public class SearchFieldLogDbm extends AbstractDBMeta {
     // ===================================================================================
     //                                                                         Column Info
     //                                                                         ===========
-    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "String", 0,
+    protected final ColumnInfo _columnName = cci("name", "name", null, null, String.class, "name", null, false, false, false, "keyword", 0,
             0, null, false, null, null, null, null, null, false);
     protected final ColumnInfo _columnSearchLogId = cci("searchLogId", "searchLogId", null, null, String.class, "searchLogId", null, false,
-            false, false, "String", 0, 0, null, false, null, null, null, null, null, false);
-    protected final ColumnInfo _columnValue = cci("value", "value", null, null, String.class, "value", null, false, false, false, "String",
-            0, 0, null, false, null, null, null, null, null, false);
+            false, false, "keyword", 0, 0, null, false, null, null, null, null, null, false);
+    protected final ColumnInfo _columnValue = cci("value", "value", null, null, String.class, "value", null, false, false, false,
+            "keyword", 0, 0, null, false, null, null, null, null, null, false);
 
     public ColumnInfo columnName() {
         return _columnName;

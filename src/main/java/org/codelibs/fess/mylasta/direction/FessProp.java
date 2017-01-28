@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import org.codelibs.fess.helper.PermissionHelper;
 import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.taglib.FessFunctions;
 import org.codelibs.fess.util.ComponentUtil;
+import org.codelibs.fess.util.PrunedTag;
 import org.dbflute.optional.OptionalThing;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.lastaflute.job.LaJob;
@@ -217,7 +218,7 @@ public interface FessProp {
                 map = Collections.emptyMap();
             } else {
                 final Set<String> keySet = new HashSet<>();
-                map = split(value, "\n").get(stream -> (Map<String, String>) stream.filter(StringUtil::isNotBlank).map(s -> {
+                map = split(value, "\n").get(stream -> stream.filter(StringUtil::isNotBlank).map(s -> {
                     final String[] pair = s.split("=");
                     if (pair.length == 1) {
                         return new Pair<>(StringUtil.EMPTY, pair[0].trim());
@@ -582,8 +583,31 @@ public interface FessProp {
 
     String getCrawlerDocumentHtmlPrunedTags();
 
-    public default String[] getCrawlerDocumentHtmlPrunedTagsAsArray() {
-        return getCrawlerDocumentHtmlPrunedTags().split(",");
+    public default PrunedTag[] getCrawlerDocumentHtmlPrunedTagsAsArray() {
+        PrunedTag[] tags = (PrunedTag[]) propMap.get("crawlerDocumentHtmlPrunedTags");
+        if (tags == null) {
+            tags = split(getCrawlerDocumentHtmlPrunedTags(), ",").get(stream -> stream.filter(StringUtil::isNotBlank).map(v -> {
+                final String[] cssValues = v.split("\\.", 2);
+                final String css;
+                if (cssValues.length == 2) {
+                    css = cssValues[1];
+                } else {
+                    css = null;
+                }
+
+                final String[] idValues = cssValues[0].split("#", 2);
+                final String id;
+                if (idValues.length == 2) {
+                    id = idValues[1];
+                } else {
+                    id = null;
+                }
+
+                return new PrunedTag(idValues[0], id, css);
+            }).toArray(n -> new PrunedTag[n]));
+            propMap.put("crawlerDocumentHtmlPrunedTags", tags);
+        }
+        return tags;
     }
 
     String getCrawlerDocumentCacheHtmlMimetypes();
@@ -745,20 +769,18 @@ public interface FessProp {
         @SuppressWarnings("unchecked")
         Map<String, Pair<String, String>> params = (Map<String, Pair<String, String>>) propMap.get(CRAWLER_METADATA_NAME_MAPPING);
         if (params == null) {
-            params =
-                    split(getCrawlerMetadataNameMapping(), "\n").get(
-                            stream -> (Map<String, Pair<String, String>>) stream.filter(StringUtil::isNotBlank).map(v -> {
-                                final String[] values = v.split("=");
-                                if (values.length == 2) {
-                                    final String[] subValues = values[1].split(":");
-                                    if (subValues.length == 2) {
-                                        return new Tuple3<>(values[0], subValues[0], subValues[1]);
-                                    } else {
-                                        return new Tuple3<>(values[0], values[1], Constants.MAPPING_TYPE_ARRAY);
-                                    }
-                                }
-                                return null;
-                            }).collect(Collectors.toMap(Tuple3::getValue1, d -> new Pair<>(d.getValue2(), d.getValue3()))));
+            params = split(getCrawlerMetadataNameMapping(), "\n").get(stream -> stream.filter(StringUtil::isNotBlank).map(v -> {
+                final String[] values = v.split("=");
+                if (values.length == 2) {
+                    final String[] subValues = values[1].split(":");
+                    if (subValues.length == 2) {
+                        return new Tuple3<>(values[0], subValues[0], subValues[1]);
+                    } else {
+                        return new Tuple3<>(values[0], values[1], Constants.MAPPING_TYPE_ARRAY);
+                    }
+                }
+                return null;
+            }).collect(Collectors.toMap(Tuple3::getValue1, d -> new Pair<>(d.getValue2(), d.getValue3()))));
             propMap.put(CRAWLER_METADATA_NAME_MAPPING, params);
         }
         return params.get(name);
@@ -815,15 +837,13 @@ public interface FessProp {
         @SuppressWarnings("unchecked")
         Map<String, String> params = (Map<String, String>) propMap.get(QUERY_LANGUAGE_MAPPING);
         if (params == null) {
-            params =
-                    stream(getQueryLanguageMapping().split("\n")).get(
-                            stream -> (Map<String, String>) stream.filter(StringUtil::isNotBlank).map(v -> {
-                                final String[] values = v.split("=");
-                                if (values.length == 2) {
-                                    return new Pair<>(values[0], values[1]);
-                                }
-                                return null;
-                            }).collect(Collectors.toMap(Pair::getFirst, d -> d.getSecond())));
+            params = stream(getQueryLanguageMapping().split("\n")).get(stream -> stream.filter(StringUtil::isNotBlank).map(v -> {
+                final String[] values = v.split("=");
+                if (values.length == 2) {
+                    return new Pair<>(values[0], values[1]);
+                }
+                return null;
+            }).collect(Collectors.toMap(Pair::getFirst, d -> d.getSecond())));
             propMap.put(QUERY_LANGUAGE_MAPPING, params);
         }
 
@@ -1256,6 +1276,9 @@ public interface FessProp {
         return source.entrySet().stream().map(e -> {
             final String key = e.getKey();
             Object value = e.getValue();
+            if (value == null) {
+                value = StringUtil.EMPTY;
+            }
             if (value instanceof String || value == null) {
                 return new Pair<>(key, value);
             }
@@ -1438,4 +1461,12 @@ public interface FessProp {
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).forEach(list::add));
         return list.toArray(new String[list.size()]);
     }
+
+    String getThumbnailGeneratorTargets();
+
+    public default String[] getThumbnailGeneratorTargetsAsArray() {
+        return getThumbnailGeneratorTargets().split(",");
+
+    }
+
 }

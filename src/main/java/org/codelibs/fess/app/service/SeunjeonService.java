@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,11 +27,15 @@ import org.codelibs.fess.dict.DictionaryFile.PagingList;
 import org.codelibs.fess.dict.DictionaryManager;
 import org.codelibs.fess.dict.seunjeon.SeunjeonFile;
 import org.codelibs.fess.dict.seunjeon.SeunjeonItem;
+import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.dbflute.optional.OptionalEntity;
 
 public class SeunjeonService {
     @Resource
     protected DictionaryManager dictionaryManager;
+
+    @Resource
+    protected FessConfig fessConfig;
 
     public List<SeunjeonItem> getSeunjeonList(final String dictId, final SeunjeonPager seunjeonPager) {
         return getSeunjeonFile(dictId).map(file -> {
@@ -40,7 +44,7 @@ public class SeunjeonService {
 
             // update pager
                 BeanUtil.copyBeanToBean(seunjeonList, seunjeonPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
-                seunjeonList.setPageRangeSize(5);
+                seunjeonList.setPageRangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
                 seunjeonPager.setPageNumberList(seunjeonList.createPageNumberList());
 
                 return (List<SeunjeonItem>) seunjeonList;

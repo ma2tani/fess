@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,7 @@ import org.codelibs.fess.indexer.IndexUpdater;
 import org.codelibs.fess.job.JobExecutor;
 import org.codelibs.fess.ldap.LdapManager;
 import org.codelibs.fess.mylasta.direction.FessConfig;
+import org.codelibs.fess.mylasta.direction.FessProp;
 import org.codelibs.fess.sso.SsoManager;
 import org.codelibs.fess.thumbnail.ThumbnailManager;
 import org.lastaflute.core.message.MessageManager;
@@ -429,6 +430,9 @@ public final class ComponentUtil {
      */
     public static void setFessConfig(final FessConfig fessConfig) {
         ComponentUtil.fessConfig = fessConfig;
+        if (fessConfig == null) {
+            FessProp.propMap.clear();
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.codelibs.fess.helper;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -24,9 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.security.MessageDigestUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.service.CrawlingInfoService;
-import org.codelibs.fess.crawler.util.UnsafeStringBuilder;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.es.config.exentity.CrawlingConfig;
 import org.codelibs.fess.es.config.exentity.CrawlingInfo;
@@ -39,7 +41,7 @@ import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Bucket;
 import org.elasticsearch.search.aggregations.bucket.terms.Terms.Order;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsBuilder;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +54,9 @@ public class CrawlingInfoHelper {
 
     protected Long documentExpires;
 
-    public int maxSessionIdsInList;
+    protected int maxSessionIdsInList;
+
+    protected int urlIdPrefixLength = 445;;
 
     protected CrawlingInfoService getCrawlingInfoService() {
         return ComponentUtil.getComponent(CrawlingInfoService.class);
@@ -165,7 +169,7 @@ public class CrawlingInfoHelper {
                 fessConfig.getIndexDocumentType(),
                 queryRequestBuilder -> {
                     queryRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
-                    final TermsBuilder termsBuilder =
+                    final TermsAggregationBuilder termsBuilder =
                             AggregationBuilders.terms(fessConfig.getIndexFieldSegment()).field(fessConfig.getIndexFieldSegment())
                                     .size(maxSessionIdsInList).order(Order.term(false));
                     queryRequestBuilder.addAggregation(termsBuilder);
@@ -186,25 +190,67 @@ public class CrawlingInfoHelper {
                 });
     }
 
-    private String generateId(final String url, final List<String> roleTypeList) {
-        final UnsafeStringBuilder buf = new UnsafeStringBuilder(1000);
+    protected String generateId(final String url, final List<String> roleTypeList) {
+        final StringBuilder buf = new StringBuilder(1000);
         buf.append(url);
         if (roleTypeList != null && !roleTypeList.isEmpty()) {
             Collections.sort(roleTypeList);
             buf.append(";role=");
-            for (int i = 0; i < roleTypeList.size(); i++) {
-                if (i != 0) {
-                    buf.append(',');
+            buf.append(String.join(",", roleTypeList));
+        }
+        final String urlId = buf.toString().trim();
+        final StringBuilder encodedBuf = new StringBuilder(urlId.length() + 100);
+        for (int i = 0; i < urlId.length(); i++) {
+            final char c = urlId.charAt(i);
+            if (c >= 'a' && c <= 'z' //
+                    || c >= 'A' && c <= 'Z' //
+                    || c >= '0' && c <= '9' //
+                    || c == '.' //
+                    || c == '-' //
+                    || c == '*' //
+                    || c == '_' //
+                    || c == ':' //
+                    || c == '+' //
+                    || c == '%' //
+                    || c == '=' //
+                    || c == '&' //
+                    || c == '?' //
+                    || c == '#' //
+                    || c == '[' //
+                    || c == ']' //
+                    || c == '@' //
+                    || c == '~' //
+                    || c == '!' //
+                    || c == '$' //
+                    || c == '\'' //
+                    || c == '(' //
+                    || c == ')' //
+                    || c == ',' //
+                    || c == ';' //
+            ) {
+                encodedBuf.append(c);
+            } else {
+                try {
+                    encodedBuf.append(URLEncoder.encode(String.valueOf(c), Constants.UTF_8));
+                } catch (final UnsupportedEncodingException e) {
+                    // NOP
                 }
-                buf.append(roleTypeList.get(i));
             }
         }
 
-        return normalize(buf.toUnsafeString().trim());
+        final String id = encodedBuf.toString();
+        if (id.length() <= urlIdPrefixLength) {
+            return id;
+        }
+        return id.substring(0, urlIdPrefixLength) + MessageDigestUtil.digest("SHA-256", id.substring(urlIdPrefixLength));
     }
 
-    private String normalize(final String value) {
-        return value.replace('"', ' ');
+    public void setMaxSessionIdsInList(final int maxSessionIdsInList) {
+        this.maxSessionIdsInList = maxSessionIdsInList;
+    }
+
+    public void setUrlIdPrefixLength(final int urlIdPrefixLength) {
+        this.urlIdPrefixLength = urlIdPrefixLength;
     }
 
 }

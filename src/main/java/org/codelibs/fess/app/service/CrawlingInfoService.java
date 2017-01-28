@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +76,8 @@ public class CrawlingInfoService {
 
         // update pager
         BeanUtil.copyBeanToBean(crawlingInfoList, crawlingInfoPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
-        crawlingInfoPager.setPageNumberList(crawlingInfoList.pageRange(op -> op.rangeSize(5)).createPageNumberList());
+        crawlingInfoPager.setPageNumberList(crawlingInfoList.pageRange(op -> op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger()))
+                .createPageNumberList());
 
         return crawlingInfoList;
     }
@@ -88,14 +89,14 @@ public class CrawlingInfoService {
     public void store(final CrawlingInfo crawlingInfo) {
         setupStoreCondition(crawlingInfo);
 
-        crawlingInfoBhv.insertOrUpdate(crawlingInfo, op -> op.setRefresh(true));
+        crawlingInfoBhv.insertOrUpdate(crawlingInfo, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
     public void delete(final CrawlingInfo crawlingInfo) {
         setupDeleteCondition(crawlingInfo);
 
-        crawlingInfoBhv.delete(crawlingInfo, op -> op.setRefresh(true));
+        crawlingInfoBhv.delete(crawlingInfo, op -> op.setRefreshPolicy(Constants.TRUE));
 
     }
 
@@ -146,7 +147,7 @@ public class CrawlingInfoService {
                 crawlingInfoIdList.add(cs.getId());
             }
             crawlingInfoParamBhv.queryDelete(cb2 -> cb2.query().setCrawlingInfoId_InScope(crawlingInfoIdList));
-            crawlingInfoBhv.batchDelete(crawlingInfoList, op -> op.setRefresh(true));
+            crawlingInfoBhv.batchDelete(crawlingInfoList, op -> op.setRefreshPolicy(Constants.TRUE));
         }
     }
 
@@ -161,7 +162,7 @@ public class CrawlingInfoService {
                 crawlingInfoParam.setCreatedTime(now);
             }
         }
-        crawlingInfoParamBhv.batchInsert(crawlingInfoParamList, op -> op.setRefresh(true));
+        crawlingInfoParamBhv.batchInsert(crawlingInfoParamList, op -> op.setRefreshPolicy(Constants.TRUE));
     }
 
     public List<CrawlingInfoParam> getCrawlingInfoParamList(final String id) {
@@ -225,7 +226,7 @@ public class CrawlingInfoService {
                         crawlingInfo = new CrawlingInfo();
                         crawlingInfo.setSessionId(list.get(0));
                         crawlingInfo.setCreatedTime(formatter.parse(list.get(1)).getTime());
-                        crawlingInfoBhv.insert(crawlingInfo, op -> op.setRefresh(true));
+                        crawlingInfoBhv.insert(crawlingInfo, op -> op.setRefreshPolicy(Constants.TRUE));
                     }
 
                     final CrawlingInfoParam entity = new CrawlingInfoParam();
@@ -233,7 +234,7 @@ public class CrawlingInfoService {
                     entity.setKey(list.get(2));
                     entity.setValue(list.get(3));
                     entity.setCreatedTime(formatter.parse(list.get(4)).getTime());
-                    crawlingInfoParamBhv.insert(entity, op -> op.setRefresh(true));
+                    crawlingInfoParamBhv.insert(entity, op -> op.setRefreshPolicy(Constants.TRUE));
                 } catch (final Exception e) {
                     logger.warn("Failed to read a click log: " + list, e);
                 }

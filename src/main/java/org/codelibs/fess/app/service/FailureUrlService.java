@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public class FailureUrlService {
         // update pager
         BeanUtil.copyBeanToBean(failureUrlList, failureUrlPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         failureUrlPager.setPageNumberList(failureUrlList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return failureUrlList;
@@ -72,7 +72,7 @@ public class FailureUrlService {
     public void store(final FailureUrl failureUrl) {
 
         failureUrlBhv.insertOrUpdate(failureUrl, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }
@@ -80,7 +80,7 @@ public class FailureUrlService {
     public void delete(final FailureUrl failureUrl) {
 
         failureUrlBhv.delete(failureUrl, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
     }
@@ -193,7 +193,7 @@ public class FailureUrlService {
         failureUrl.setThreadName(Thread.currentThread().getName());
 
         bhv.insertOrUpdate(failureUrl, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
     }
 

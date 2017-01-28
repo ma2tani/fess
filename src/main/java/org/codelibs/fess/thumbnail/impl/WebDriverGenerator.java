@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,19 @@
  */
 package org.codelibs.fess.thumbnail.impl;
 
-import java.awt.Image;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Iterator;
 
 import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
@@ -39,6 +43,8 @@ import org.openqa.selenium.phantomjs.PhantomJSDriver;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService;
 import org.openqa.selenium.phantomjs.PhantomJSDriverService.Builder;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.SessionNotFoundException;
+import org.openqa.selenium.remote.UnreachableBrowserException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,31 +68,39 @@ public class WebDriverGenerator extends BaseThumbnailGenerator {
 
     protected String imageFormatName = "png";
 
+    protected long unreachableCheckInterval = 10 * 60 * 1000L;
+
+    protected long previousCheckTime = 0;
+
     @PostConstruct
     public void init() {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         if (fessConfig.isThumbnailHtmlPhantomjsEnabled() && super.isAvailable()) {
-            try {
-                if (webDriver == null) {
-                    if (webDriverCapabilities == null) {
-                        webDriver = new PhantomJSDriver();
-                    } else {
-                        if (webDriverCapabilities instanceof DesiredCapabilities) {
-                            final DesiredCapabilities capabilities = (DesiredCapabilities) webDriverCapabilities;
-                            webDriverCapabilities.asMap().entrySet().stream()
-                                    .filter(e -> e.getValue() instanceof String && filePathMap.containsKey(e.getValue().toString()))
-                                    .forEach(e -> capabilities.setCapability(e.getKey(), filePathMap.get(e.getValue().toString())));
-                        }
-                        webDriver = new PhantomJSDriver(createDriverService(webDriverCapabilities), webDriverCapabilities);
-                    }
-                }
-                webDriver.manage().window().setSize(new Dimension(windowWidth, windowHeight));
-            } catch (final Exception e) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("WebDriver is not available for generating thumbnails.", e);
+            startWebDriver();
+        }
+    }
+
+    protected void startWebDriver() {
+        try {
+            if (webDriver == null) {
+                if (webDriverCapabilities == null) {
+                    webDriver = new PhantomJSDriver();
                 } else {
-                    logger.info("WebDriver is not available for generating thumbnails.");
+                    if (webDriverCapabilities instanceof DesiredCapabilities) {
+                        final DesiredCapabilities capabilities = (DesiredCapabilities) webDriverCapabilities;
+                        webDriverCapabilities.asMap().entrySet().stream()
+                                .filter(e -> e.getValue() instanceof String && filePathMap.containsKey(e.getValue().toString()))
+                                .forEach(e -> capabilities.setCapability(e.getKey(), filePathMap.get(e.getValue().toString())));
+                    }
+                    webDriver = new PhantomJSDriver(createDriverService(webDriverCapabilities), webDriverCapabilities);
                 }
+            }
+            webDriver.manage().window().setSize(new Dimension(windowWidth, windowHeight));
+        } catch (final Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("WebDriver is not available for generating thumbnails.", e);
+            } else {
+                logger.info("WebDriver is not available for generating thumbnails.");
             }
         }
     }
@@ -95,7 +109,12 @@ public class WebDriverGenerator extends BaseThumbnailGenerator {
     public void destroy() {
         if (webDriver != null) {
             synchronized (this) {
-                webDriver.quit();
+                try {
+                    webDriver.quit();
+                } catch (final Throwable t) {
+                    logger.debug("Failed to quit webDriver.", t);
+                }
+                webDriver = null;
             }
         }
     }
@@ -124,15 +143,27 @@ public class WebDriverGenerator extends BaseThumbnailGenerator {
 
         if (webDriver instanceof TakesScreenshot) {
             synchronized (this) {
-                webDriver.get(url);
-                final File thumbnail = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
-                convert(thumbnail, outputFile);
-                return true;
+                try {
+                    webDriver.get(url);
+                    final File thumbnail = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
+                    convert(thumbnail, outputFile);
+                    return true;
+                } catch (final UnreachableBrowserException | SessionNotFoundException e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("WebDriver is not available.", e);
+                    }
+                    final long now = ComponentUtil.getSystemHelper().getCurrentTimeAsLong();
+                    if (now - previousCheckTime > unreachableCheckInterval) {
+                        destroy();
+                        startWebDriver();
+                        previousCheckTime = now;
+                    }
+                }
             }
         } else {
             logger.warn("WebDriver is not instance of TakesScreenshot: " + webDriver);
-            return false;
         }
+        return false;
     }
 
     @Override
@@ -144,16 +175,26 @@ public class WebDriverGenerator extends BaseThumbnailGenerator {
     }
 
     protected void convert(final File inputFile, final File outputFile) {
-        try {
-            final BufferedImage image = loadImage(inputFile);
-            final int height = thumbnailWidth * image.getHeight() / windowWidth;
-            final BufferedImage thumbnailImage = new BufferedImage(thumbnailWidth, thumbnailHeight, image.getType());
-            thumbnailImage.getGraphics().drawImage(image.getScaledInstance(thumbnailWidth, height, Image.SCALE_AREA_AVERAGING), 0, 0,
-                    thumbnailWidth, thumbnailHeight, null);
-
-            ImageIO.write(thumbnailImage, imageFormatName, outputFile);
-        } catch (final Exception e) {
-            logger.warn("Failed to convert " + inputFile.getAbsolutePath(), e);
+        try (ImageInputStream input = ImageIO.createImageInputStream(inputFile)) {
+            final Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+            if (readers.hasNext()) {
+                final ImageReader reader = readers.next();
+                try {
+                    reader.setInput(input);
+                    final ImageReadParam param = reader.getDefaultReadParam();
+                    final int samplingWidth = reader.getWidth(0) / thumbnailWidth;
+                    final int samplingHeight = reader.getHeight(0) / thumbnailHeight;
+                    param.setSourceSubsampling(samplingWidth, samplingHeight, 0, 0);
+                    param.setSourceRegion(new Rectangle(windowWidth, thumbnailHeight * reader.getHeight(0) / thumbnailWidth));
+                    final BufferedImage image = reader.read(0, param);
+                    ImageIO.write(image, imageFormatName, outputFile);
+                    image.flush();
+                } finally {
+                    reader.dispose();
+                }
+            }
+        } catch (final Throwable t) {
+            logger.warn("Failed to convert " + inputFile.getAbsolutePath(), t);
             inputFile.renameTo(outputFile);
         }
     }
@@ -241,5 +282,9 @@ public class WebDriverGenerator extends BaseThumbnailGenerator {
 
     public void setThumbnailHeight(final int thumbnailHeight) {
         this.thumbnailHeight = thumbnailHeight;
+    }
+
+    public void setUnreachableCheckInterval(final long unreachableCheckInterval) {
+        this.unreachableCheckInterval = unreachableCheckInterval;
     }
 }

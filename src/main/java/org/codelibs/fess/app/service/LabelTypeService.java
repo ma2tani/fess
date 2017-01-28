@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class LabelTypeService {
         // update pager
         BeanUtil.copyBeanToBean(labelTypeList, labelTypePager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         labelTypePager.setPageNumberList(labelTypeList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return labelTypeList;
@@ -58,7 +58,7 @@ public class LabelTypeService {
     public void delete(final LabelType labelType) {
 
         labelTypeBhv.delete(labelType, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
         final LabelTypeHelper labelTypeHelper = ComponentUtil.getLabelTypeHelper();
@@ -90,7 +90,7 @@ public class LabelTypeService {
 
     public void store(final LabelType labelType) {
         labelTypeBhv.insertOrUpdate(labelType, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
         final LabelTypeHelper labelTypeHelper = ComponentUtil.getLabelTypeHelper();

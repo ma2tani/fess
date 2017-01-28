@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -333,9 +333,9 @@ public class LdapManager {
                         processSearchRoles(result, (entryDn, name) -> {
                             final String lowerEntryDn = entryDn.toLowerCase(Locale.ROOT);
                             if (lowerEntryDn.indexOf(lowerGroupDn) != -1) {
-                                groupList.add(Base64.getEncoder().encodeToString(name.getBytes(Constants.CHARSET_UTF_8)));
+                                groupList.add(Base64.getUrlEncoder().encodeToString(name.getBytes(Constants.CHARSET_UTF_8)));
                             } else if (lowerEntryDn.indexOf(lowerRoleDn) != -1) {
-                                roleList.add(Base64.getEncoder().encodeToString(name.getBytes(Constants.CHARSET_UTF_8)));
+                                roleList.add(Base64.getUrlEncoder().encodeToString(name.getBytes(Constants.CHARSET_UTF_8)));
                             }
                         });
                         user.setGroups(groupList.toArray(new String[groupList.size()]));

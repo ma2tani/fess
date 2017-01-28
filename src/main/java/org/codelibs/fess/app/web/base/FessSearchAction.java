@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,9 +29,9 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.net.URLUtil;
 import org.codelibs.fess.Constants;
+import org.codelibs.fess.app.service.SearchService;
 import org.codelibs.fess.app.web.sso.SsoAction;
 import org.codelibs.fess.entity.SearchRequestParams.SearchRequestType;
-import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.helper.LabelTypeHelper;
 import org.codelibs.fess.helper.OpenSearchHelper;
 import org.codelibs.fess.helper.PopularWordHelper;
@@ -41,6 +41,7 @@ import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.helper.UserInfoHelper;
 import org.codelibs.fess.helper.ViewHelper;
 import org.codelibs.fess.thumbnail.ThumbnailManager;
+import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.optional.OptionalThing;
 import org.lastaflute.web.login.LoginManager;
 import org.lastaflute.web.response.ActionResponse;
@@ -52,7 +53,7 @@ public abstract class FessSearchAction extends FessBaseAction {
     protected static final String LABEL_FIELD = "label";
 
     @Resource
-    protected FessEsClient fessEsClient;
+    protected SearchService searchService;
 
     @Resource
     protected ThumbnailManager thumbnailManager;
@@ -118,7 +119,7 @@ public abstract class FessSearchAction extends FessBaseAction {
         runtime.registerData("labelTypeItems", labelTypeItems);
         runtime.registerData("displayLabelTypeItems", labelTypeItems != null && !labelTypeItems.isEmpty());
 
-        Locale locale = request.getLocale();
+        Locale locale = ComponentUtil.getRequestManager().getUserLocale();
         if (locale == null) {
             locale = Locale.ENGLISH;
         }

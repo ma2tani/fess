@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import org.dbflute.cbean.result.ListResultBean;
 import org.dbflute.exception.FetchingOverSafetySizeException;
 import org.dbflute.exception.IllegalBehaviorStateException;
 import org.dbflute.util.DfTypeUtil;
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.admin.indices.refresh.RefreshResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -139,7 +140,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         esCb.request().build(builder);
         final SearchResponse response = esCb.build(builder).execute().actionGet(searchTimeout);
 
-        final EsPagingResultBean<RESULT> list = new EsPagingResultBean<>();
+        final EsPagingResultBean<RESULT> list = new EsPagingResultBean<>(builder);
         final SearchHits searchHits = response.getHits();
         searchHits.forEach(hit -> {
             final Map<String, Object> source = hit.getSource();
@@ -158,6 +159,9 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         list.setTotalShards(response.getTotalShards());
         list.setSuccessfulShards(response.getSuccessfulShards());
         list.setFailedShards(response.getFailedShards());
+
+        list.setAggregation(response.getAggregations());
+
         // #pending others
 
         return list;
@@ -263,7 +267,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
 
         final IndexResponse response = builder.execute().actionGet(indexTimeout);
         esEntity.asDocMeta().id(response.getId());
-        return response.isCreated() ? 1 : 0;
+        return response.getResult() == Result.CREATED ? 1 : 0;
     }
 
     protected IndexRequestBuilder createInsertRequest(final EsAbstractEntity esEntity) {
@@ -312,7 +316,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         final DeleteRequestBuilder builder = createDeleteRequest(esEntity);
 
         final DeleteResponse response = builder.execute().actionGet(deleteTimeout);
-        return response.isFound() ? 1 : 0;
+        return response.getResult() == Result.DELETED ? 1 : 0;
     }
 
     protected DeleteRequestBuilder createDeleteRequest(final EsAbstractEntity esEntity) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:+UseParNewGC
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
     -XX:-OmitStackTraceInFastThrow
     -Djcifs.smb.client.connTimeout=60000
     -Djcifs.smb.client.soTimeout=35000
@@ -70,6 +71,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:+UseParNewGC
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
     -Dgroovy.use.classvalue=true
     */
     String JVM_SUGGEST_OPTIONS = "jvm.suggest.options";
@@ -146,7 +148,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. false */
     String CRAWLER_DOCUMENT_DUPLICATE_TERM_REMOVED = "crawler.document.duplicate.term.removed";
 
-    /** The key of the configuration. e.g. u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu202Fu205Fu3000uFEFFuFFFDu00B6 */
+    /** The key of the configuration. e.g. u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu200Cu202Fu205Fu3000uFEFFuFFFDu00B6 */
     String CRAWLER_DOCUMENT_SPACE_CHARS = "crawler.document.space.chars";
 
     /** The key of the configuration. e.g. UTF-8 */
@@ -160,6 +162,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. false */
     String CRAWLER_IGNORE_ROBOTS_TXT = "crawler.ignore.robots.txt";
+
+    /** The key of the configuration. e.g. false */
+    String CRAWLER_IGNORE_META_ROBOTS = "crawler.ignore.meta.robots";
 
     /** The key of the configuration. e.g. resourceName,X-Parsed-By,Content-Encoding.*,Content-Type.* */
     String CRAWLER_METADATA_CONTENT_EXCLUDES = "crawler.metadata.content.excludes";
@@ -316,6 +321,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. parent_id */
     String INDEX_FIELD_parent_id = "index.field.parent_id";
 
+    /** The key of the configuration. e.g. important_content */
+    String INDEX_FIELD_important_content = "index.field.important_content";
+
     /** The key of the configuration. e.g. content */
     String INDEX_FIELD_CONTENT = "index.field.content";
 
@@ -418,8 +426,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. location */
     String QUERY_GEO_FIELDS = "query.geo.fields";
 
+    /** The key of the configuration. e.g. browser_lang */
+    String QUERY_BROWSER_LANG_PARAMETER_NAME = "query.browser.lang.parameter.name";
+
     /** The key of the configuration. e.g. true */
     String QUERY_REPLACE_TERM_WITH_PREFIX_QUERY = "query.replace.term.with.prefix.query";
+
+    /** The key of the configuration. e.g. 50 */
+    String QUERY_HIGHLIGHT_FRAGMENT_SIZE = "query.highlight.fragment.size";
+
+    /** The key of the configuration. e.g. 5 */
+    String QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS = "query.highlight.number.of.fragments";
+
+    /** The key of the configuration. e.g. 100000 */
+    String QUERY_MAX_SEARCH_RESULT_OFFSET = "query.max.search.result.offset";
 
     /** The key of the configuration. e.g.  */
     String QUERY_ADDITIONAL_RESPONSE_FIELDS = "query.additional.response.fields";
@@ -520,6 +540,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. .fess_basic_config.bulk,.fess_config.bulk,.fess_user.bulk,system.properties */
     String INDEX_BACKUP_TARGETS = "index.backup.targets";
 
+    /** The key of the configuration. e.g. 4000 */
+    String FORM_ADMIN_MAX_INPUT_SIZE = "form.admin.max.input.size";
+
     /** The key of the configuration. e.g. admin */
     String AUTHENTICATION_ADMIN_USERS = "authentication.admin.users";
 
@@ -556,10 +579,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. FES */
     String COOKIE_REMEMBER_ME_HARBOR_KEY = "cookie.remember.me.harbor.key";
 
-    /** The key of the configuration. e.g. 4 */
+    /** The key of the configuration. e.g. 25 */
     String PAGING_PAGE_SIZE = "paging.page.size";
 
-    /** The key of the configuration. e.g. 3 */
+    /** The key of the configuration. e.g. 5 */
     String PAGING_PAGE_RANGE_SIZE = "paging.page.range.size";
 
     /** The key of the configuration. e.g. true */
@@ -637,6 +660,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 1000 */
     String PAGE_DICTIONARY_MAX_FETCH_SIZE = "page.dictionary.max.fetch.size";
 
+    /** The key of the configuration. e.g. 100 */
+    String PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE = "page.thumbnail.queue.max.fetch.size";
+
     /** The key of the configuration. e.g. 0 */
     String PAGING_SEARCH_PAGE_START = "paging.search.page.start";
 
@@ -648,6 +674,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. true */
     String THUMBNAIL_HTML_PHANTOMJS_ENABLED = "thumbnail.html.phantomjs.enabled";
+
+    /** The key of the configuration. e.g. all */
+    String THUMBNAIL_GENERATOR_TARGETS = "thumbnail.generator.targets";
+
+    /** The key of the configuration. e.g. false */
+    String THUMBNAIL_CRAWLER_ENABLED = "thumbnail.crawler.enabled";
 
     /** The key of the configuration. e.g. Administrator */
     String MAIL_FROM_NAME = "mail.from.name";
@@ -780,6 +812,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. accesstoken */
     String ONLINE_HELP_NAME_ACCESSTOKEN = "online.help.name.accesstoken";
+
+    /** The key of the configuration. e.g. suggest */
+    String ONLINE_HELP_NAME_SUGGEST = "online.help.name.suggest";
 
     /** The key of the configuration. e.g. ja */
     String ONLINE_HELP_SUPPORTED_LANGS = "online.help.supported.langs";
@@ -1122,6 +1157,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:+UseParNewGC
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
     -XX:-OmitStackTraceInFastThrow
     -Djcifs.smb.client.connTimeout=60000
     -Djcifs.smb.client.soTimeout=35000
@@ -1146,6 +1182,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:+UseParNewGC
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
     -Dgroovy.use.classvalue=true
     <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -1400,7 +1437,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'crawler.document.space.chars'. <br>
-     * The value is, e.g. u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu202Fu205Fu3000uFEFFuFFFDu00B6 <br>
+     * The value is, e.g. u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu200Cu202Fu205Fu3000uFEFFuFFFDu00B6 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getCrawlerDocumentSpaceChars();
@@ -1439,6 +1476,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isCrawlerIgnoreRobotsTxt();
+
+    /**
+     * Get the value for the key 'crawler.ignore.meta.robots'. <br>
+     * The value is, e.g. false <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerIgnoreMetaRobots();
+
+    /**
+     * Is the property for the key 'crawler.ignore.meta.robots' true? <br>
+     * The value is, e.g. false <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isCrawlerIgnoreMetaRobots();
 
     /**
      * Get the value for the key 'crawler.metadata.content.excludes'. <br>
@@ -1970,6 +2021,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getIndexFieldParentId();
 
     /**
+     * Get the value for the key 'index.field.important_content'. <br>
+     * The value is, e.g. important_content <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexFieldImportantContent();
+
+    /**
      * Get the value for the key 'index.field.content'. <br>
      * The value is, e.g. content <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2237,6 +2295,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getQueryGeoFields();
 
     /**
+     * Get the value for the key 'query.browser.lang.parameter.name'. <br>
+     * The value is, e.g. browser_lang <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryBrowserLangParameterName();
+
+    /**
      * Get the value for the key 'query.replace.term.with.prefix.query'. <br>
      * The value is, e.g. true <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2249,6 +2314,51 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isQueryReplaceTermWithPrefixQuery();
+
+    /**
+     * Get the value for the key 'query.highlight.fragment.size'. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightFragmentSize();
+
+    /**
+     * Get the value for the key 'query.highlight.fragment.size' as {@link Integer}. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryHighlightFragmentSizeAsInteger();
+
+    /**
+     * Get the value for the key 'query.highlight.number.of.fragments'. <br>
+     * The value is, e.g. 5 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightNumberOfFragments();
+
+    /**
+     * Get the value for the key 'query.highlight.number.of.fragments' as {@link Integer}. <br>
+     * The value is, e.g. 5 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryHighlightNumberOfFragmentsAsInteger();
+
+    /**
+     * Get the value for the key 'query.max.search.result.offset'. <br>
+     * The value is, e.g. 100000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryMaxSearchResultOffset();
+
+    /**
+     * Get the value for the key 'query.max.search.result.offset' as {@link Integer}. <br>
+     * The value is, e.g. 100000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryMaxSearchResultOffsetAsInteger();
 
     /**
      * Get the value for the key 'query.additional.response.fields'. <br>
@@ -2542,6 +2652,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getIndexBackupTargets();
 
     /**
+     * Get the value for the key 'form.admin.max.input.size'. <br>
+     * The value is, e.g. 4000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getFormAdminMaxInputSize();
+
+    /**
+     * Get the value for the key 'form.admin.max.input.size' as {@link Integer}. <br>
+     * The value is, e.g. 4000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getFormAdminMaxInputSizeAsInteger();
+
+    /**
      * Get the value for the key 'authentication.admin.users'. <br>
      * The value is, e.g. admin <br>
      * comment: ------
@@ -2674,7 +2799,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'paging.page.size'. <br>
-     * The value is, e.g. 4 <br>
+     * The value is, e.g. 25 <br>
      * comment: The size of one page for paging
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
@@ -2682,7 +2807,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'paging.page.size' as {@link Integer}. <br>
-     * The value is, e.g. 4 <br>
+     * The value is, e.g. 25 <br>
      * comment: The size of one page for paging
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
@@ -2691,7 +2816,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'paging.page.range.size'. <br>
-     * The value is, e.g. 3 <br>
+     * The value is, e.g. 5 <br>
      * comment: The size of page range for paging
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
@@ -2699,7 +2824,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'paging.page.range.size' as {@link Integer}. <br>
-     * The value is, e.g. 3 <br>
+     * The value is, e.g. 5 <br>
      * comment: The size of page range for paging
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
@@ -3085,6 +3210,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getPageDictionaryMaxFetchSizeAsInteger();
 
     /**
+     * Get the value for the key 'page.thumbnail.queue.max.fetch.size'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getPageThumbnailQueueMaxFetchSize();
+
+    /**
+     * Get the value for the key 'page.thumbnail.queue.max.fetch.size' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getPageThumbnailQueueMaxFetchSizeAsInteger();
+
+    /**
      * Get the value for the key 'paging.search.page.start'. <br>
      * The value is, e.g. 0 <br>
      * comment: search page
@@ -3144,6 +3284,27 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isThumbnailHtmlPhantomjsEnabled();
+
+    /**
+     * Get the value for the key 'thumbnail.generator.targets'. <br>
+     * The value is, e.g. all <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailGeneratorTargets();
+
+    /**
+     * Get the value for the key 'thumbnail.crawler.enabled'. <br>
+     * The value is, e.g. false <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailCrawlerEnabled();
+
+    /**
+     * Is the property for the key 'thumbnail.crawler.enabled' true? <br>
+     * The value is, e.g. false <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isThumbnailCrawlerEnabled();
 
     /**
      * Get the value for the key 'mail.from.name'. <br>
@@ -3472,6 +3633,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getOnlineHelpNameAccesstoken();
+
+    /**
+     * Get the value for the key 'online.help.name.suggest'. <br>
+     * The value is, e.g. suggest <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getOnlineHelpNameSuggest();
 
     /**
      * Get the value for the key 'online.help.supported.langs'. <br>
@@ -4484,6 +4652,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.CRAWLER_IGNORE_ROBOTS_TXT);
         }
 
+        public String getCrawlerIgnoreMetaRobots() {
+            return get(FessConfig.CRAWLER_IGNORE_META_ROBOTS);
+        }
+
+        public boolean isCrawlerIgnoreMetaRobots() {
+            return is(FessConfig.CRAWLER_IGNORE_META_ROBOTS);
+        }
+
         public String getCrawlerMetadataContentExcludes() {
             return get(FessConfig.CRAWLER_METADATA_CONTENT_EXCLUDES);
         }
@@ -4772,6 +4948,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.INDEX_FIELD_parent_id);
         }
 
+        public String getIndexFieldImportantContent() {
+            return get(FessConfig.INDEX_FIELD_important_content);
+        }
+
         public String getIndexFieldContent() {
             return get(FessConfig.INDEX_FIELD_CONTENT);
         }
@@ -4920,12 +5100,40 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.QUERY_GEO_FIELDS);
         }
 
+        public String getQueryBrowserLangParameterName() {
+            return get(FessConfig.QUERY_BROWSER_LANG_PARAMETER_NAME);
+        }
+
         public String getQueryReplaceTermWithPrefixQuery() {
             return get(FessConfig.QUERY_REPLACE_TERM_WITH_PREFIX_QUERY);
         }
 
         public boolean isQueryReplaceTermWithPrefixQuery() {
             return is(FessConfig.QUERY_REPLACE_TERM_WITH_PREFIX_QUERY);
+        }
+
+        public String getQueryHighlightFragmentSize() {
+            return get(FessConfig.QUERY_HIGHLIGHT_FRAGMENT_SIZE);
+        }
+
+        public Integer getQueryHighlightFragmentSizeAsInteger() {
+            return getAsInteger(FessConfig.QUERY_HIGHLIGHT_FRAGMENT_SIZE);
+        }
+
+        public String getQueryHighlightNumberOfFragments() {
+            return get(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS);
+        }
+
+        public Integer getQueryHighlightNumberOfFragmentsAsInteger() {
+            return getAsInteger(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS);
+        }
+
+        public String getQueryMaxSearchResultOffset() {
+            return get(FessConfig.QUERY_MAX_SEARCH_RESULT_OFFSET);
+        }
+
+        public Integer getQueryMaxSearchResultOffsetAsInteger() {
+            return getAsInteger(FessConfig.QUERY_MAX_SEARCH_RESULT_OFFSET);
         }
 
         public String getQueryAdditionalResponseFields() {
@@ -5054,6 +5262,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getIndexBackupTargets() {
             return get(FessConfig.INDEX_BACKUP_TARGETS);
+        }
+
+        public String getFormAdminMaxInputSize() {
+            return get(FessConfig.FORM_ADMIN_MAX_INPUT_SIZE);
+        }
+
+        public Integer getFormAdminMaxInputSizeAsInteger() {
+            return getAsInteger(FessConfig.FORM_ADMIN_MAX_INPUT_SIZE);
         }
 
         public String getAuthenticationAdminUsers() {
@@ -5340,6 +5556,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.PAGE_DICTIONARY_MAX_FETCH_SIZE);
         }
 
+        public String getPageThumbnailQueueMaxFetchSize() {
+            return get(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE);
+        }
+
+        public Integer getPageThumbnailQueueMaxFetchSizeAsInteger() {
+            return getAsInteger(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE);
+        }
+
         public String getPagingSearchPageStart() {
             return get(FessConfig.PAGING_SEARCH_PAGE_START);
         }
@@ -5370,6 +5594,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public boolean isThumbnailHtmlPhantomjsEnabled() {
             return is(FessConfig.THUMBNAIL_HTML_PHANTOMJS_ENABLED);
+        }
+
+        public String getThumbnailGeneratorTargets() {
+            return get(FessConfig.THUMBNAIL_GENERATOR_TARGETS);
+        }
+
+        public String getThumbnailCrawlerEnabled() {
+            return get(FessConfig.THUMBNAIL_CRAWLER_ENABLED);
+        }
+
+        public boolean isThumbnailCrawlerEnabled() {
+            return is(FessConfig.THUMBNAIL_CRAWLER_ENABLED);
         }
 
         public String getMailFromName() {
@@ -5554,6 +5790,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getOnlineHelpNameAccesstoken() {
             return get(FessConfig.ONLINE_HELP_NAME_ACCESSTOKEN);
+        }
+
+        public String getOnlineHelpNameSuggest() {
+            return get(FessConfig.ONLINE_HELP_NAME_SUGGEST);
         }
 
         public String getOnlineHelpSupportedLangs() {

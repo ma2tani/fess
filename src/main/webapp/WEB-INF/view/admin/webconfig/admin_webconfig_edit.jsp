@@ -152,7 +152,7 @@
 											<la:errors property="intervalTime" />
 											<input type="number" name="intervalTime"
 												value="${f:h(intervalTime)}" class="form-control"
-												min="0" step="1000">
+												min="0">
 											<la:message key="labels.millisec" />
 										</div>
 									</div>
@@ -199,6 +199,15 @@
 													<la:message key="labels.disabled" />
 												</la:option>
 											</la:select>
+										</div>
+									</div>
+									<div class="form-group">
+										<label for="permissions" class="col-sm-3 control-label"><la:message
+												key="labels.description" /></label>
+										<div class="col-sm-9">
+											<la:errors property="description" />
+											<la:textarea property="description" styleClass="form-control"
+												rows="5" />
 										</div>
 									</div>
 								</div>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,6 @@ import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.web.base.FessSearchAction;
 import org.codelibs.fess.app.web.error.ErrorAction;
 import org.codelibs.fess.util.DocumentUtil;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermQueryBuilder;
 import org.lastaflute.web.Execute;
 import org.lastaflute.web.response.ActionResponse;
 import org.lastaflute.web.response.StreamResponse;
@@ -56,15 +54,7 @@ public class CacheAction extends FessSearchAction {
 
         Map<String, Object> doc = null;
         try {
-            doc =
-                    fessEsClient.getDocument(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(),
-                            queryRequestBuilder -> {
-                                final TermQueryBuilder termQuery = QueryBuilders.termQuery(fessConfig.getIndexFieldDocId(), form.docId);
-                                queryRequestBuilder.setQuery(termQuery);
-                                queryRequestBuilder.addFields(queryHelper.getCacheResponseFields());
-                                fessConfig.processSearchPreference(queryRequestBuilder, getUserBean());
-                                return true;
-                            }).orElse(null);
+            doc = searchService.getDocumentByDocId(form.docId, queryHelper.getCacheResponseFields(), getUserBean()).orElse(null);
         } catch (final Exception e) {
             logger.warn("Failed to request: " + form.docId, e);
         }

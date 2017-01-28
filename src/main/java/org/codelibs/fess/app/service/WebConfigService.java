@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 CodeLibs Project and the Others.
+ * Copyright 2012-2017 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ public class WebConfigService {
         // update pager
         BeanUtil.copyBeanToBean(webConfigList, webConfigPager, option -> option.include(Constants.PAGER_CONVERSION_RULE));
         webConfigPager.setPageNumberList(webConfigList.pageRange(op -> {
-            op.rangeSize(5);
+            op.rangeSize(fessConfig.getPagingPageRangeSizeAsInteger());
         }).createPageNumberList());
 
         return webConfigList;
@@ -72,7 +72,7 @@ public class WebConfigService {
         final String webConfigId = webConfig.getId();
 
         webConfigBhv.delete(webConfig, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
 
         webConfigToLabelBhv.queryDelete(cb -> {
@@ -138,7 +138,7 @@ public class WebConfigService {
         final String[] labelTypeIds = webConfig.getLabelTypeIds();
 
         webConfigBhv.insertOrUpdate(webConfig, op -> {
-            op.setRefresh(true);
+            op.setRefreshPolicy(Constants.TRUE);
         });
         final String webConfigId = webConfig.getId();
         if (isNew) {
@@ -152,7 +152,7 @@ public class WebConfigService {
                     wctltmList.add(mapping);
                 }
                 webConfigToLabelBhv.batchInsert(wctltmList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         } else {
@@ -183,10 +183,10 @@ public class WebConfigService {
                 }
                 list.removeAll(matchedList);
                 webConfigToLabelBhv.batchInsert(newList, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
                 webConfigToLabelBhv.batchDelete(list, op -> {
-                    op.setRefresh(true);
+                    op.setRefreshPolicy(Constants.TRUE);
                 });
             }
         }
