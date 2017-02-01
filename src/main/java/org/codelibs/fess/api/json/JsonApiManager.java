@@ -283,7 +283,11 @@ public class JsonApiManager extends BaseJsonApiManager {
             return "Unknown";
         }
         if (t.getCause() != null) {
+<<<<<<< HEAD
             final StringBuilder sb = new StringBuilder();
+=======
+            StringBuilder sb = new StringBuilder();
+>>>>>>> 93b1d0a27e2ba3b4d5da735e126a26403850fca6
             while (t != null) {
                 sb.append(t.getClass().getSimpleName());
                 if (t.getMessage() != null) {

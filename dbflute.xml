@@ -2,7 +2,11 @@
 <project name="dbflute" basedir=".">
 	<property name="mydbflute.dir" value="${basedir}/mydbflute" />
 	<property name="target.dir" value="${basedir}/target" />
+<<<<<<< HEAD
 	<property name="branch.name" value="master" />
+=======
+	<property name="branch.name" value="es-2.4" />
+>>>>>>> 93b1d0a27e2ba3b4d5da735e126a26403850fca6
 	<property name="mydbflute.url" value="https://github.com/lastaflute/lastaflute-example-waterfront/archive/${branch.name}.zip" />
 
 	<target name="mydbflute.check">
