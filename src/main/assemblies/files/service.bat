@@ -5,6 +5,8 @@ TITLE Fess Service
 
 if NOT DEFINED JAVA_HOME goto err
 
+if not "%CONF_FILE%" == "" goto conffileset
+
 set SCRIPT_DIR=%~dp0
 for %%I in ("%SCRIPT_DIR%..") do set FESS_HOME=%%~dpfI
 
@@ -154,8 +156,13 @@ if not "%FESS_JAVA_OPTS%" == "" set JVM_OPTS=%JVM_OPTS%;%JVM_FESS_JAVA_OPTS%;
 if "%FESS_START_TYPE%" == "" set FESS_START_TYPE=manual
 if "%FESS_STOP_TIMEOUT%" == "" set FESS_STOP_TIMEOUT=0
 
+<<<<<<< HEAD
 if "%SERVICE_DISPLAY_NAME%" == "" set SERVICE_DISPLAY_NAME=Fess (%SERVICE_ID%)
 if "%SERVICE_DESCRIPTION%" == "" set SERVICE_DESCRIPTION=Fess Service - https://github.com/codelibs/fess
+=======
+if "%SERVICE_DISPLAY_NAME%" == "" set SERVICE_DISPLAY_NAME=Fess %FESS_VERSION% (%SERVICE_ID%)
+if "%SERVICE_DESCRIPTION%" == "" set SERVICE_DESCRIPTION=Elasticsearch %FESS_VERSION% Windows Service - https://github.com/codelibs/fess
+>>>>>>> update service.bat
 
 if not "%SERVICE_USERNAME%" == "" (
 	if not "%SERVICE_PASSWORD%" == "" (
@@ -208,6 +215,10 @@ rem convert to MB
 set /a conv=%conv% * 1024
 :mega
 set "%~2=%conv%"
+goto:eof
+
+:conffileset
+echo CONF_FILE setting is no longer supported. elasticsearch.yml must be placed in the config directory and cannot be renamed.
 goto:eof
 
 ENDLOCAL
