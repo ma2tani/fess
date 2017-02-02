@@ -646,14 +646,10 @@ public class FessEsClient implements Client {
 
     protected <T> OptionalEntity<T> getDocument(final String index, final String type,
             final SearchCondition<SearchRequestBuilder> condition, final EntityCreator<T, SearchResponse, SearchHit> creator) {
-<<<<<<< HEAD
         return search(index, type, searchRequestBuilder -> {
             searchRequestBuilder.setVersion(true);
             return condition.build(searchRequestBuilder);
         }, (queryBuilder, execTime, searchResponse) -> {
-=======
-        return search(index, type, condition, (queryBuilder, execTime, searchResponse) -> {
->>>>>>> 93b1d0a27e2ba3b4d5da735e126a26403850fca6
             return searchResponse.map(response -> {
                 final SearchHit[] hits = response.getHits().hits();
                 if (hits.length > 0) {
@@ -873,15 +869,10 @@ public class FessEsClient implements Client {
             queryContext.sortBuilders().forEach(sortBuilder -> searchRequestBuilder.addSort(sortBuilder));
 
             // highlighting
-<<<<<<< HEAD
             final HighlightBuilder highlightBuilder = new HighlightBuilder();
             queryHelper.highlightedFields(stream -> stream.forEach(hf -> highlightBuilder.field(hf,
                     fessConfig.getQueryHighlightFragmentSizeAsInteger(), fessConfig.getQueryHighlightNumberOfFragmentsAsInteger())));
             searchRequestBuilder.highlighter(highlightBuilder);
-=======
-            queryHelper.highlightedFields(stream -> stream.forEach(hf -> searchRequestBuilder.addHighlightedField(hf,
-                    fessConfig.getQueryHighlightFragmentSizeAsInteger(), fessConfig.getQueryHighlightNumberOfFragmentsAsInteger())));
->>>>>>> 93b1d0a27e2ba3b4d5da735e126a26403850fca6
 
             // facets
             if (facetInfo != null) {

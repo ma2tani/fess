@@ -216,7 +216,6 @@ public class SearchService {
 
     public OptionalEntity<Map<String, Object>> getDocumentByDocId(final String docId, final String[] fields,
             final OptionalThing<FessUserBean> userBean) {
-<<<<<<< HEAD
         return fessEsClient.getDocument(
                 fessConfig.getIndexDocumentSearchIndex(),
                 fessConfig.getIndexDocumentType(),
@@ -237,23 +236,6 @@ public class SearchService {
                     return true;
                 });
 
-=======
-        return fessEsClient.getDocument(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(), builder -> {
-            BoolQueryBuilder boolQuery = QueryBuilders.boolQuery().must(QueryBuilders.termQuery(fessConfig.getIndexFieldDocId(), docId));
-            final Set<String> roleSet = ComponentUtil.getRoleQueryHelper().build(SearchRequestType.JSON); // TODO SearchRequestType?
-                if (!roleSet.isEmpty()) {
-                    final BoolQueryBuilder roleQuery = QueryBuilders.boolQuery();
-                    roleSet.stream().forEach(name -> {
-                        roleQuery.should(QueryBuilders.termQuery(fessConfig.getIndexFieldRole(), name));
-                    });
-                    boolQuery.filter(roleQuery);
-                }
-                builder.setQuery(boolQuery);
-                builder.addFields(fields);
-                fessConfig.processSearchPreference(builder, userBean);
-                return true;
-            });
->>>>>>> 93b1d0a27e2ba3b4d5da735e126a26403850fca6
     }
 
     public List<Map<String, Object>> getDocumentListByDocIds(final String[] docIds, final String[] fields,
