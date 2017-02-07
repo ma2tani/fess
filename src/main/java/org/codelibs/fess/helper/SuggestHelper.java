@@ -53,6 +53,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,10 +107,16 @@ public class SuggestHelper {
     }
 
     public void indexFromSearchLog(final List<SearchLog> searchLogList) {
+        final Set<String> sessionIdSet = new HashSet<>();
         searchLogList.stream().forEach(
                 searchLog -> {
                     if (searchLog.getHitCount() == null
                             || searchLog.getHitCount().longValue() < fessConfig.getSuggestMinHitCountAsInteger().longValue()) {
+                        return;
+                    }
+
+                    final String sessionId = searchLog.getUserSessionId();
+                    if (sessionId == null || sessionIdSet.contains(sessionId)) {
                         return;
                     }
 
@@ -139,6 +146,7 @@ public class SuggestHelper {
                         if (fessConfig.isValidSearchLogPermissions(roles.toArray(new String[roles.size()]))) {
                             suggester.indexer().indexFromSearchWord(sb.toString(), fields.toArray(new String[fields.size()]),
                                     tags.toArray(new String[tags.size()]), roles.toArray(new String[roles.size()]), 1, langs);
+                            sessionIdSet.add(sessionId);
                         }
                     }
                 });
@@ -164,6 +172,8 @@ public class SuggestHelper {
                             reader.setQuery(QueryBuilders.functionScoreQuery(QueryBuilders.matchAllQuery(),
                                     flist.toArray(new FunctionScoreQueryBuilder.FilterFunctionBuilder[flist.size()])).boostMode(
                                     CombineFunction.MULTIPLY));
+                            reader.addSort(SortBuilders.fieldSort(fessConfig.getIndexFieldClickCount()));
+                            reader.addSort(SortBuilders.scoreSort());
                             return reader;
                         }, 2, fessConfig.getSuggestUpdateRequestIntervalAsInteger().longValue()).then(response -> {
                     suggester.refresh();
