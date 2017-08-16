@@ -268,6 +268,9 @@
           },
           "userAgent" : {
             "type": "keyword"
+          },
+          "virtualHosts" : {
+            "type": "keyword"
           }
         }
       },
@@ -454,6 +457,9 @@
           },
           "updatedTime" : {
             "type" : "long"
+          },
+          "virtualHosts" : {
+            "type": "keyword"
           }
         }
       },
@@ -569,6 +575,9 @@
             "type": "keyword"
           },
           "term" : {
+            "type": "keyword"
+          },
+          "virtualHost" : {
             "type": "keyword"
           },
           "updatedBy" : {
@@ -722,6 +731,9 @@
           },
           "updatedTime" : {
             "type" : "long"
+          },
+          "virtualHosts" : {
+            "type": "keyword"
           }
         }
       },
@@ -822,6 +834,9 @@
           "permissions" : {
             "type": "keyword"
           },
+          "virtualHost" : {
+            "type": "keyword"
+          },
           "sortOrder" : {
             "type" : "integer"
           },
@@ -853,10 +868,66 @@
           "generator" : {
             "type": "keyword"
           },
-          "path" : {
+          "thumbnail_id" : {
             "type": "keyword"
           },
-          "url" : {
+          "path" : {
+            "type": "keyword"
+          }
+        }
+      },
+      "related_content" : {
+        "_all" : {
+          "enabled" : false
+        },
+        "properties" : {
+          "createdBy" : {
+            "type": "keyword"
+          },
+          "createdTime" : {
+            "type" : "long"
+          },
+          "updatedBy" : {
+            "type": "keyword"
+          },
+          "updatedTime" : {
+            "type" : "long"
+          },
+          "term" : {
+            "type": "keyword"
+          },
+          "content" : {
+            "type": "keyword"
+          },
+          "virtualHost" : {
+            "type": "keyword"
+          }
+        }
+      },
+      "related_query" : {
+        "_all" : {
+          "enabled" : false
+        },
+        "properties" : {
+          "createdBy" : {
+            "type": "keyword"
+          },
+          "createdTime" : {
+            "type" : "long"
+          },
+          "updatedBy" : {
+            "type": "keyword"
+          },
+          "updatedTime" : {
+            "type" : "long"
+          },
+          "term" : {
+            "type": "keyword"
+          },
+          "queries" : {
+            "type": "keyword"
+          },
+          "virtualHost" : {
             "type": "keyword"
           }
         }
@@ -877,12 +948,18 @@
             "properties" : {
               "permissions" : {
                 "array" : "true"
+              },
+              "virtualHosts" : {
+                "array" : "true"
               }
             }
           },
           "file_config" : {
             "properties" : {
               "permissions" : {
+                "array" : "true"
+              },
+              "virtualHosts" : {
                 "array" : "true"
               }
             }
@@ -898,12 +975,22 @@
             "properties" : {
               "permissions" : {
                 "array" : "true"
+              },
+              "virtualHosts" : {
+                "array" : "true"
               }
             }
           },
           "elevate_word" : {
             "properties" : {
               "permissions" : {
+                "array" : "true"
+              }
+            }
+          },
+          "related_query" : {
+            "properties" : {
+              "queries" : {
                 "array" : "true"
               }
             }

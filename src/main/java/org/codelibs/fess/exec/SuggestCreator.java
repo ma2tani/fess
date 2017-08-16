@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 public class SuggestCreator {
 
-    private static final Logger logger = LoggerFactory.getLogger(Crawler.class);
+    private static final Logger logger = LoggerFactory.getLogger(SuggestCreator.class);
 
     @Resource
     public FessEsClient fessEsClient;
@@ -183,6 +183,16 @@ public class SuggestCreator {
 
         final SuggestHelper suggestHelper = ComponentUtil.getSuggestHelper();
 
+        logger.info("Create update index.");
+        suggestHelper.suggester().createNextIndex();
+
+        logger.info("storeAllBadWords");
+        suggestHelper.storeAllBadWords(true);
+
+        logger.info("storeAllElevateWords");
+        suggestHelper.storeAllElevateWords(true);
+
+        logger.info("indexFromDocuments");
         suggestHelper.indexFromDocuments(ret -> {
             logger.info("Success index from documents.");
             result.set(0);
@@ -199,6 +209,15 @@ public class SuggestCreator {
                 logger.debug("Interrupted.", ignore);
             }
         }
+
+        logger.info("storeSearchLog");
+        suggestHelper.storeSearchLog();
+
+        logger.info("switchIndex");
+        suggestHelper.suggester().switchIndex();
+
+        logger.info("removeDisableIndices");
+        suggestHelper.suggester().removeDisableIndices();
 
         return result.get();
     }

@@ -295,6 +295,9 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
         final List<String> roleTypeList = getRoleTypes(responseData);
         stream(crawlingConfig.getPermissions()).of(stream -> stream.forEach(p -> roleTypeList.add(p)));
         putResultDataBody(dataMap, fessConfig.getIndexFieldRole(), roleTypeList);
+        // virtualHosts
+        putResultDataBody(dataMap, fessConfig.getIndexFieldVirtualHost(),
+                stream(crawlingConfig.getVirtualHosts()).get(stream -> stream.filter(StringUtil::isNotBlank).toArray(n -> new String[n])));
         // TODO date
         // lang
         if (StringUtil.isNotBlank(fessConfig.getCrawlerDocumentFileDefaultLang())) {
@@ -310,6 +313,8 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
             putResultDataBody(dataMap, fessConfig.getIndexFieldParentId(), crawlingInfoHelper.generateId(dataMap));
             putResultDataBody(dataMap, fessConfig.getIndexFieldUrl(), url); // set again
         }
+        // thumbnail
+        putResultDataBody(dataMap, fessConfig.getIndexFieldThumbnail(), responseData.getUrl());
 
         // from config
         final Map<String, String> scriptConfigMap = crawlingConfig.getConfigParameterMap(ConfigName.SCRIPT);
@@ -333,7 +338,7 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
     private ExtractData getExtractData(final Extractor extractor, final InputStream in, final Map<String, String> params) {
         try {
             return extractor.getText(in, params);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             if (!fessConfig.isCrawlerIgnoreContentException()) {
                 throw e;
             }

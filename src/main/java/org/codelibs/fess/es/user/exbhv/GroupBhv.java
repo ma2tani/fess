@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.es.user.bsbhv.BsGroupBhv;
 import org.codelibs.fess.es.user.exentity.Group;
+import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.exception.IllegalBehaviorStateException;
 import org.dbflute.util.DfTypeUtil;
 
@@ -30,7 +31,12 @@ import org.dbflute.util.DfTypeUtil;
 public class GroupBhv extends BsGroupBhv {
 
     @Override
-    protected <RESULT extends Group> RESULT createEntity(Map<String, Object> source, Class<? extends RESULT> entityType) {
+    protected String asEsIndex() {
+        return ComponentUtil.getFessConfig().getIndexUserIndex();
+    }
+
+    @Override
+    protected <RESULT extends Group> RESULT createEntity(final Map<String, Object> source, final Class<? extends RESULT> entityType) {
         try {
             final RESULT result = entityType.newInstance();
             result.setName(DfTypeUtil.toString(source.get("name")));

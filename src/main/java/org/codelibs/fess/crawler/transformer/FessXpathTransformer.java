@@ -68,12 +68,17 @@ import org.cyberneko.html.parsers.DOMParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 public class FessXpathTransformer extends XpathTransformer implements FessTransformer {
     private static final Logger logger = LoggerFactory.getLogger(FessXpathTransformer.class);
+
+    private static final String META_NAME_THUMBNAIL_CONTENT = "//META[@name=\"thumbnail\" or @name=\"THUMBNAIL\"]/@content";
+
+    private static final String META_PROPERTY_OGIMAGE_CONTENT = "//META[@property=\"og:image\"]/@content";
 
     private static final String META_NAME_ROBOTS_CONTENT = "//META[@name=\"robots\" or @name=\"ROBOTS\"]/@content";
 
@@ -163,7 +168,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
                     break;
                 }
             } catch (final TransformerException e) {
-                logger.warn("Could not parse a value of " + entry.getKey() + ":" + entry.getValue());
+                logger.warn("Could not parse a value of " + entry.getKey() + ":" + entry.getValue(), e);
             }
         }
 
@@ -209,18 +214,57 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
                 }
             }
         } catch (final TransformerException e) {
-            logger.warn("Could not parse a value of " + META_NAME_ROBOTS_CONTENT);
+            logger.warn("Could not parse a value of " + META_NAME_ROBOTS_CONTENT, e);
         }
 
     }
 
+    protected boolean isValidUrl(final String urlStr) {
+        if (StringUtil.isBlank(urlStr)) {
+            return false;
+        }
+        final String value;
+        if (urlStr.startsWith("://")) {
+            value = "http" + urlStr;
+        } else if (urlStr.startsWith("//")) {
+            value = "http:" + urlStr;
+        } else {
+            value = urlStr;
+        }
+        try {
+            final URL url = new java.net.URL(value);
+            final String host = url.getHost();
+            if (StringUtil.isBlank(host)) {
+                return false;
+            }
+            if ("http".equalsIgnoreCase(host) || "https".equalsIgnoreCase(host)) {
+                return false;
+            }
+        } catch (final MalformedURLException e) {
+            return false;
+        }
+        return true;
+    }
+
+    protected boolean isValidCanonicalUrl(final String url, final String canonicalUrl) {
+        if (url.startsWith("https:") && canonicalUrl.startsWith("http:")) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Invalid Canonical Url(https->http): " + url + " -> " + canonicalUrl);
+            }
+            return false;
+        }
+        return true;
+    }
+
     protected void putAdditionalData(final Map<String, Object> dataMap, final ResponseData responseData, final Document document) {
         // canonical
-        if (StringUtil.isNotBlank(fessConfig.getCrawlerDocumentHtmlCannonicalXpath())) {
+        if (StringUtil.isNotBlank(fessConfig.getCrawlerDocumentHtmlCanonicalXpath())) {
             final String canonicalUrl = getCanonicalUrl(responseData, document);
-            if (canonicalUrl != null && !canonicalUrl.equals(responseData.getUrl())) {
+            if (canonicalUrl != null && !canonicalUrl.equals(responseData.getUrl()) && isValidUrl(canonicalUrl)
+                    && isValidCanonicalUrl(responseData.getUrl(), canonicalUrl)) {
                 final Set<RequestData> childUrlSet = new HashSet<>();
                 childUrlSet.add(RequestDataBuilder.newRequestData().get().url(canonicalUrl).build());
+                logger.info("CANONICAL: " + responseData.getUrl() + " -> " + canonicalUrl);
                 throw new ChildUrlsException(childUrlSet, this.getClass().getName()
                         + "#putAdditionalData(Map<String, Object>, ResponseData, Document)");
             }
@@ -350,6 +394,9 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         final List<String> roleTypeList = new ArrayList<>();
         stream(crawlingConfig.getPermissions()).of(stream -> stream.forEach(p -> roleTypeList.add(p)));
         putResultDataBody(dataMap, fessConfig.getIndexFieldRole(), roleTypeList);
+        // virtualHosts
+        putResultDataBody(dataMap, fessConfig.getIndexFieldVirtualHost(),
+                stream(crawlingConfig.getVirtualHosts()).get(stream -> stream.filter(StringUtil::isNotBlank).toArray(n -> new String[n])));
         // id
         putResultDataBody(dataMap, fessConfig.getIndexFieldId(), crawlingInfoHelper.generateId(dataMap));
         // parentId
@@ -359,6 +406,11 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
             putResultDataBody(dataMap, fessConfig.getIndexFieldUrl(), parentUrl);
             putResultDataBody(dataMap, fessConfig.getIndexFieldParentId(), crawlingInfoHelper.generateId(dataMap));
             putResultDataBody(dataMap, fessConfig.getIndexFieldUrl(), url); // set again
+        }
+        // thumbnail
+        final String thumbnailUrl = getThumbnailUrl(responseData, document);
+        if (StringUtil.isNotBlank(thumbnailUrl)) {
+            putResultDataBody(dataMap, fessConfig.getIndexFieldThumbnail(), thumbnailUrl);
         }
 
         // from config
@@ -400,19 +452,17 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
     }
 
     protected String getCanonicalUrl(final ResponseData responseData, final Document document) {
-        final String canonicalUrl = getSingleNodeValue(document, fessConfig.getCrawlerDocumentHtmlCannonicalXpath(), false);
+        final String canonicalUrl = getSingleNodeValue(document, fessConfig.getCrawlerDocumentHtmlCanonicalXpath(), false);
         if (StringUtil.isBlank(canonicalUrl)) {
             return null;
         }
-        if (canonicalUrl.startsWith("/")) {
-            return normalizeCanonicalUrl(responseData.getUrl(), canonicalUrl);
-        }
-        return canonicalUrl;
+        return normalizeCanonicalUrl(responseData.getUrl(), canonicalUrl);
     }
 
     protected String normalizeCanonicalUrl(final String baseUrl, final String canonicalUrl) {
         try {
-            return new URL(new URL(baseUrl), canonicalUrl).toString();
+            final URL u = new URL(baseUrl);
+            return new URL(u, canonicalUrl.startsWith(":") ? u.getProtocol() + canonicalUrl : canonicalUrl).toString();
         } catch (final MalformedURLException e) {
             logger.warn("Invalid canonical url: " + baseUrl + " : " + canonicalUrl, e);
         }
@@ -561,7 +611,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
                 buf.append("\n");
             }
         } catch (final Exception e) {
-            logger.warn("Could not parse a value of " + xpath);
+            logger.warn("Could not parse a value of " + xpath, e);
         }
         return buf.toString().trim();
     }
@@ -580,7 +630,7 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         List<RequestData> anchorList = new ArrayList<>();
         final String baseHref = getBaseHref(document);
         try {
-            final URL url = new URL(baseHref != null ? baseHref : responseData.getUrl());
+            final URL url = getBaseUrl(responseData.getUrl(), baseHref);
             for (final Map.Entry<String, String> entry : childUrlRuleMap.entrySet()) {
                 for (final String u : getUrlFromTagAttribute(url, document, entry.getKey(), entry.getValue(), responseData.getCharSet())) {
                     anchorList.add(RequestDataBuilder.newRequestData().get().url(u).build());
@@ -589,8 +639,6 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
             anchorList = convertChildUrlList(anchorList);
         } catch (final Exception e) {
             logger.warn("Could not parse anchor tags.", e);
-            //        } finally {
-            //            xpathAPI.remove();
         }
 
         final List<String> urlList = new ArrayList<>(anchorList.size());
@@ -598,6 +646,13 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
             urlList.add(requestData.getUrl());
         }
         return urlList;
+    }
+
+    protected URL getBaseUrl(final String currentUrl, final String baseHref) throws MalformedURLException {
+        if (baseHref != null) {
+            return getURL(currentUrl, baseHref);
+        }
+        return new URL(currentUrl);
     }
 
     @Override
@@ -628,17 +683,12 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
     }
 
     @Override
-    protected boolean isValidPath(final String path) {
-        return super.isValidPath(path);
-    }
-
-    @Override
     protected void addChildUrlFromTagAttribute(final List<String> urlList, final URL url, final String attrValue, final String encoding) {
         final String urlValue = attrValue.trim();
         URL childUrl;
         String u = null;
         try {
-            childUrl = new URL(url, urlValue);
+            childUrl = new URL(url, urlValue.startsWith(":") ? url.getProtocol() + urlValue : urlValue);
             u = encodeUrl(normalizeUrl(childUrl.toExternalForm()), encoding);
         } catch (final MalformedURLException e) {
             final int pos = urlValue.indexOf(':');
@@ -675,4 +725,117 @@ public class FessXpathTransformer extends XpathTransformer implements FessTransf
         this.useGoogleOffOn = useGoogleOffOn;
     }
 
+    protected String getThumbnailUrl(final ResponseData responseData, final Document document) {
+        // TODO PageMap
+        try {
+            // meta thumbnail
+            final Node thumbnailNode = getXPathAPI().selectSingleNode(document, META_NAME_THUMBNAIL_CONTENT);
+            if (thumbnailNode != null) {
+                final String content = thumbnailNode.getTextContent();
+                if (StringUtil.isNotBlank(content)) {
+                    final URL thumbnailUrl = getURL(responseData.getUrl(), content);
+                    if (thumbnailUrl != null) {
+                        return thumbnailUrl.toExternalForm();
+                    }
+                }
+            }
+
+            // meta og:image
+            final Node ogImageNode = getXPathAPI().selectSingleNode(document, META_PROPERTY_OGIMAGE_CONTENT);
+            if (ogImageNode != null) {
+                final String content = ogImageNode.getTextContent();
+                if (StringUtil.isNotBlank(content)) {
+                    final URL thumbnailUrl = getURL(responseData.getUrl(), content);
+                    if (thumbnailUrl != null) {
+                        return thumbnailUrl.toExternalForm();
+                    }
+                }
+            }
+
+            final NodeList imgNodeList = getXPathAPI().selectNodeList(document, fessConfig.getThumbnailHtmlImageXpath());
+            String firstThumbnailUrl = null;
+            for (int i = 0; i < imgNodeList.getLength(); i++) {
+                final Node imgNode = imgNodeList.item(i);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("img tag: " + imgNode);
+                }
+                final NamedNodeMap attributes = imgNode.getAttributes();
+                final String thumbnailUrl = getThumbnailSrc(responseData.getUrl(), attributes);
+                final Integer height = getAttributeAsInteger(attributes, "height");
+                final Integer width = getAttributeAsInteger(attributes, "width");
+                if (!fessConfig.isThumbnailHtmlImageUrl(thumbnailUrl)) {
+                    continue;
+                } else if (height != null && width != null) {
+                    try {
+                        if (fessConfig.validateThumbnailSize(width, height)) {
+                            return thumbnailUrl;
+                        }
+                    } catch (final Exception e) {
+                        logger.debug("Failed to parse " + imgNode + " at " + responseData.getUrl(), e);
+                    }
+                } else if (firstThumbnailUrl == null) {
+                    firstThumbnailUrl = thumbnailUrl;
+                }
+            }
+
+            if (firstThumbnailUrl != null) {
+                return firstThumbnailUrl;
+            }
+        } catch (final Exception e) {
+            logger.warn("Failed to retrieve thumbnail url from " + responseData.getUrl(), e);
+        }
+        return null;
+    }
+
+    protected String getThumbnailSrc(final String url, final NamedNodeMap attributes) {
+        final Node srcNode = attributes.getNamedItem("src");
+        if (srcNode != null) {
+            try {
+                final URL thumbnailUrl = getURL(url, srcNode.getTextContent());
+                if (thumbnailUrl != null) {
+                    return thumbnailUrl.toExternalForm();
+                }
+            } catch (final Exception e) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Failed to parse thumbnail url for " + url + " : " + attributes, e);
+                }
+            }
+        }
+        return null;
+    }
+
+    protected Integer getAttributeAsInteger(final NamedNodeMap attributes, final String name) {
+        final Node namedItem = attributes.getNamedItem(name);
+        if (namedItem == null) {
+            return null;
+        }
+        final String value = namedItem.getTextContent();
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (final NumberFormatException e) {
+            if (value.endsWith("%") || value.endsWith("px")) {
+                return null;
+            }
+            return 0;
+        }
+    }
+
+    protected URL getURL(final String currentUrl, final String url) throws MalformedURLException {
+        if (url != null) {
+            if (url.startsWith("://")) {
+                final String protocol = currentUrl.split(":")[0];
+                return new URL(protocol + url);
+            } else if (url.startsWith("//")) {
+                final String protocol = currentUrl.split(":")[0];
+                return new URL(protocol + ":" + url);
+            } else if (url.startsWith("/") || url.indexOf(':') == -1) {
+                return new URL(new URL(currentUrl), url);
+            }
+            return new URL(url);
+        }
+        return null;
+    }
 }

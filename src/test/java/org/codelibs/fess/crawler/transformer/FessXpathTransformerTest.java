@@ -18,6 +18,7 @@ package org.codelibs.fess.crawler.transformer;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -372,68 +373,6 @@ public class FessXpathTransformerTest extends UnitFessTestCase {
 
     }
 
-    public void test_isValidPath_valid() {
-        final FessXpathTransformer fessXpathTransformer = new FessXpathTransformer();
-        fessXpathTransformer.init();
-        fessXpathTransformer.convertUrlMap.put("feed:", "http:");
-
-        String value;
-
-        value = "foo.html";
-        assertTrue(fessXpathTransformer.isValidPath(value));
-
-        value = "./foo.html";
-        assertTrue(fessXpathTransformer.isValidPath(value));
-
-        value = "/foo.html";
-        assertTrue(fessXpathTransformer.isValidPath(value));
-
-        value = "http://www.seasar.org/foo.html";
-        assertTrue(fessXpathTransformer.isValidPath(value));
-
-        value = "a javascript:...";
-        assertTrue(fessXpathTransformer.isValidPath(value));
-
-    }
-
-    public void test_isValidPath_invalid() {
-        final FessXpathTransformer fessXpathTransformer = new FessXpathTransformer();
-        fessXpathTransformer.init();
-        fessXpathTransformer.convertUrlMap.put("feed:", "http:");
-
-        String value;
-
-        value = "javascript:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "mailto:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "irc:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = " javascript:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = " mailto:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = " irc:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "JAVASCRIPT:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "MAILTO:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "IRC:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-
-        value = "skype:...";
-        assertFalse(fessXpathTransformer.isValidPath(value));
-    }
-
     public void test_convertChildUrlList() {
         final FessXpathTransformer fessXpathTransformer = new FessXpathTransformer();
         fessXpathTransformer.init();
@@ -600,5 +539,146 @@ public class FessXpathTransformerTest extends UnitFessTestCase {
 
         value = transformer.normalizeCanonicalUrl("http://hoge.com/bbb", "/aaa");
         assertEquals("http://hoge.com/aaa", value);
+
+        value = transformer.normalizeCanonicalUrl("http://hoge.com/bbb", "http://hoge.com/aaa");
+        assertEquals("http://hoge.com/aaa", value);
+
+        value = transformer.normalizeCanonicalUrl("http://hoge.com/bbb", "://hoge.com/aaa");
+        assertEquals("http://hoge.com/aaa", value);
+
+        value = transformer.normalizeCanonicalUrl("http://hoge.com/bbb", "//hoge.com/aaa");
+        assertEquals("http://hoge.com/aaa", value);
+    }
+
+    public void test_getBaseUrl() throws Exception {
+        final FessXpathTransformer transformer = new FessXpathTransformer();
+        URL value;
+
+        value = transformer.getBaseUrl("http://hoge.com/", null);
+        assertEquals("http://hoge.com/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/", "http://hoge.com/");
+        assertEquals("http://hoge.com/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/aaa/bbb.html", "http://hoge.com/");
+        assertEquals("http://hoge.com/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/aaa/bbb.html", "http://hoge.com/ccc/");
+        assertEquals("http://hoge.com/ccc/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/aaa/bbb.html", null);
+        assertEquals("http://hoge.com/aaa/bbb.html", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/", "://hoge.com/aaa/");
+        assertEquals("http://hoge.com/aaa/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("https://hoge.com/", "://hoge.com/aaa/");
+        assertEquals("https://hoge.com/aaa/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("http://hoge.com/", "//hoge.com/aaa/");
+        assertEquals("http://hoge.com/aaa/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("https://hoge.com/", "//hoge.com/aaa/");
+        assertEquals("https://hoge.com/aaa/", value.toExternalForm());
+
+        value = transformer.getBaseUrl("https://hoge.com/", "aaa/");
+        assertEquals("https://hoge.com/aaa/", value.toExternalForm());
+    }
+
+    public void test_getThumbnailUrl_no() throws Exception {
+
+        final FessXpathTransformer transformer = new FessXpathTransformer();
+        transformer.init();
+        final ResponseData responseData = new ResponseData();
+        responseData.setUrl("http://example.com/");
+
+        String data = "<html><body>foo</body></html>";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"x\" height=\"x\">";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"10\" height=\"100\">";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"100\" height=\"10\">";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"400\" height=\"100\">";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"100\" height=\"400\">";
+        assertNull(transformer.getThumbnailUrl(responseData, getDocument(data)));
+    }
+
+    public void test_getThumbnailUrl() throws Exception {
+        String data = "<meta property=\"og:image\" content=\"http://example/foo.jpg\" />";
+        String expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<meta property=\"og:image\" content=\"://example/foo.jpg\" />";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<meta property=\"og:image\" content=\"http://example/foo.jpg\" />";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<meta property=\"og:image\" content=\"/foo.jpg\" />";
+        expected = "http://example.com/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\">";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\">" //
+                + "<img src=\"http://example/bar.jpg\">";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\">" //
+                + "<img src=\"http://example/bar.jpg\" width=\"100\" height=\"100\">";
+        expected = "http://example/bar.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"100\" height=\"100\">";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"100%\" height=\"100%\">";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+
+        data = "<img src=\"http://example/foo.jpg\" width=\"100px\" height=\"100px\">";
+        expected = "http://example/foo.jpg";
+        assertGetThumbnailUrl(data, expected);
+    }
+
+    private void assertGetThumbnailUrl(String data, String expected) throws Exception {
+        final Document document = getDocument(data);
+
+        final FessXpathTransformer transformer = new FessXpathTransformer();
+        transformer.init();
+
+        final ResponseData responseData = new ResponseData();
+        responseData.setUrl("http://example.com/");
+
+        assertEquals(expected, transformer.getThumbnailUrl(responseData, document));
+    }
+
+    public void test_isValidUrl() {
+        final FessXpathTransformer transformer = new FessXpathTransformer();
+
+        assertTrue(transformer.isValidUrl("http://www.example.com"));
+        assertTrue(transformer.isValidUrl("http://www.example.com/aaa"));
+        assertTrue(transformer.isValidUrl("https://www.example.com"));
+        assertTrue(transformer.isValidUrl("://www.example.com"));
+        assertTrue(transformer.isValidUrl("//www.example.com"));
+
+        assertFalse(transformer.isValidUrl(null));
+        assertFalse(transformer.isValidUrl(" "));
+        assertFalse(transformer.isValidUrl("http://"));
+        assertFalse(transformer.isValidUrl("http://http://www.example.com"));
     }
 }

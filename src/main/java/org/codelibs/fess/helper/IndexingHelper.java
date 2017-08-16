@@ -45,18 +45,32 @@ public class IndexingHelper {
             return;
         }
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        if (fessConfig.isResultCollapsed()) {
+            docList.forEach(doc -> {
+                doc.put("content_minhash", doc.get(fessConfig.getIndexFieldContent()));
+            });
+        }
         final long execTime = System.currentTimeMillis();
         if (logger.isDebugEnabled()) {
             logger.debug("Sending " + docList.size() + " documents to a server.");
         }
         try {
+            if (fessConfig.isThumbnailCrawlerEnabled()) {
+                final ThumbnailManager thumbnailManager = ComponentUtil.getThumbnailManager();
+                docList.stream().forEach(
+                        doc -> {
+                            if (!thumbnailManager.offer(doc)) {
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("Removing " + doc.get(fessConfig.getIndexFieldThumbnail()) + " from "
+                                            + doc.get(fessConfig.getIndexFieldUrl()));
+                                }
+                                doc.remove(fessConfig.getIndexFieldThumbnail());
+                            }
+                        });
+            }
             synchronized (fessEsClient) {
                 deleteOldDocuments(fessEsClient, docList);
                 fessEsClient.addAll(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), docList);
-            }
-            if (fessConfig.isThumbnailCrawlerEnabled()) {
-                final ThumbnailManager thumbnailManager = ComponentUtil.getThumbnailManager();
-                docList.stream().forEach(doc -> thumbnailManager.offer(doc));
             }
             if (logger.isInfoEnabled()) {
                 if (docList.getContentSize() > 0) {
@@ -116,9 +130,14 @@ public class IndexingHelper {
         }
     }
 
-    public void deleteDocument(final FessEsClient fessEsClient, final String id) {
+    public boolean updateDocument(final FessEsClient fessEsClient, final String id, final String field, final Object value) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
-        fessEsClient.delete(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), id, 0);
+        return fessEsClient.update(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), id, field, value);
+    }
+
+    public boolean deleteDocument(final FessEsClient fessEsClient, final String id) {
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        return fessEsClient.delete(fessConfig.getIndexDocumentUpdateIndex(), fessConfig.getIndexDocumentType(), id, 0);
     }
 
     public int deleteDocumentByUrl(final FessEsClient fessEsClient, final String url) {

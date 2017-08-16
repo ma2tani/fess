@@ -7,7 +7,7 @@
       "enabled": false
     },
     "properties": {
-      "url": {
+      "thumbnail_id": {
         "type": "keyword"
       },
       "path": {

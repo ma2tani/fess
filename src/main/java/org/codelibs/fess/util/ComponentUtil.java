@@ -23,6 +23,7 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.codelibs.core.crypto.CachedCipher;
 import org.codelibs.core.misc.DynamicProperties;
 import org.codelibs.fess.api.WebApiManagerFactory;
+import org.codelibs.fess.auth.AuthenticationManager;
 import org.codelibs.fess.crawler.client.CrawlerClientFactory;
 import org.codelibs.fess.crawler.entity.EsAccessResult;
 import org.codelibs.fess.crawler.extractor.ExtractorFactory;
@@ -47,6 +48,8 @@ import org.codelibs.fess.helper.PermissionHelper;
 import org.codelibs.fess.helper.PopularWordHelper;
 import org.codelibs.fess.helper.ProcessHelper;
 import org.codelibs.fess.helper.QueryHelper;
+import org.codelibs.fess.helper.RelatedContentHelper;
+import org.codelibs.fess.helper.RelatedQueryHelper;
 import org.codelibs.fess.helper.RoleQueryHelper;
 import org.codelibs.fess.helper.SambaHelper;
 import org.codelibs.fess.helper.SearchLogHelper;
@@ -76,6 +79,8 @@ import org.slf4j.LoggerFactory;
 public final class ComponentUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ComponentUtil.class);
+
+    private static final String AUTHENTICATION_MANAGER = "authenticationManager";
 
     private static final String THUMBNAIL_MANAGER = "thumbnailManager";
 
@@ -378,12 +383,24 @@ public final class ComponentUtil {
         return getComponent(THUMBNAIL_MANAGER);
     }
 
+    public static AuthenticationManager getAuthenticationManager() {
+        return getComponent(AUTHENTICATION_MANAGER);
+    }
+
     public static PrimaryCipher getPrimaryCipher() {
         return getComponent(PrimaryCipher.class);
     }
 
     public static CrawlerClientFactory getCrawlerClientFactory() {
         return getComponent(CrawlerClientFactory.class);
+    }
+
+    public static RelatedQueryHelper getRelatedQueryHelper() {
+        return getComponent(RelatedQueryHelper.class);
+    }
+
+    public static RelatedContentHelper getRelatedContentHelper() {
+        return getComponent(RelatedContentHelper.class);
     }
 
     public static <T> T getComponent(final Class<T> clazz) {
@@ -414,6 +431,10 @@ public final class ComponentUtil {
         return SingletonLaContainerFactory.getContainer().hasComponentDef(QUERY_HELPER);
     }
 
+    public static boolean hasPopularWordHelper() {
+        return SingletonLaContainerFactory.getContainer().hasComponentDef(POPULAR_WORD_HELPER);
+    }
+
     public static boolean available() {
         try {
             return SingletonLaContainer.getComponent(SYSTEM_HELPER) != null;
@@ -425,7 +446,7 @@ public final class ComponentUtil {
 
     /**
      * For test purpose only.
-     * 
+     *
      * @param fessConfig fessConfig instance
      */
     public static void setFessConfig(final FessConfig fessConfig) {

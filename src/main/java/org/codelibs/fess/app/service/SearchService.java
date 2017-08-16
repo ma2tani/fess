@@ -56,6 +56,7 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.lastaflute.taglib.function.LaFunctions;
+import org.lastaflute.web.util.LaRequestUtil;
 
 public class SearchService {
 
@@ -85,9 +86,12 @@ public class SearchService {
 
     public void search(final SearchRequestParams params, final SearchRenderData data, final OptionalThing<FessUserBean> userBean) {
         final long requestedTime = systemHelper.getCurrentTimeAsLong();
-
         final long startTime = System.currentTimeMillis();
-        final boolean searchLogSupport = fessConfig.isSearchLog();
+
+        LaRequestUtil.getOptionalRequest().ifPresent(request -> {
+            request.setAttribute(Constants.REQUEST_LANGUAGES, params.getLanguages());
+            request.setAttribute(Constants.REQUEST_QUERIES, params.getQuery());
+        });
 
         final String query =
                 QueryStringBuilder.query(params.getQuery()).extraQueries(params.getExtraQueries()).fields(params.getFields()).build();
@@ -104,7 +108,8 @@ public class SearchService {
                             return SearchConditionBuilder.builder(searchRequestBuilder)
                                     .query(StringUtil.isBlank(sortField) ? query : query + " sort:" + sortField).offset(pageStart)
                                     .size(pageSize).facetInfo(params.getFacetInfo()).geoInfo(params.getGeoInfo())
-                                    .responseFields(queryHelper.getResponseFields()).searchRequestType(params.getType()).build();
+                                    .similarDocHash(params.getSimilarDocHash()).responseFields(queryHelper.getResponseFields())
+                                    .searchRequestType(params.getType()).build();
                         }, (searchRequestBuilder, execTime, searchResponse) -> {
                             final QueryResponseList queryResponseList = ComponentUtil.getQueryResponseList();
                             queryResponseList.init(searchResponse, pageStart, pageSize);
@@ -156,10 +161,16 @@ public class SearchService {
         data.setQueryId(queryId);
 
         // search log
-        if (searchLogSupport) {
+        if (fessConfig.isSearchLog()) {
             ComponentUtil.getSearchLogHelper().addSearchLog(params, DfTypeUtil.toLocalDateTime(requestedTime), queryId, query, pageStart,
                     pageSize, queryResponseList);
         }
+
+        // favorite
+        if (fessConfig.isUserFavorite()) {
+            ComponentUtil.getUserInfoHelper().storeQueryId(queryId, documentItems);
+        }
+
     }
 
     public int deleteByQuery(final HttpServletRequest request, final SearchRequestParams params) {

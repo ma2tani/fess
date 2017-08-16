@@ -24,7 +24,7 @@ import org.codelibs.core.lang.StringUtil;
 public class Constants extends CoreLibConstants {
     public static final int MAJOR_VERSION = 11;
 
-    public static final int MINOR_VERSION = 1;
+    public static final int MINOR_VERSION = 3;
 
     public static final String FESS_VERSION = String.valueOf(MAJOR_VERSION) + "." + String.valueOf(MINOR_VERSION);
 
@@ -74,11 +74,11 @@ public class Constants extends CoreLibConstants {
 
     public static final int DEFAULT_INTERVAL_TIME_FOR_FS = 1000;
 
-    public static final int DEFAULT_INTERVAL_TIME_FOR_WEB = 30000;
+    public static final int DEFAULT_INTERVAL_TIME_FOR_WEB = 10000;
 
     public static final int DEFAULT_NUM_OF_THREAD_FOR_FS = 5;
 
-    public static final int DEFAULT_NUM_OF_THREAD_FOR_WEB = 3;
+    public static final int DEFAULT_NUM_OF_THREAD_FOR_WEB = 1;
 
     public static final long DEFAULT_CRAWLING_EXECUTION_INTERVAL = 5000L;
 
@@ -111,7 +111,11 @@ public class Constants extends CoreLibConstants {
 
     public static final String DEFAULT_SORT_VALUE_PROPERTY = "sort.value";
 
+    public static final String VIRTUAL_HOST_VALUE_PROPERTY = "virtual.host.value";
+
     public static final String LOGIN_REQUIRED_PROPERTY = "login.required";
+
+    public static final String RESULT_COLLAPSED_PROPERTY = "result.collapsed";
 
     public static final String LOGIN_LINK_ENALBED_PROPERTY = "login.link.enabled";
 
@@ -182,13 +186,16 @@ public class Constants extends CoreLibConstants {
             + ",YandexBot"//
             + ",Chilkat"//
             + ",CloudFront"//
-            + ",Mediapartners";
+            + ",Mediapartners"//
+            + ",MSIE 6";
 
     public static final String DEFAULT_FROM_EMAIL = "Administrator <root@localhost>";
 
     // info map
 
     public static final String CRAWLER_STATUS = "CrawlerStatus";
+
+    public static final String CRAWLER_ERRORS = "CrawlerErrors";
 
     public static final String CRAWLER_START_TIME = "CrawlerStartTime";
 
@@ -262,8 +269,6 @@ public class Constants extends CoreLibConstants {
     public static final String STATS_REPORT_TYPE = "reportType";
 
     public static final String RESULT_DOC_ID_CACHE = "resultDocIds";
-
-    public static final String SCREEN_SHOT_PATH_CACHE = "thumbnailPaths";
 
     public static final String CRAWLING_INFO_SYSTEM_NAME = "system";
 
@@ -339,9 +344,10 @@ public class Constants extends CoreLibConstants {
 
     public static final String DATA_CRAWLER_TYPE = "data_crawling";
 
-    // TODO remove searchParams
-    public static final String[] COMMON_CONVERSION_RULE = new String[] { "searchParams", "crudMode", "createdBy", "createdTime",
-            "updatedBy", "updatedTime" };
+    public static final String[] COMMON_CONVERSION_RULE =
+            new String[] { "crudMode", "createdBy", "createdTime", "updatedBy", "updatedTime" };
+
+    public static final String[] COMMON_API_CONVERSION_RULE = new String[] { "crudMode" };
 
     public static final String USER_INFO = "LoginInfo";
 
@@ -401,7 +407,13 @@ public class Constants extends CoreLibConstants {
 
     public static final String PERMISSIONS = "permissions";
 
+    public static final String QUERIES = "queries";
+
+    public static final String VIRTUAL_HOSTS = "virtualHosts";
+
     public static final String CIPHER_PREFIX = "{cipher}";
 
     public static final String SYSTEM_USER = "system";
+
+    public static final String EMPTY_USER_ID = "<empty>";
 }

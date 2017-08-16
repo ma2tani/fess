@@ -49,11 +49,11 @@ public class BsThumbnailQueue extends EsAbstractEntity {
     /** generator */
     protected String generator;
 
+    /** thumbnail_id */
+    protected String thumbnailId;
+
     /** path */
     protected String path;
-
-    /** url */
-    protected String url;
 
     // [Referrers] *comment only
 
@@ -88,11 +88,11 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         if (generator != null) {
             addFieldToSource(sourceMap, "generator", generator);
         }
+        if (thumbnailId != null) {
+            addFieldToSource(sourceMap, "thumbnail_id", thumbnailId);
+        }
         if (path != null) {
             addFieldToSource(sourceMap, "path", path);
-        }
-        if (url != null) {
-            addFieldToSource(sourceMap, "url", url);
         }
         return sourceMap;
     }
@@ -111,8 +111,8 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         sb.append(dm).append(createdTime);
         sb.append(dm).append(target);
         sb.append(dm).append(generator);
+        sb.append(dm).append(thumbnailId);
         sb.append(dm).append(path);
-        sb.append(dm).append(url);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -163,6 +163,16 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         this.generator = value;
     }
 
+    public String getThumbnailId() {
+        checkSpecifiedProperty("thumbnailId");
+        return convertEmptyToNull(thumbnailId);
+    }
+
+    public void setThumbnailId(String value) {
+        registerModifiedProperty("thumbnailId");
+        this.thumbnailId = value;
+    }
+
     public String getPath() {
         checkSpecifiedProperty("path");
         return convertEmptyToNull(path);
@@ -171,15 +181,5 @@ public class BsThumbnailQueue extends EsAbstractEntity {
     public void setPath(String value) {
         registerModifiedProperty("path");
         this.path = value;
-    }
-
-    public String getUrl() {
-        checkSpecifiedProperty("url");
-        return convertEmptyToNull(url);
-    }
-
-    public void setUrl(String value) {
-        registerModifiedProperty("url");
-        this.url = value;
     }
 }

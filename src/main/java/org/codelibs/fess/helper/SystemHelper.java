@@ -15,16 +15,21 @@
  */
 package org.codelibs.fess.helper;
 
+import static org.codelibs.core.stream.StreamUtil.stream;
+
 import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,11 +42,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.crawler.util.CharUtil;
 import org.codelibs.fess.mylasta.action.FessMessages;
@@ -49,14 +56,12 @@ import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.validation.FessActionValidator;
-import org.lastaflute.core.message.MessageManager;
-import org.lastaflute.core.message.supplier.MessageLocaleProvider;
 import org.lastaflute.core.message.supplier.UserMessagesCreator;
 import org.lastaflute.web.TypicalAction;
 import org.lastaflute.web.ruts.process.ActionRuntime;
 import org.lastaflute.web.servlet.request.RequestManager;
+import org.lastaflute.web.util.LaServletContextUtil;
 import org.lastaflute.web.validation.ActionValidator;
-import org.lastaflute.web.validation.VaErrorHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +73,7 @@ import com.ibm.icu.util.ULocale;
 public class SystemHelper {
     private static final Logger logger = LoggerFactory.getLogger(SystemHelper.class);
 
-    protected final Map<String, String> designJspFileNameMap = new HashMap<>();
+    protected final Map<String, String> designJspFileNameMap = new LinkedHashMap<>();
 
     protected final AtomicBoolean forceStop = new AtomicBoolean(false);
 
@@ -182,6 +187,10 @@ public class SystemHelper {
 
     public String getHelpLink(final String name) {
         final String url = ComponentUtil.getFessConfig().getOnlineHelpBaseLink() + name + "-guide.html";
+        return getHelpUrl(url);
+    }
+
+    protected String getHelpUrl(final String url) {
         final Locale locale = ComponentUtil.getRequestManager().getUserLocale();
         if (locale != null) {
             final String lang = locale.getLanguage();
@@ -203,6 +212,38 @@ public class SystemHelper {
 
     public String getDesignJspFileName(final String fileName) {
         return designJspFileNameMap.get(fileName);
+    }
+
+    @SuppressWarnings("unchecked")
+    public Pair<String, String>[] getDesignJspFileNames() {
+        return designJspFileNameMap.entrySet().stream().map(e -> new Pair<>(e.getKey(), e.getValue())).toArray(n -> new Pair[n]);
+    }
+
+    public void refreshDesignJspFiles() {
+        final ServletContext servletContext = LaServletContextUtil.getServletContext();
+        stream(ComponentUtil.getFessConfig().getVirtualHostPaths()).of(
+                stream -> stream.filter(s -> s != null && !s.equals("/")).forEach(
+                        key -> {
+                            designJspFileNameMap
+                                    .entrySet()
+                                    .stream()
+                                    .forEach(
+                                            e -> {
+                                                final File jspFile =
+                                                        new File(servletContext.getRealPath("/WEB-INF/view" + key + "/" + e.getValue()));
+                                                if (!jspFile.exists()) {
+                                                    jspFile.getParentFile().mkdirs();
+                                                    final File baseJspFile =
+                                                            new File(servletContext.getRealPath("/WEB-INF/view/" + e.getValue()));
+                                                    try {
+                                                        Files.copy(baseJspFile.toPath(), jspFile.toPath());
+                                                    } catch (final IOException ex) {
+                                                        logger.warn("Could not copy from " + baseJspFile.getAbsolutePath() + " to "
+                                                                + jspFile.getAbsolutePath(), ex);
+                                                    }
+                                                }
+                                            });
+                        }));
     }
 
     public boolean isForceStop() {
@@ -281,7 +322,9 @@ public class SystemHelper {
     }
 
     public void setupAdminHtmlData(final TypicalAction action, final ActionRuntime runtime) {
-        // nothing
+        runtime.registerData("developmentMode", ComponentUtil.getFessEsClient().isEmbedded());
+        final String url = ComponentUtil.getFessConfig().getOnlineHelpInstallation();
+        runtime.registerData("installationLink", getHelpUrl(url));
     }
 
     public String getSearchRoleByUser(final String name) {
@@ -323,10 +366,9 @@ public class SystemHelper {
         return previousClusterState.getAndSet(status) != status;
     }
 
-    public ActionValidator<FessMessages> createValidator(MessageManager messageManager, MessageLocaleProvider messageLocaleProvider,
-            UserMessagesCreator<FessMessages> userMessagesCreator, VaErrorHook apiFailureHook, Class<?>... runtimeGroups) {
-        return new FessActionValidator<FessMessages>(messageManager, messageLocaleProvider, userMessagesCreator, apiFailureHook,
-                runtimeGroups);
+    public ActionValidator<FessMessages> createValidator(final RequestManager requestManager,
+            final UserMessagesCreator<FessMessages> messagesCreator, final Class<?>[] runtimeGroups) {
+        return new FessActionValidator<>(requestManager, messagesCreator, runtimeGroups);
     }
 
 }

@@ -63,7 +63,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
-import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -116,9 +115,7 @@ public class QueryHelper {
 
     protected boolean lowercaseWildcard = true;
 
-    protected long timeAllowed = -1;
-
-    protected SortBuilder[] defaultSortBuilders;
+    protected SortBuilder<?>[] defaultSortBuilders;
 
     protected String highlightPrefix = "hl_";
 
@@ -148,6 +145,7 @@ public class QueryHelper {
                     fessConfig.getIndexFieldTitle(), //
                     fessConfig.getIndexFieldDigest(), //
                     fessConfig.getIndexFieldUrl(), //
+                    fessConfig.getIndexFieldThumbnail(), //
                     fessConfig.getIndexFieldClickCount(), //
                     fessConfig.getIndexFieldFavoriteCount(), //
                     fessConfig.getIndexFieldConfigId(), //
@@ -197,6 +195,7 @@ public class QueryHelper {
                     fessConfig.getIndexFieldFilename(), //
                     fessConfig.getIndexFieldLabel(), //
                     fessConfig.getIndexFieldSegment(), //
+                    fessConfig.getIndexFieldAnchor(), //
                     fessConfig.getIndexFieldClickCount(), //
                     fessConfig.getIndexFieldFavoriteCount(), //
                     fessConfig.getIndexFieldLang());
@@ -290,11 +289,28 @@ public class QueryHelper {
         buildBaseQuery(queryContext, context);
         buildBoostQuery(queryContext);
         buildRoleQuery(queryContext, searchRequestType);
+        buildVirtualHostQuery(queryContext, searchRequestType);
 
         if (!queryContext.hasSorts() && defaultSortBuilders != null) {
             queryContext.addSorts(defaultSortBuilders);
         }
         return queryContext;
+    }
+
+    protected void buildVirtualHostQuery(final QueryContext queryContext, final SearchRequestType searchRequestType) {
+        switch (searchRequestType) {
+        case ADMIN_SEARCH:
+            // nothing to do
+            break;
+        default:
+            final String key = fessConfig.getVirtualHostKey();
+            if (StringUtil.isNotBlank(key)) {
+                queryContext.addQuery(boolQuery -> {
+                    boolQuery.filter(QueryBuilders.termQuery(fessConfig.getIndexFieldVirtualHost(), key));
+                });
+            }
+            break;
+        }
     }
 
     protected void buildRoleQuery(final QueryContext queryContext, final SearchRequestType searchRequestType) {
@@ -568,19 +584,17 @@ public class QueryHelper {
                 builder.apply(fessConfig.getIndexFieldContent(), fessConfig.getQueryBoostContentAsDecimal().floatValue());
         boolQuery.should(contentQuery);
         getQueryLanguages().ifPresent(
-                langs -> {
-                    stream(langs).of(
-                            stream -> stream.forEach(lang -> {
-                                final QueryBuilder titleLangQuery =
-                                        builder.apply(fessConfig.getIndexFieldTitle() + "_" + lang, fessConfig
-                                                .getQueryBoostTitleLangAsDecimal().floatValue());
-                                boolQuery.should(titleLangQuery);
-                                final QueryBuilder contentLangQuery =
-                                        builder.apply(fessConfig.getIndexFieldContent() + "_" + lang, fessConfig
-                                                .getQueryBoostContentLangAsDecimal().floatValue());
-                                boolQuery.should(contentLangQuery);
-                            }));
-                });
+                langs -> stream(langs).of(
+                        stream -> stream.forEach(lang -> {
+                            final QueryBuilder titleLangQuery =
+                                    builder.apply(fessConfig.getIndexFieldTitle() + "_" + lang, fessConfig
+                                            .getQueryBoostTitleLangAsDecimal().floatValue());
+                            boolQuery.should(titleLangQuery);
+                            final QueryBuilder contentLangQuery =
+                                    builder.apply(fessConfig.getIndexFieldContent() + "_" + lang, fessConfig
+                                            .getQueryBoostContentLangAsDecimal().floatValue());
+                            boolQuery.should(contentLangQuery);
+                        })));
         return boolQuery;
     }
 
@@ -752,22 +766,8 @@ public class QueryHelper {
         this.additionalQuery = additionalQuery;
     }
 
-    /**
-     * @return the timeAllowed
-     */
-    public long getTimeAllowed() {
-        return timeAllowed;
-    }
-
-    /**
-     * @param timeAllowed the timeAllowed to set
-     */
-    public void setTimeAllowed(final long timeAllowed) {
-        this.timeAllowed = timeAllowed;
-    }
-
     public void addDefaultSort(final String fieldName, final String order) {
-        final List<SortBuilder> list = new ArrayList<>();
+        final List<SortBuilder<?>> list = new ArrayList<>();
         if (defaultSortBuilders != null) {
             stream(defaultSortBuilders).of(stream -> stream.forEach(builder -> list.add(builder)));
         }
@@ -775,13 +775,12 @@ public class QueryHelper {
         defaultSortBuilders = list.toArray(new SortBuilder[list.size()]);
     }
 
-    protected FieldSortBuilder createFieldSortBuilder(final String field, final SortOrder order) {
-        final String fieldName = SCORE_FIELD.equals(field) ? ES_SCORE_FIELD : field;
-        FieldSortBuilder builder = SortBuilders.fieldSort(fieldName);
-        if (ES_SCORE_FIELD.equals(fieldName)) {
-            builder.unmappedType("float");
+    protected SortBuilder<?> createFieldSortBuilder(final String field, final SortOrder order) {
+        if (SCORE_FIELD.equals(field) || ES_SCORE_FIELD.equals(field)) {
+            return SortBuilders.scoreSort().order(order);
+        } else {
+            return SortBuilders.fieldSort(field).order(order);
         }
-        return builder.order(order);
     }
 
     public void setHighlightPrefix(final String highlightPrefix) {

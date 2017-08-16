@@ -4,7 +4,7 @@
 <head profile="http://a9.com/-/spec/opensearch/1.1/">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title><la:message key="labels.login.title" /></title>
 <link href="${fe:url('/css/style-base.css')}" rel="stylesheet"
 	type="text/css" />
@@ -84,15 +84,7 @@
 		<!-- /.login-box-body -->
 	</div>
 	<!-- /.login-box -->
-
-	<footer class="footer bd-footer text-muted" role="contentinfo">
-		<div class="container center">
-			<p class="text-muted">
-				<la:message key="labels.footer.copyright" />
-			</p>
-		</div>
-	</footer>
-
+	<jsp:include page="../footer.jsp" />
 	<input type="hidden" id="contextPath" value="${contextPath}" />
 	<script type="text/javascript"
 		src="${fe:url('/js/jquery-2.2.4.min.js')}"></script>

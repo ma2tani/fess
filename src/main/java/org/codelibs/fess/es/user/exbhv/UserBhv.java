@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.es.user.bsbhv.BsUserBhv;
 import org.codelibs.fess.es.user.exentity.User;
+import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.exception.IllegalBehaviorStateException;
 import org.dbflute.util.DfTypeUtil;
 
@@ -35,7 +36,12 @@ public class UserBhv extends BsUserBhv {
     private static final String NAME = "name";
 
     @Override
-    protected <RESULT extends User> RESULT createEntity(Map<String, Object> source, Class<? extends RESULT> entityType) {
+    protected String asEsIndex() {
+        return ComponentUtil.getFessConfig().getIndexUserIndex();
+    }
+
+    @Override
+    protected <RESULT extends User> RESULT createEntity(final Map<String, Object> source, final Class<? extends RESULT> entityType) {
         try {
             final RESULT result = entityType.newInstance();
             result.setName(DfTypeUtil.toString(source.get(NAME)));

@@ -29,6 +29,8 @@ import javax.annotation.Resource;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.IOUtils;
+import org.codelibs.core.io.CopyUtil;
+import org.codelibs.core.lang.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +40,11 @@ public class CommandGenerator extends BaseThumbnailGenerator {
     @Resource
     protected ServletContext application;
 
-    public List<String> commandList;
+    protected List<String> commandList;
 
-    public long commandTimeout = 10 * 1000L;// 10sec
+    protected long commandTimeout = 30 * 1000L;// 30sec
 
-    public File baseDir;
+    protected File baseDir;
 
     private volatile Timer destoryTimer;
 
@@ -61,9 +63,9 @@ public class CommandGenerator extends BaseThumbnailGenerator {
     }
 
     @Override
-    public boolean generate(final String url, final File outputFile) {
+    public boolean generate(final String thumbnailId, final File outputFile) {
         if (logger.isDebugEnabled()) {
-            logger.debug("Generate Thumbnail: " + url);
+            logger.debug("Generate Thumbnail: " + thumbnailId);
         }
 
         if (outputFile.exists()) {
@@ -82,12 +84,47 @@ public class CommandGenerator extends BaseThumbnailGenerator {
             return false;
         }
 
-        final String outputPath = outputFile.getAbsolutePath();
-        final List<String> cmdList = new ArrayList<>();
-        for (final String value : commandList) {
-            cmdList.add(expandPath(value.replace("${url}", url).replace("${outputFile}", outputPath)));
-        }
+        return process(thumbnailId, responseData -> {
+            File tempFile = null;
+            try {
+                tempFile = File.createTempFile("thumbnail_", "");
+                CopyUtil.copy(responseData.getResponseBody(), tempFile);
 
+                final String tempPath = tempFile.getAbsolutePath();
+                final String outputPath = outputFile.getAbsolutePath();
+                final List<String> cmdList = new ArrayList<>();
+                for (final String value : commandList) {
+                    cmdList.add(expandPath(value.replace("${url}", tempPath).replace("${outputFile}", outputPath)));
+                }
+
+                executeCommand(thumbnailId, cmdList);
+
+                if (outputFile.isFile() && outputFile.length() == 0) {
+                    logger.warn("Thumbnail File is empty. ID is " + thumbnailId);
+                    if (outputFile.delete()) {
+                        logger.info("Deleted: " + outputFile.getAbsolutePath());
+                    }
+                    updateThumbnailField(thumbnailId, StringUtil.EMPTY);
+                    return false;
+                }
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Thumbnail File: " + outputPath);
+                }
+                return true;
+            } catch (final Exception e) {
+                logger.warn("Failed to process ", e);
+                if (tempFile != null && !tempFile.delete()) {
+                    logger.debug("Failed to delete " + tempFile.getAbsolutePath());
+                }
+                updateThumbnailField(thumbnailId, StringUtil.EMPTY);
+                return false;
+            }
+        });
+
+    }
+
+    protected void executeCommand(final String thumbnailId, final List<String> cmdList) {
         ProcessBuilder pb = null;
         Process p = null;
 
@@ -125,25 +162,12 @@ public class CommandGenerator extends BaseThumbnailGenerator {
                 p.destroy();
             }
         } catch (final Exception e) {
-            logger.warn("Failed to generate a thumbnail of " + url, e);
+            logger.warn("Failed to generate a thumbnail of " + thumbnailId, e);
         }
         if (task != null) {
             task.cancel();
             task = null;
         }
-
-        if (outputFile.isFile() && outputFile.length() == 0) {
-            logger.warn("Thumbnail File is empty. URL is " + url);
-            if (outputFile.delete()) {
-                logger.info("Deleted: " + outputFile.getAbsolutePath());
-            }
-            return false;
-        }
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("Thumbnail File: " + outputPath);
-        }
-        return true;
     }
 
     protected static class ProcessDestroyer extends TimerTask {
@@ -166,6 +190,18 @@ public class CommandGenerator extends BaseThumbnailGenerator {
                 logger.warn("Failed to stop destroyer.", e);
             }
         }
+    }
+
+    public void setCommandList(final List<String> commandList) {
+        this.commandList = commandList;
+    }
+
+    public void setCommandTimeout(final long commandTimeout) {
+        this.commandTimeout = commandTimeout;
+    }
+
+    public void setBaseDir(final File baseDir) {
+        this.baseDir = baseDir;
     }
 
 }

@@ -35,6 +35,8 @@ import org.codelibs.fess.entity.SearchRenderData;
 import org.codelibs.fess.entity.SearchRequestParams.SearchRequestType;
 import org.codelibs.fess.exception.InvalidQueryException;
 import org.codelibs.fess.exception.ResultOffsetExceededException;
+import org.codelibs.fess.helper.RelatedContentHelper;
+import org.codelibs.fess.helper.RelatedQueryHelper;
 import org.codelibs.fess.util.RenderDataUtil;
 import org.lastaflute.taglib.function.LaFunctions;
 import org.lastaflute.web.Execute;
@@ -56,6 +58,12 @@ public class SearchAction extends FessSearchAction {
     //
     @Resource
     protected SearchService searchService;
+
+    @Resource
+    protected RelatedContentHelper relatedContentHelper;
+
+    @Resource
+    protected RelatedQueryHelper relatedQueryHelper;
 
     // ===================================================================================
     //                                                                               Hook
@@ -98,7 +106,7 @@ public class SearchAction extends FessSearchAction {
     }
 
     protected HtmlResponse doSearch(final SearchForm form) {
-        validate(form, messages -> {}, () -> asHtml(path_SearchJsp));
+        validate(form, messages -> {}, () -> asHtml(virtualHost(path_SearchJsp)));
         if (isLoginRequired()) {
             return redirectToLogin();
         }
@@ -122,25 +130,23 @@ public class SearchAction extends FessSearchAction {
         try {
             buildFormParams(form);
             form.lang = searchService.getLanguages(request, form);
-            request.setAttribute(Constants.REQUEST_LANGUAGES, form.lang);
-            request.setAttribute(Constants.REQUEST_QUERIES, form.q);
             final WebRenderData renderData = new WebRenderData();
             searchService.search(form, renderData, getUserBean());
-            return asHtml(path_SearchJsp).renderWith(data -> {
-                renderData.register(data);
-                // favorite or thumbnail
-                    if (favoriteSupport || thumbnailSupport) {
-                        final String queryId = renderData.getQueryId();
-                        final List<Map<String, Object>> documentItems = renderData.getDocumentItems();
-                        userInfoHelper.storeQueryId(queryId, documentItems);
-                        if (thumbnailSupport) {
-                            thumbnailManager.storeRequest(queryId, documentItems);
+            return asHtml(virtualHost(path_SearchJsp)).renderWith(
+                    data -> {
+                        renderData.register(data);
+                        RenderDataUtil.register(data, "displayQuery",
+                                getDisplayQuery(form, labelTypeHelper.getLabelTypeItemList(SearchRequestType.SEARCH)));
+                        createPagingQuery(form);
+                        final String relatedContent = relatedContentHelper.getRelatedContent(form.getQuery());
+                        if (StringUtil.isNotBlank(relatedContent)) {
+                            RenderDataUtil.register(data, "relatedContent", relatedContent);
                         }
-                    }
-                    RenderDataUtil.register(data, "displayQuery",
-                            getDisplayQuery(form, labelTypeHelper.getLabelTypeItemList(SearchRequestType.SEARCH)));
-                    createPagingQuery(form);
-                });
+                        final String[] relatedQueries = relatedQueryHelper.getRelatedQueries(form.getQuery());
+                        if (relatedQueries.length > 0) {
+                            RenderDataUtil.register(data, "relatedQueries", relatedQueries);
+                        }
+                    });
         } catch (final InvalidQueryException e) {
             if (logger.isDebugEnabled()) {
                 logger.debug(e.getMessage(), e);

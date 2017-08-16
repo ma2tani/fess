@@ -431,9 +431,6 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Term */
     public static final String LABELS_TERM = "{labels.term}";
 
-    /** The key of the message: Search Parameters */
-    public static final String LABELS_SEARCH_PARAMS = "{labels.searchParams}";
-
     /** The key of the message: Fields */
     public static final String LABELS_FIELDS = "{labels.fields}";
 
@@ -578,6 +575,12 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Access Token */
     public static final String LABELS_menu_access_token = "{labels.menu_access_token}";
 
+    /** The key of the message: Related Content */
+    public static final String LABELS_menu_related_content = "{labels.menu_related_content}";
+
+    /** The key of the message: Related Query */
+    public static final String LABELS_menu_related_query = "{labels.menu_related_query}";
+
     /** The key of the message: Search... */
     public static final String LABELS_SIDEBAR_placeholder_search = "{labels.sidebar.placeholder_search}";
 
@@ -589,6 +592,9 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Search */
     public static final String LABELS_SEARCH = "{labels.search}";
+
+    /** The key of the message: Similar results are displayed. */
+    public static final String LABELS_similar_doc_result_status = "{labels.similar_doc_result_status}";
 
     /** The key of the message: Results &lt;b&gt;{2}&lt;/b&gt;&lt;span class="hidden-phone"&gt; -&lt;/span&gt; &lt;b&gt;{3}&lt;/b&gt; of &lt;b&gt;{1}&lt;/b&gt; for &lt;b&gt;{0}&lt;/b&gt; */
     public static final String LABELS_search_result_status = "{labels.search_result_status}";
@@ -610,6 +616,9 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Popular Words:  */
     public static final String LABELS_search_popular_word_word = "{labels.search_popular_word_word}";
+
+    /** The key of the message: Related Words:  */
+    public static final String LABELS_search_related_queries = "{labels.search_related_queries}";
 
     /** The key of the message: -- Sort -- */
     public static final String LABELS_search_result_select_sort = "{labels.search_result_select_sort}";
@@ -682,6 +691,9 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Cache */
     public static final String LABELS_search_result_cache = "{labels.search_result_cache}";
+
+    /** The key of the message: Similar Results ({0}) */
+    public static final String LABELS_search_result_similar = "{labels.search_result_similar}";
 
     /** The key of the message: Label */
     public static final String LABELS_facet_label_title = "{labels.facet_label_title}";
@@ -1028,7 +1040,7 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Max Access Count */
     public static final String LABELS_max_access_count = "{labels.max_access_count}";
 
-    /** The key of the message: The number of Tread */
+    /** The key of the message: The number of Thread */
     public static final String LABELS_number_of_thread = "{labels.number_of_thread}";
 
     /** The key of the message: Interval time */
@@ -1039,6 +1051,12 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Permissions */
     public static final String LABELS_PERMISSIONS = "{labels.permissions}";
+
+    /** The key of the message: Virtual Hosts */
+    public static final String LABELS_virtual_hosts = "{labels.virtual_hosts}";
+
+    /** The key of the message: Virtual Host */
+    public static final String LABELS_virtual_host = "{labels.virtual_host}";
 
     /** The key of the message: Label */
     public static final String LABELS_label_type = "{labels.label_type}";
@@ -1124,11 +1142,17 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Default Sort Value */
     public static final String LABELS_default_sort_value = "{labels.default_sort_value}";
 
+    /** The key of the message: Virtual Hosts */
+    public static final String LABELS_virtual_host_value = "{labels.virtual_host_value}";
+
     /** The key of the message: Append Params to URL */
     public static final String LABELS_append_query_param_enabled = "{labels.append_query_param_enabled}";
 
     /** The key of the message: Login Required */
     public static final String LABELS_login_required = "{labels.login_required}";
+
+    /** The key of the message: Similar Result Collapsed */
+    public static final String LABELS_result_collapsed = "{labels.result_collapsed}";
 
     /** The key of the message: Login Link */
     public static final String LABELS_login_link = "{labels.login_link}";
@@ -1436,6 +1460,9 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Boost */
     public static final String LABELS_key_match_boost = "{labels.key_match_boost}";
 
+    /** The key of the message: Urls */
+    public static final String LABELS_key_match_urls = "{labels.key_match_urls}";
+
     /** The key of the message: Key Match */
     public static final String LABELS_key_match_title_details = "{labels.key_match_title_details}";
 
@@ -1471,60 +1498,6 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Use Default */
     public static final String LABELS_design_use_default_button = "{labels.design_use_default_button}";
-
-    /** The key of the message: Top Page */
-    public static final String LABELS_design_file_index = "{labels.design_file_index}";
-
-    /** The key of the message: Footer */
-    public static final String LABELS_design_file_footer = "{labels.design_file_footer}";
-
-    /** The key of the message: Results Page (Frame) */
-    public static final String LABELS_design_file_search = "{labels.design_file_search}";
-
-    /** The key of the message: Results Page (Content) */
-    public static final String LABELS_design_file_searchResults = "{labels.design_file_searchResults}";
-
-    /** The key of the message: Results Page (No Result) */
-    public static final String LABELS_design_file_searchNoResult = "{labels.design_file_searchNoResult}";
-
-    /** The key of the message: Search Options Page */
-    public static final String LABELS_design_file_searchOptions = "{labels.design_file_searchOptions}";
-
-    /** The key of the message: Help Page (Content) */
-    public static final String LABELS_design_file_help = "{labels.design_file_help}";
-
-    /** The key of the message: Header */
-    public static final String LABELS_design_file_header = "{labels.design_file_header}";
-
-    /** The key of the message: Search Error Page */
-    public static final String LABELS_design_file_error = "{labels.design_file_error}";
-
-    /** The key of the message: Cache Page */
-    public static final String LABELS_design_file_cache = "{labels.design_file_cache}";
-
-    /** The key of the message: Error Page (Header) */
-    public static final String LABELS_design_file_errorHeader = "{labels.design_file_errorHeader}";
-
-    /** The key of the message: Error Page (Footer) */
-    public static final String LABELS_design_file_errorFooter = "{labels.design_file_errorFooter}";
-
-    /** The key of the message: Error Page (Not Found) */
-    public static final String LABELS_design_file_errorNotFound = "{labels.design_file_errorNotFound}";
-
-    /** The key of the message: Error Page (System Error) */
-    public static final String LABELS_design_file_errorSystem = "{labels.design_file_errorSystem}";
-
-    /** The key of the message: Error Page (Redirect) */
-    public static final String LABELS_design_file_errorRedirect = "{labels.design_file_errorRedirect}";
-
-    /** The key of the message: Error Page (BadRequest) */
-    public static final String LABELS_design_file_errorBadRequest = "{labels.design_file_errorBadRequest}";
-
-    /** The key of the message: Login Page */
-    public static final String LABELS_design_file_login = "{labels.design_file_login}";
-
-    /** The key of the message: Profile Page */
-    public static final String LABELS_design_file_profile = "{labels.design_file_profile}";
 
     /** The key of the message: Edit JSP File */
     public static final String LABELS_design_title_edit_content = "{labels.design_title_edit_content}";
@@ -2133,7 +2106,7 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Word Type */
     public static final String LABELS_suggest_word_type = "{labels.suggest_word_type}";
 
-    /** The key of the message: Word Number */
+    /** The key of the message: Word Count */
     public static final String LABELS_suggest_word_number = "{labels.suggest_word_number}";
 
     /** The key of the message: All */
@@ -2276,6 +2249,36 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Group */
     public static final String LABELS_group_title_details = "{labels.group_title_details}";
+
+    /** The key of the message: Related Content */
+    public static final String LABELS_related_content_configuration = "{labels.related_content_configuration}";
+
+    /** The key of the message: Content */
+    public static final String LABELS_related_content_content = "{labels.related_content_content}";
+
+    /** The key of the message: Term */
+    public static final String LABELS_related_content_list_term = "{labels.related_content_list_term}";
+
+    /** The key of the message: Term */
+    public static final String LABELS_related_content_term = "{labels.related_content_term}";
+
+    /** The key of the message: Related Content */
+    public static final String LABELS_related_content_title_details = "{labels.related_content_title_details}";
+
+    /** The key of the message: Related Query */
+    public static final String LABELS_related_query_configuration = "{labels.related_query_configuration}";
+
+    /** The key of the message: Term */
+    public static final String LABELS_related_query_list_term = "{labels.related_query_list_term}";
+
+    /** The key of the message: Queries */
+    public static final String LABELS_related_query_queries = "{labels.related_query_queries}";
+
+    /** The key of the message: Term */
+    public static final String LABELS_related_query_term = "{labels.related_query_term}";
+
+    /** The key of the message: Related Query */
+    public static final String LABELS_related_query_title_details = "{labels.related_query_title_details}";
 
     /** The key of the message: Create */
     public static final String LABELS_crud_button_create = "{labels.crud_button_create}";
@@ -2631,8 +2634,17 @@ public class FessLabels extends UserMessages {
     /** The key of the message: Data Migration */
     public static final String LABELS_upgrade_data_migration = "{labels.upgrade_data_migration}";
 
+    /** The key of the message: Reindex */
+    public static final String LABELS_upgrade_reindex = "{labels.upgrade_reindex}";
+
     /** The key of the message: Start */
     public static final String LABELS_upgrade_start_button = "{labels.upgrade_start_button}";
+
+    /** The key of the message: Update Aliases */
+    public static final String LABELS_replace_aliases = "{labels.replace_aliases}";
+
+    /** The key of the message: Start */
+    public static final String LABELS_reindex_start_button = "{labels.reindex_start_button}";
 
     /** The key of the message: Version */
     public static final String LABELS_TARGET_VERSION = "{labels.targetVersion}";
@@ -2654,6 +2666,12 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: No match */
     public static final String LABELS_facet_is_not_found = "{labels.facet_is_not_found}";
+
+    /** The key of the message: Score:  */
+    public static final String LABELS_doc_score = "{labels.doc_score}";
+
+    /** The key of the message: Running as Development mode. For production use, please install a standalone elasticsearch server. */
+    public static final String LABELS_development_mode_warning = "{labels.development_mode_warning}";
 
     /**
      * Assert the property is not null.
