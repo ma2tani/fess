@@ -262,10 +262,13 @@ public class CrawlJob {
             if (StringUtil.isNotBlank(transportAddresses)) {
                 cmdList.add("-D" + Constants.FESS_ES_TRANSPORT_ADDRESSES + "=" + transportAddresses);
             }
-            final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
-            if (StringUtil.isNotBlank(clusterName)) {
-                cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
-            }
+        }
+
+        final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
+        if (StringUtil.isNotBlank(clusterName)) {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
+        } else {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + fessConfig.getElasticsearchClusterName());
         }
 
         final String systemLastaEnv = System.getProperty("lasta.env");
@@ -286,6 +289,9 @@ public class CrawlJob {
             addSystemProperty(cmdList, "fess.log.level", null, null);
         } else {
             cmdList.add("-Dfess.log.level=" + logLevel);
+            if (logLevel.equalsIgnoreCase("debug")) {
+                cmdList.add("-Dorg.apache.tika.service.error.warn=true");
+            }
         }
         stream(fessConfig.getJvmCrawlerOptionsAsArray()).of(
                 stream -> stream.filter(StringUtil::isNotBlank).forEach(value -> cmdList.add(value)));
