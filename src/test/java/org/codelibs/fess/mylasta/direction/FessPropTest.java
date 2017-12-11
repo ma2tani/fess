@@ -15,14 +15,21 @@
  */
 package org.codelibs.fess.mylasta.direction;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.codelibs.core.io.FileUtil;
 import org.codelibs.core.misc.DynamicProperties;
 import org.codelibs.fess.unit.UnitFessTestCase;
+import org.codelibs.fess.util.PrunedTag;
+import org.cyberneko.html.parsers.DOMParser;
 import org.lastaflute.di.core.factory.SingletonLaContainerFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 public class FessPropTest extends UnitFessTestCase {
 
@@ -119,4 +126,64 @@ public class FessPropTest extends UnitFessTestCase {
         assertEquals(12288, spaceChars[1]);
     }
 
+    public void test_getCrawlerDocumentHtmlPrunedTagsAsArray() throws Exception {
+        FessProp.propMap.clear();
+        FessConfig fessConfig = new FessConfig.SimpleImpl() {
+            @Override
+            public String getCrawlerDocumentHtmlPrunedTags() {
+                return "script,div#main,p.image,a[rel=nofollow]";
+            }
+        };
+
+        PrunedTag[] tags = fessConfig.getCrawlerDocumentHtmlPrunedTagsAsArray();
+        assertTrue(matchesTag(tags[0], "<script></script>"));
+        assertTrue(matchesTag(tags[0], "<script id=\\\"main\\\"></script>"));
+        assertFalse(matchesTag(tags[0], "<a></a>"));
+
+        assertTrue(matchesTag(tags[1], "<div id=\"main\"></div>"));
+        assertFalse(matchesTag(tags[1], "<div></div>"));
+
+        assertTrue(matchesTag(tags[2], "<p class=\"image\"></p>"));
+        assertFalse(matchesTag(tags[2], "<p></p>"));
+
+        assertTrue(matchesTag(tags[3], "<a rel=\"nofollow\"></a>"));
+        assertFalse(matchesTag(tags[3], "<a></a>"));
+    }
+
+    private boolean matchesTag(final PrunedTag tag, final String text) throws Exception {
+        final DOMParser parser = new DOMParser();
+        final String html = "<html><body>" + text + "</body></html>";
+        final ByteArrayInputStream is = new ByteArrayInputStream(html.getBytes("UTF-8"));
+        parser.parse(new InputSource(is));
+        Node node = parser.getDocument().getFirstChild().getLastChild().getFirstChild();
+        return tag.matches(node);
+    }
+
+    public void test_normalizeQueryLanguages() {
+        FessProp.propMap.clear();
+        FessConfig fessConfig = new FessConfig.SimpleImpl() {
+            @Override
+            public String getQueryLanguageMapping() {
+                return "ja=ja\nzh_cn=zh-cn\nzh_TW=zh-tw\nzh=zh-cn";
+            }
+        };
+
+        assertArrays(new String[] {}, fessConfig.normalizeQueryLanguages(new String[] {}));
+        assertArrays(new String[] {}, fessConfig.normalizeQueryLanguages(new String[] { "unknown" }));
+        assertArrays(new String[] { "ja" }, fessConfig.normalizeQueryLanguages(new String[] { "ja" }));
+        assertArrays(new String[] { "ja" }, fessConfig.normalizeQueryLanguages(new String[] { "ja", "ja" }));
+        assertArrays(new String[] { "ja" }, fessConfig.normalizeQueryLanguages(new String[] { "ja-jp" }));
+        assertArrays(new String[] { "ja" }, fessConfig.normalizeQueryLanguages(new String[] { "ja_JP" }));
+        assertArrays(new String[] { "ja", "zh-cn" }, fessConfig.normalizeQueryLanguages(new String[] { "ja", "zh" }));
+        assertArrays(new String[] { "ja", "zh-cn" }, fessConfig.normalizeQueryLanguages(new String[] { "ja", "zh_CN" }));
+        assertArrays(new String[] { "ja", "zh-cn" }, fessConfig.normalizeQueryLanguages(new String[] { "ja", "zh-cn" }));
+        assertArrays(new String[] { "zh-cn" }, fessConfig.normalizeQueryLanguages(new String[] { "zh", "zh-cn" }));
+        assertArrays(new String[] { "zh-tw" }, fessConfig.normalizeQueryLanguages(new String[] { "zh_TW" }));
+    }
+
+    private void assertArrays(final String[] expected, final String[] actual) {
+        Arrays.sort(expected);
+        Arrays.sort(actual);
+        assertEquals(String.join(",", expected), String.join(",", actual));
+    }
 }

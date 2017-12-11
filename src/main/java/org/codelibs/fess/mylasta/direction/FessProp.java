@@ -18,18 +18,29 @@ package org.codelibs.fess.mylasta.direction;
 import static org.codelibs.core.stream.StreamUtil.split;
 import static org.codelibs.core.stream.StreamUtil.stream;
 
+import java.net.Authenticator;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
+import java.net.Proxy.Type;
+import java.net.SocketAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.naming.directory.Attribute;
 import javax.naming.directory.BasicAttribute;
@@ -40,6 +51,7 @@ import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.core.misc.Tuple3;
 import org.codelibs.fess.Constants;
+import org.codelibs.fess.exception.FessSystemException;
 import org.codelibs.fess.helper.PermissionHelper;
 import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.taglib.FessFunctions;
@@ -47,8 +59,12 @@ import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.PrunedTag;
 import org.dbflute.optional.OptionalThing;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.lastaflute.job.LaJob;
-import org.lastaflute.job.subsidiary.ConcurrentExec;
+import org.lastaflute.job.subsidiary.JobConcurrentExec;
+import org.lastaflute.web.response.next.HtmlNext;
 import org.lastaflute.web.util.LaRequestUtil;
 import org.lastaflute.web.validation.RequiredValidator;
 import org.lastaflute.web.validation.theme.typed.DoubleTypeValidator;
@@ -57,6 +73,26 @@ import org.lastaflute.web.validation.theme.typed.IntegerTypeValidator;
 import org.lastaflute.web.validation.theme.typed.LongTypeValidator;
 
 public interface FessProp {
+
+    public static final String QUERY_GSA_RESPONSE_FIELDS = "queryGsaResponseFields";
+
+    public static final String THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS = "ThumbnailHtmlImageExcludeExtensions";
+
+    public static final String VIRTUAL_HOST_VALUE = "VirtualHostValue";
+
+    public static final String QUERY_DEFAULT_LANGUAGES = "queryDefaultLanguages";
+
+    public static final String HTML_PROXY = "httpProxy";
+
+    public static final String CRAWLER_FAILURE_URL_STATUS_CODES = "crawlerFailureUrlStatusCodes";
+
+    public static final String VIRTUAL_HOST_HEADERS = "virtualHostHeaders";
+
+    public static final String QUERY_COLLAPSE_INNER_HITS_SORTS = "queryCollapseInnerHitsSorts";
+
+    public static final String USER_CODE_PATTERN = "userCodePattern";
+
+    public static final String API_ADMIN_ACCESS_PERMISSION_SET = "apiAdminAccessPermissionSet";
 
     public static final String CRAWLER_DOCUMENT_SPACE_CHARS = "crawlerDocumentSpaceChars";
 
@@ -89,6 +125,8 @@ public interface FessProp {
     public static final String DEFAULT_SORT_VALUES = "defaultSortValues";
 
     public static final String DEFAULT_LABEL_VALUES = "defaultLabelValues";
+
+    public static final String VIRTUAL_HOST_VALUES = "virtualHostValues";
 
     public static final String QUERY_LANGUAGE_MAPPING = "queryLanguageMapping";
 
@@ -211,41 +249,50 @@ public interface FessProp {
 
     public default String[] getDefaultLabelValues(final OptionalThing<FessUserBean> userBean) {
         @SuppressWarnings("unchecked")
-        Map<String, String> map = (Map<String, String>) propMap.get(DEFAULT_LABEL_VALUES);
+        Map<String, List<String>> map = (Map<String, List<String>>) propMap.get(DEFAULT_LABEL_VALUES);
         if (map == null) {
             final String value = getSystemProperty(Constants.DEFAULT_LABEL_VALUE_PROPERTY);
             if (StringUtil.isBlank(value)) {
                 map = Collections.emptyMap();
             } else {
                 final Set<String> keySet = new HashSet<>();
-                map = split(value, "\n").get(stream -> stream.filter(StringUtil::isNotBlank).map(s -> {
-                    final String[] pair = s.split("=");
-                    if (pair.length == 1) {
-                        return new Pair<>(StringUtil.EMPTY, pair[0].trim());
-                    } else if (pair.length == 2) {
-                        return new Pair<>(pair[0].trim(), pair[1].trim());
-                    }
-                    return null;
-                }).filter(o -> o != null && keySet.add(o.getFirst())).collect(Collectors.toMap(Pair::getFirst, d -> d.getSecond())));
+                map =
+                        split(value, "\n").get(
+                                stream -> stream
+                                        .filter(StringUtil::isNotBlank)
+                                        .map(s -> {
+                                            final String[] pair = s.split("=");
+                                            if (pair.length == 1) {
+                                                return new Pair<>(StringUtil.EMPTY, pair[0].trim());
+                                            } else if (pair.length == 2) {
+                                                return new Pair<>(pair[0].trim(), pair[1].trim());
+                                            }
+                                            return null;
+                                        })
+                                        .filter(o -> o != null && keySet.add(o.getFirst()))
+                                        .collect(HashMap<String, List<String>>::new,
+                                                (m, d) -> m.put(d.getFirst(), Arrays.asList(d.getSecond().split(","))),
+                                                (m, u) -> m.putAll(u)));
             }
             propMap.put(DEFAULT_LABEL_VALUES, map);
         }
         return map
                 .entrySet()
                 .stream()
-                .map(e -> {
-                    final String key = e.getKey();
-                    if (StringUtil.isEmpty(key)) {
-                        return e.getValue();
-                    }
-                    if (userBean.map(
-                            user -> stream(user.getRoles()).get(stream -> stream.anyMatch(s -> key.equals(ROLE_VALUE_PREFIX + s)))
-                                    || stream(user.getGroups()).get(stream -> stream.anyMatch(s -> key.equals(GROUP_VALUE_PREFIX + s))))
-                            .orElse(false)) {
-                        return e.getValue();
-                    }
-                    return null;
-                }).filter(StringUtil::isNotBlank).toArray(n -> new String[n]);
+                .flatMap(
+                        e -> {
+                            final String key = e.getKey();
+                            if (StringUtil.isEmpty(key)) {
+                                return e.getValue().stream();
+                            }
+                            if (userBean.map(
+                                    user -> stream(user.getRoles()).get(stream -> stream.anyMatch(s -> key.equals(ROLE_VALUE_PREFIX + s)))
+                                            || stream(user.getGroups()).get(
+                                                    stream -> stream.anyMatch(s -> key.equals(GROUP_VALUE_PREFIX + s)))).orElse(false)) {
+                                return e.getValue().stream();
+                            }
+                            return Stream.empty();
+                        }).filter(StringUtil::isNotBlank).toArray(n -> new String[n]);
     }
 
     public default void setDefaultLabelValue(final String value) {
@@ -257,12 +304,29 @@ public interface FessProp {
         return getSystemProperty(Constants.DEFAULT_LABEL_VALUE_PROPERTY, StringUtil.EMPTY);
     }
 
+    public default void setVirtualHostValue(final String value) {
+        setSystemProperty(Constants.VIRTUAL_HOST_VALUE_PROPERTY, value);
+        propMap.remove(VIRTUAL_HOST_HEADERS);
+    }
+
+    public default String getVirtualHostValue() {
+        return getSystemProperty(Constants.VIRTUAL_HOST_VALUE_PROPERTY, getVirtualHostHeaders());
+    }
+
     public default void setLoginRequired(final boolean value) {
         setSystemPropertyAsBoolean(Constants.LOGIN_REQUIRED_PROPERTY, value);
     }
 
     public default boolean isLoginRequired() {
         return getSystemPropertyAsBoolean(Constants.LOGIN_REQUIRED_PROPERTY, false);
+    }
+
+    public default void setResultCollapsed(final boolean value) {
+        setSystemPropertyAsBoolean(Constants.RESULT_COLLAPSED_PROPERTY, value);
+    }
+
+    public default boolean isResultCollapsed() {
+        return getSystemPropertyAsBoolean(Constants.RESULT_COLLAPSED_PROPERTY, false);
     }
 
     public default void setLoginLinkEnabled(final boolean value) {
@@ -587,23 +651,26 @@ public interface FessProp {
         PrunedTag[] tags = (PrunedTag[]) propMap.get("crawlerDocumentHtmlPrunedTags");
         if (tags == null) {
             tags = split(getCrawlerDocumentHtmlPrunedTags(), ",").get(stream -> stream.filter(StringUtil::isNotBlank).map(v -> {
-                final String[] cssValues = v.split("\\.", 2);
-                final String css;
-                if (cssValues.length == 2) {
-                    css = cssValues[1];
-                } else {
-                    css = null;
+                final Pattern pattern = Pattern.compile("(\\w+)(\\[[^\\]]+\\])?(\\.\\w+)?(#\\w+)?");
+                final Matcher matcher = pattern.matcher(v.trim());
+                if (matcher.matches()) {
+                    final PrunedTag tag = new PrunedTag(matcher.group(1));
+                    if (matcher.group(2) != null) {
+                        final String attrPair = matcher.group(2).substring(1, matcher.group(2).length() - 1);
+                        final Matcher equalMatcher = Pattern.compile("(\\w+)=(\\w+)").matcher(attrPair);
+                        if (equalMatcher.matches()) {
+                            tag.setAttr(equalMatcher.group(1), equalMatcher.group(2));
+                        }
+                    }
+                    if (matcher.group(3) != null) {
+                        tag.setCss(matcher.group(3).substring(1));
+                    }
+                    if (matcher.group(4) != null) {
+                        tag.setId(matcher.group(4).substring(1));
+                    }
+                    return tag;
                 }
-
-                final String[] idValues = cssValues[0].split("#", 2);
-                final String id;
-                if (idValues.length == 2) {
-                    id = idValues[1];
-                } else {
-                    id = null;
-                }
-
-                return new PrunedTag(idValues[0], id, css);
+                throw new FessSystemException("Invalid pruned tag: " + v);
             }).toArray(n -> new PrunedTag[n]));
             propMap.put("crawlerDocumentHtmlPrunedTags", tags);
         }
@@ -656,8 +723,11 @@ public interface FessProp {
 
     String getIndexBackupTargets();
 
-    public default String[] getIndexBackupTargetsAsArray() {
-        return getIndexBackupTargets().split(",");
+    String getIndexBackupLogTargets();
+
+    public default String[] getIndexBackupAllTargets() {
+        return split(getIndexBackupTargets() + "," + getIndexBackupLogTargets(), ",").get(
+                stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).toArray(n -> new String[n]));
     }
 
     String getJobSystemJobIds();
@@ -746,8 +816,8 @@ public interface FessProp {
 
     String getSchedulerConcurrentExecMode();
 
-    public default ConcurrentExec getSchedulerConcurrentExecModeAsEnum() {
-        return ConcurrentExec.valueOf(getSchedulerConcurrentExecMode());
+    public default JobConcurrentExec getSchedulerConcurrentExecModeAsEnum() {
+        return JobConcurrentExec.valueOf(getSchedulerConcurrentExecMode());
     }
 
     String getCrawlerMetadataContentExcludes();
@@ -815,25 +885,7 @@ public interface FessProp {
 
     String getQueryLanguageMapping();
 
-    public default String[] getQueryLanguages(final Enumeration<Locale> locales, final String[] requestLangs) {
-        if (StringUtil.isNotBlank(getQueryDefaultLanguages())) {
-            String[] langs = (String[]) propMap.get("queryDefaultLanguages");
-            if (langs == null) {
-                langs = split(getQueryDefaultLanguages(), ",").get(stream -> stream.map(s -> s.trim()).toArray(n -> new String[n]));
-                propMap.put("queryDefaultLanguages", langs);
-
-            }
-            return langs;
-        }
-
-        if (requestLangs != null && requestLangs.length != 0) {
-            return requestLangs;
-        }
-
-        if (locales == null) {
-            return StringUtil.EMPTY_STRINGS;
-        }
-
+    public default String[] normalizeQueryLanguages(final String[] langs) {
         @SuppressWarnings("unchecked")
         Map<String, String> params = (Map<String, String>) propMap.get(QUERY_LANGUAGE_MAPPING);
         if (params == null) {
@@ -846,24 +898,54 @@ public interface FessProp {
             }).collect(Collectors.toMap(Pair::getFirst, d -> d.getSecond())));
             propMap.put(QUERY_LANGUAGE_MAPPING, params);
         }
-
         final Map<String, String> mapping = params;
-        return Collections.list(locales).stream().map(locale -> {
+        return stream(langs).get(stream -> stream.map(s -> {
+            if (StringUtil.isBlank(s)) {
+                return null;
+            }
+            final String lang1 = mapping.get(s);
+            if (lang1 != null) {
+                return lang1;
+            }
+            final String lang2 = mapping.get(s.split("[\\-_]")[0]);
+            if (lang2 != null) {
+                return lang2;
+            }
+            return null;
+        }).filter(StringUtil::isNotBlank).distinct().toArray(n -> new String[n]));
+    }
+
+    public default String[] getQueryLanguages(final Enumeration<Locale> locales, final String[] requestLangs) {
+        // requestLangs > default > browser
+        if (StringUtil.isNotBlank(getQueryDefaultLanguages())) {
+            String[] langs = (String[]) propMap.get(QUERY_DEFAULT_LANGUAGES);
+            if (langs == null) {
+                langs = split(getQueryDefaultLanguages(), ",").get(stream -> stream.map(s -> s.trim()).toArray(n -> new String[n]));
+                propMap.put(QUERY_DEFAULT_LANGUAGES, langs);
+
+            }
+            return normalizeQueryLanguages(langs);
+        }
+
+        if (requestLangs != null && requestLangs.length != 0) {
+            return normalizeQueryLanguages(requestLangs);
+        }
+
+        if (locales == null) {
+            return StringUtil.EMPTY_STRINGS;
+        }
+
+        return normalizeQueryLanguages(Collections.list(locales).stream().map(locale -> {
             final String language = locale.getLanguage();
             final String country = locale.getCountry();
             if (StringUtil.isNotBlank(language)) {
                 if (StringUtil.isNotBlank(country)) {
-                    final String lang = language.toLowerCase(Locale.ROOT) + "-" + country.toLowerCase(Locale.ROOT);
-                    if (mapping.containsKey(lang)) {
-                        return mapping.get(lang);
-                    }
+                    return language.toLowerCase(Locale.ROOT) + "-" + country.toLowerCase(Locale.ROOT);
                 }
-                if (mapping.containsKey(language)) {
-                    return mapping.get(language);
-                }
+                return language.toLowerCase(Locale.ROOT);
             }
             return null;
-        }).filter(l -> l != null).distinct().toArray(n -> new String[n]);
+        }).toArray(n -> new String[n]));
     }
 
     String getSupportedUploadedFiles();
@@ -1186,7 +1268,7 @@ public interface FessProp {
         final IntegerTypeValidator integerValidator = new IntegerTypeValidator();
         return split(getIndexAdminIntegerFields(), ",").get(
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).filter(s -> isNonEmptyValue(source.get(s)))
-                        .filter(s -> !integerValidator.isValid((String) source.get(s), null)).collect(Collectors.toList()));
+                        .filter(s -> !integerValidator.isValid(source.get(s).toString(), null)).collect(Collectors.toList()));
     }
 
     String getIndexAdminLongFields();
@@ -1211,7 +1293,7 @@ public interface FessProp {
         final LongTypeValidator longValidator = new LongTypeValidator();
         return split(getIndexAdminLongFields(), ",").get(
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).filter(s -> isNonEmptyValue(source.get(s)))
-                        .filter(s -> !longValidator.isValid((String) source.get(s), null)).collect(Collectors.toList()));
+                        .filter(s -> !longValidator.isValid(source.get(s).toString(), null)).collect(Collectors.toList()));
     }
 
     String getIndexAdminFloatFields();
@@ -1236,7 +1318,7 @@ public interface FessProp {
         final FloatTypeValidator floatValidator = new FloatTypeValidator();
         return split(getIndexAdminFloatFields(), ",").get(
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).filter(s -> isNonEmptyValue(source.get(s)))
-                        .filter(s -> !floatValidator.isValid((String) source.get(s), null)).collect(Collectors.toList()));
+                        .filter(s -> !floatValidator.isValid(source.get(s).toString(), null)).collect(Collectors.toList()));
     }
 
     String getIndexAdminDoubleFields();
@@ -1261,7 +1343,7 @@ public interface FessProp {
         final DoubleTypeValidator doubleValidator = new DoubleTypeValidator();
         return split(getIndexAdminDoubleFields(), ",").get(
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).filter(s -> isNonEmptyValue(source.get(s)))
-                        .filter(s -> !doubleValidator.isValid((String) source.get(s), null)).collect(Collectors.toList()));
+                        .filter(s -> !doubleValidator.isValid(source.get(s).toString(), null)).collect(Collectors.toList()));
     }
 
     public default Map<String, Object> convertToEditableDoc(final Map<String, Object> source) {
@@ -1467,6 +1549,255 @@ public interface FessProp {
     public default String[] getThumbnailGeneratorTargetsAsArray() {
         return getThumbnailGeneratorTargets().split(",");
 
+    }
+
+    String getApiAdminAccessPermissions();
+
+    public default Set<String> getApiAdminAccessPermissionSet() {
+        @SuppressWarnings("unchecked")
+        Set<String> fieldSet = (Set<String>) propMap.get(API_ADMIN_ACCESS_PERMISSION_SET);
+        if (fieldSet == null) {
+            fieldSet =
+                    split(getApiAdminAccessPermissions(), ",").get(
+                            stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).collect(Collectors.toSet()));
+            propMap.put(API_ADMIN_ACCESS_PERMISSION_SET, fieldSet);
+        }
+        return fieldSet;
+    }
+
+    public default boolean isApiAdminAccessAllowed(final Set<String> accessPermissions) {
+        return getApiAdminAccessPermissionSet().stream().anyMatch(s -> accessPermissions.contains(s));
+    }
+
+    String getUserCodePattern();
+
+    public default boolean isValidUserCode(final String userCode) {
+        if (userCode == null) {
+            return false;
+        }
+        Pattern pattern = (Pattern) propMap.get(USER_CODE_PATTERN);
+        if (pattern == null) {
+            pattern = Pattern.compile(getUserCodePattern());
+            propMap.put(USER_CODE_PATTERN, pattern);
+        }
+        return pattern.matcher(userCode).matches();
+    }
+
+    String getQueryCollapseInnerHitsSorts();
+
+    @SuppressWarnings("rawtypes")
+    public default OptionalThing<SortBuilder[]> getQueryCollapseInnerHitsSortBuilders() {
+        @SuppressWarnings("unchecked")
+        OptionalThing<SortBuilder[]> ot = (OptionalThing<SortBuilder[]>) propMap.get(QUERY_COLLAPSE_INNER_HITS_SORTS);
+        if (ot == null) {
+            final String sorts = getQueryCollapseInnerHitsSorts();
+            if (StringUtil.isBlank(sorts)) {
+                ot = OptionalThing.empty();
+            } else {
+                final SortBuilder[] sortBuilders =
+                        split(sorts, ",").get(
+                                stream -> stream
+                                        .filter(StringUtil::isNotBlank)
+                                        .map(s -> {
+                                            final String[] values = s.split(":");
+                                            if (values.length > 1) {
+                                                return SortBuilders.fieldSort(values[0]).order(
+                                                        values[0].equalsIgnoreCase("desc") ? SortOrder.DESC : SortOrder.ASC);
+                                            } else {
+                                                return SortBuilders.fieldSort(values[0]).order(SortOrder.ASC);
+                                            }
+                                        }).toArray(n -> new SortBuilder[n]));
+                ot = OptionalThing.of(sortBuilders);
+            }
+            propMap.put(QUERY_COLLAPSE_INNER_HITS_SORTS, ot);
+        }
+        return ot;
+    }
+
+    String getVirtualHostHeaders();
+
+    public default HtmlNext getVirtualHostPath(final HtmlNext page) {
+        return processVirtualHost(s -> {
+            final String basePath = ComponentUtil.getSystemHelper().getVirtualHostBasePath(s, page);
+            return new HtmlNext(basePath + page.getRoutingPath());
+        }, page);
+    }
+
+    public default String getVirtualHostKey() {
+        return LaRequestUtil.getOptionalRequest().map(req -> (String) req.getAttribute(VIRTUAL_HOST_VALUE)).orElseGet(() -> {
+            final String value = processVirtualHost(s -> s, StringUtil.EMPTY);
+            LaRequestUtil.getOptionalRequest().ifPresent(req -> req.setAttribute(VIRTUAL_HOST_VALUE, value));
+            return value;
+        });
+    }
+
+    public default String getVirtualHostHeaderValue() {
+        final String value = getVirtualHostValue();
+        if (StringUtil.isNotBlank(value)) {
+            return value;
+        }
+        return getVirtualHostHeaders();
+    }
+
+    public default <T> T processVirtualHost(final Function<String, T> func, final T defaultValue) {
+        final Tuple3<String, String, String>[] vHosts = getVirtualHosts();
+        return LaRequestUtil.getOptionalRequest().map(req -> {
+            for (final Tuple3<String, String, String> host : vHosts) {
+                final String headerValue = req.getHeader(host.getValue1());
+                if (host.getValue2().equalsIgnoreCase(headerValue)) {
+                    return func.apply(host.getValue3());
+                }
+            }
+            return defaultValue;
+        }).orElse(defaultValue);
+    }
+
+    public default String[] getVirtualHostKeys() {
+        return stream(getVirtualHosts()).get(stream -> stream.map(h -> h.getValue3()).toArray(n -> new String[n]));
+    }
+
+    public default String[] getVirtualHostPaths() {
+        return stream(getVirtualHosts()).get(stream -> stream.map(h -> "/" + h.getValue3()).toArray(n -> new String[n]));
+    }
+
+    @SuppressWarnings("unchecked")
+    public default Tuple3<String, String, String>[] getVirtualHosts() {
+        Tuple3<String, String, String>[] hosts = (Tuple3<String, String, String>[]) propMap.get(VIRTUAL_HOST_HEADERS);
+        if (hosts == null) {
+            hosts =
+                    split(getVirtualHostHeaderValue(), "\n").get(
+                            stream -> stream
+                                    .map(s -> {
+                                        final String[] v1 = s.split("=");
+                                        if (v1.length == 2) {
+                                            final String[] v2 = v1[0].split(":", 2);
+                                            if (v2.length == 2) {
+                                                return new Tuple3<>(v2[0].trim(), v2[1].trim(), v1[1].replaceAll("[^a-zA-Z0-9_]",
+                                                        StringUtil.EMPTY).trim());
+                                            }
+                                        }
+                                        return null;
+                                    })
+                                    .filter(v -> {
+                                        if (v == null) {
+                                            return false;
+                                        }
+                                        if ("admin".equalsIgnoreCase(v.getValue3()) || "common".equalsIgnoreCase(v.getValue3())
+                                                || "error".equalsIgnoreCase(v.getValue3()) || "login".equalsIgnoreCase(v.getValue3())
+                                                || "profile".equalsIgnoreCase(v.getValue3())) {
+                                            return false;
+                                        }
+                                        return true;
+                                    }).toArray(n -> new Tuple3[n]));
+            propMap.put(VIRTUAL_HOST_HEADERS, hosts);
+        }
+        return hosts;
+    }
+
+    String getCrawlerFailureUrlStatusCodes();
+
+    public default boolean isCrawlerFailureUrlStatusCodes(final int code) {
+        int[] codes = (int[]) propMap.get(CRAWLER_FAILURE_URL_STATUS_CODES);
+        if (codes == null) {
+            codes =
+                    split(getCrawlerFailureUrlStatusCodes(), ",").get(
+                            stream -> stream.filter(StringUtil::isNotBlank).mapToInt(Integer::parseInt).toArray());
+            propMap.put(CRAWLER_FAILURE_URL_STATUS_CODES, codes);
+        }
+        for (final int v : codes) {
+            if (v == code) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Integer getThumbnailHtmlImageMinWidthAsInteger();
+
+    Integer getThumbnailHtmlImageMinHeightAsInteger();
+
+    java.math.BigDecimal getThumbnailHtmlImageMaxAspectRatioAsDecimal();
+
+    public default boolean validateThumbnailSize(final int width, final int height) {
+        if (width <= 0 || height <= 0) {
+            return false;
+        }
+
+        if (width < getThumbnailHtmlImageMinWidthAsInteger().intValue() || height < getThumbnailHtmlImageMinHeightAsInteger().intValue()) {
+            return false;
+        }
+
+        final float ratio = getThumbnailHtmlImageMaxAspectRatioAsDecimal().floatValue();
+        if (((float) width) / ((float) height) > ratio || ((float) height) / ((float) width) > ratio) {
+            return false;
+        }
+
+        return true;
+    }
+
+    String getHttpProxyHost();
+
+    Integer getHttpProxyPortAsInteger();
+
+    String getHttpProxyUsername();
+
+    String getHttpProxyPassword();
+
+    public default Proxy getHttpProxy() {
+        Proxy proxy = (Proxy) propMap.get(HTML_PROXY);
+        if (proxy == null) {
+            if (StringUtil.isNotBlank(getHttpProxyHost()) && getHttpProxyPortAsInteger() != null) {
+                final SocketAddress addr = new InetSocketAddress(getHttpProxyHost(), getHttpProxyPortAsInteger());
+                proxy = new Proxy(Type.HTTP, addr);
+                if (StringUtil.isNotBlank(getHttpProxyUsername())) {
+                    Authenticator.setDefault(new Authenticator() {
+                        @Override
+                        protected PasswordAuthentication getPasswordAuthentication() {
+                            return new PasswordAuthentication(getHttpProxyUsername(), getHttpProxyPassword().toCharArray());
+                        }
+                    });
+                }
+            } else {
+                proxy = Proxy.NO_PROXY;
+            }
+            propMap.put(HTML_PROXY, proxy);
+        }
+        return proxy;
+    }
+
+    String getThumbnailHtmlImageExcludeExtensions();
+
+    public default boolean isThumbnailHtmlImageUrl(final String url) {
+        if (StringUtil.isBlank(url)) {
+            return false;
+        }
+
+        String[] excludeExtensions = (String[]) propMap.get(THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS);
+        if (excludeExtensions == null) {
+            excludeExtensions =
+                    split(getThumbnailHtmlImageExcludeExtensions(), ",").get(
+                            stream -> stream.map(s -> s.toLowerCase(Locale.ROOT).trim()).filter(StringUtil::isNotBlank)
+                                    .toArray(n -> new String[n]));
+            propMap.put(THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS, excludeExtensions);
+        }
+
+        final String u = url.toLowerCase(Locale.ROOT);
+        return !stream(excludeExtensions).get(stream -> stream.anyMatch(s -> u.endsWith(s)));
+    }
+
+    String getQueryGsaResponseFields();
+
+    public default boolean isGsaResponseFields(final String name) {
+        @SuppressWarnings("unchecked")
+        Set<String> gsaResponseFieldSet = (Set<String>) propMap.get(QUERY_GSA_RESPONSE_FIELDS);
+        if (gsaResponseFieldSet == null) {
+            gsaResponseFieldSet =
+                    split(getQueryGsaResponseFields(), ",").get(
+                            stream -> stream.map(s -> s.toLowerCase(Locale.ROOT).trim()).filter(StringUtil::isNotBlank)
+                                    .collect(Collectors.toSet()));
+            propMap.put(QUERY_GSA_RESPONSE_FIELDS, gsaResponseFieldSet);
+        }
+        return gsaResponseFieldSet.contains(name.toLowerCase(Locale.ROOT));
     }
 
 }

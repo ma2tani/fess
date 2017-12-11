@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tika.metadata.HttpHeaders;
@@ -34,6 +35,8 @@ import org.codelibs.core.io.SerializeUtil;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.Constants;
+import org.codelibs.fess.crawler.client.fs.FileSystemClient;
+import org.codelibs.fess.crawler.client.ftp.FtpClient;
 import org.codelibs.fess.crawler.client.smb.SmbClient;
 import org.codelibs.fess.crawler.entity.AccessResultData;
 import org.codelibs.fess.crawler.entity.ExtractData;
@@ -92,18 +95,16 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
     }
 
     protected Map<String, Object> generateData(final ResponseData responseData) {
+        final CrawlingConfigHelper crawlingConfigHelper = ComponentUtil.getCrawlingConfigHelper();
+        final CrawlingConfig crawlingConfig = crawlingConfigHelper.get(responseData.getSessionId());
         final Extractor extractor = getExtractor(responseData);
-        final Map<String, String> params = new HashMap<>();
-        params.put(TikaMetadataKeys.RESOURCE_NAME_KEY, getResourceName(responseData));
         final String mimeType = responseData.getMimeType();
-        params.put(HttpHeaders.CONTENT_TYPE, mimeType);
-        params.put(HttpHeaders.CONTENT_ENCODING, responseData.getCharSet());
         final StringBuilder contentMetaBuf = new StringBuilder(1000);
         final Map<String, Object> dataMap = new HashMap<>();
         final Map<String, Object> metaDataMap = new HashMap<>();
         String content;
         try (final InputStream in = responseData.getResponseBody()) {
-            final ExtractData extractData = extractor.getText(in, params);
+            final ExtractData extractData = getExtractData(extractor, in, createExtractParams(responseData, crawlingConfig));
             content = extractData.getContent();
             if (fessConfig.isCrawlerDocumentFileIgnoreEmptyContent() && StringUtil.isBlank(content)) {
                 return null;
@@ -162,12 +163,9 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
         }
         final String contentMeta = contentMetaBuf.toString().trim();
 
-        final FessConfig fessConfig = ComponentUtil.getFessConfig();
         final CrawlingInfoHelper crawlingInfoHelper = ComponentUtil.getCrawlingInfoHelper();
         final String sessionId = crawlingInfoHelper.getCanonicalSessionId(responseData.getSessionId());
         final PathMappingHelper pathMappingHelper = ComponentUtil.getPathMappingHelper();
-        final CrawlingConfigHelper crawlingConfigHelper = ComponentUtil.getCrawlingConfigHelper();
-        final CrawlingConfig crawlingConfig = crawlingConfigHelper.get(responseData.getSessionId());
         final Date documentExpires = crawlingInfoHelper.getDocumentExpires(crawlingConfig);
         final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
         final FileTypeHelper fileTypeHelper = ComponentUtil.getFileTypeHelper();
@@ -295,6 +293,9 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
         final List<String> roleTypeList = getRoleTypes(responseData);
         stream(crawlingConfig.getPermissions()).of(stream -> stream.forEach(p -> roleTypeList.add(p)));
         putResultDataBody(dataMap, fessConfig.getIndexFieldRole(), roleTypeList);
+        // virtualHosts
+        putResultDataBody(dataMap, fessConfig.getIndexFieldVirtualHost(),
+                stream(crawlingConfig.getVirtualHosts()).get(stream -> stream.filter(StringUtil::isNotBlank).toArray(n -> new String[n])));
         // TODO date
         // lang
         if (StringUtil.isNotBlank(fessConfig.getCrawlerDocumentFileDefaultLang())) {
@@ -310,6 +311,8 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
             putResultDataBody(dataMap, fessConfig.getIndexFieldParentId(), crawlingInfoHelper.generateId(dataMap));
             putResultDataBody(dataMap, fessConfig.getIndexFieldUrl(), url); // set again
         }
+        // thumbnail
+        putResultDataBody(dataMap, fessConfig.getIndexFieldThumbnail(), responseData.getUrl());
 
         // from config
         final Map<String, String> scriptConfigMap = crawlingConfig.getConfigParameterMap(ConfigName.SCRIPT);
@@ -328,6 +331,29 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
         }
 
         return dataMap;
+    }
+
+    protected Map<String, String> createExtractParams(final ResponseData responseData, final CrawlingConfig crawlingConfig) {
+        final Map<String, String> params = new HashMap<>(crawlingConfig.getConfigParameterMap(ConfigName.CONFIG));
+        params.put(TikaMetadataKeys.RESOURCE_NAME_KEY, getResourceName(responseData));
+        params.put(HttpHeaders.CONTENT_TYPE, responseData.getMimeType());
+        params.put(HttpHeaders.CONTENT_ENCODING, responseData.getCharSet());
+        params.put(ExtractData.URL, responseData.getUrl());
+        return params;
+    }
+
+    protected ExtractData getExtractData(final Extractor extractor, final InputStream in, final Map<String, String> params) {
+        try {
+            return extractor.getText(in, params);
+        } catch (final RuntimeException e) {
+            if (!fessConfig.isCrawlerIgnoreContentException()) {
+                throw e;
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Could not get a text.", e);
+            }
+        }
+        return new ExtractData();
     }
 
     private String getResourceName(final ResponseData responseData) {
@@ -375,7 +401,52 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
     protected List<String> getRoleTypes(final ResponseData responseData) {
         final List<String> roleTypeList = new ArrayList<>();
 
-        if (fessConfig.isSmbRoleFromFile() && responseData.getUrl().startsWith("smb://")) {
+        roleTypeList.addAll(getSmbRoleTypes(responseData));
+        roleTypeList.addAll(getFileRoleTypes(responseData));
+        roleTypeList.addAll(getFtpRoleTypes(responseData));
+
+        return roleTypeList;
+    }
+
+    protected List<String> getFileRoleTypes(final ResponseData responseData) {
+        final List<String> roleTypeList = new ArrayList<>();
+        if (fessConfig.isFileRoleFromFile() && responseData.getUrl().startsWith("file:")) {
+            final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
+            final String owner = (String) responseData.getMetaDataMap().get(FileSystemClient.FS_FILE_USER);
+            if (owner != null) {
+                roleTypeList.add(systemHelper.getSearchRoleByUser(owner));
+            }
+            final String[] groups = (String[]) responseData.getMetaDataMap().get(FileSystemClient.FS_FILE_GROUPS);
+            roleTypeList.addAll(stream(groups).get(stream -> stream.map(systemHelper::getSearchRoleByGroup).collect(Collectors.toList())));
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("fileUrl:" + responseData.getUrl() + " roleType:" + roleTypeList.toString());
+            }
+        }
+        return roleTypeList;
+    }
+
+    protected List<String> getFtpRoleTypes(final ResponseData responseData) {
+        final List<String> roleTypeList = new ArrayList<>();
+        if (fessConfig.isFtpRoleFromFile() && responseData.getUrl().startsWith("ftp:")) {
+            final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
+            final String owner = (String) responseData.getMetaDataMap().get(FtpClient.FTP_FILE_USER);
+            if (owner != null) {
+                roleTypeList.add(systemHelper.getSearchRoleByUser(owner));
+            }
+            final String group = (String) responseData.getMetaDataMap().get(FtpClient.FTP_FILE_GROUP);
+            if (group != null) {
+                roleTypeList.add(systemHelper.getSearchRoleByGroup(group));
+            }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("ftpUrl:" + responseData.getUrl() + " roleType:" + roleTypeList.toString());
+            }
+        }
+        return roleTypeList;
+    }
+
+    protected List<String> getSmbRoleTypes(final ResponseData responseData) {
+        final List<String> roleTypeList = new ArrayList<>();
+        if (fessConfig.isSmbRoleFromFile() && responseData.getUrl().startsWith("smb:")) {
             final SambaHelper sambaHelper = ComponentUtil.getSambaHelper();
             final ACE[] aces = (ACE[]) responseData.getMetaDataMap().get(SmbClient.SMB_ACCESS_CONTROL_ENTRIES);
             if (aces != null) {
@@ -391,7 +462,6 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
                 }
             }
         }
-
         return roleTypeList;
     }
 
@@ -402,15 +472,15 @@ public abstract class AbstractFessFileTransformer extends AbstractTransformer im
 
         if (url.startsWith("file:////")) {
             final String value = decodeUrlAsName(url.substring(9), true);
-            return StringUtils.abbreviate("\\\\" + value.replace('/', '\\'), getMaxSiteLength());
+            return abbreviateSite("\\\\" + value.replace('/', '\\'));
         } else if (url.startsWith("file:")) {
             final String value = decodeUrlAsName(url.substring(5), true);
             if (value.length() > 2 && value.charAt(2) == ':') {
                 // Windows
-                return StringUtils.abbreviate(value.substring(1).replace('/', '\\'), getMaxSiteLength());
+                return abbreviateSite(value.substring(1).replace('/', '\\'));
             } else {
                 // Unix
-                return StringUtils.abbreviate(value, getMaxSiteLength());
+                return abbreviateSite(value);
             }
         }
 

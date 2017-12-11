@@ -224,10 +224,6 @@ public class BsFileConfigCB extends EsAbstractConditionBean {
             doColumn("intervalTime");
         }
 
-        public void columnTimeToLive() {
-            doColumn("timeToLive");
-        }
-
         public void columnMaxAccessCount() {
             doColumn("maxAccessCount");
         }
@@ -252,12 +248,20 @@ public class BsFileConfigCB extends EsAbstractConditionBean {
             doColumn("sortOrder");
         }
 
+        public void columnTimeToLive() {
+            doColumn("timeToLive");
+        }
+
         public void columnUpdatedBy() {
             doColumn("updatedBy");
         }
 
         public void columnUpdatedTime() {
             doColumn("updatedTime");
+        }
+
+        public void columnVirtualHosts() {
+            doColumn("virtualHosts");
         }
     }
 }

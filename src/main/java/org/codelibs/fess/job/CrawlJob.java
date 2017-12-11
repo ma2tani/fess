@@ -62,8 +62,6 @@ public class CrawlJob {
 
     protected String[] dataConfigIds;
 
-    protected String operation;
-
     protected String logFilePath;
 
     protected String logLevel;
@@ -88,11 +86,6 @@ public class CrawlJob {
 
     public CrawlJob namespace(final String namespace) {
         this.namespace = namespace;
-        return this;
-    }
-
-    public CrawlJob operation(final String operation) {
-        this.operation = operation;
         return this;
     }
 
@@ -147,28 +140,6 @@ public class CrawlJob {
 
     public String execute(final JobExecutor jobExecutor) {
         jobExecutor(jobExecutor);
-        return execute();
-    }
-
-    public String execute(final JobExecutor jobExecutor, final String[] webConfigIds, final String[] fileConfigIds,
-            final String[] dataConfigIds, final String operation) {
-        jobExecutor(jobExecutor);
-        operation(operation);
-        webConfigIds(webConfigIds);
-        fileConfigIds(fileConfigIds);
-        dataConfigIds(dataConfigIds);
-        return execute();
-
-    }
-
-    public String execute(final JobExecutor jobExecutor, final String sessionId, final String[] webConfigIds, final String[] fileConfigIds,
-            final String[] dataConfigIds, final String operation) {
-        jobExecutor(jobExecutor);
-        operation(operation);
-        webConfigIds(webConfigIds);
-        fileConfigIds(fileConfigIds);
-        dataConfigIds(dataConfigIds);
-        sessionId(sessionId);
         return execute();
     }
 
@@ -291,10 +262,13 @@ public class CrawlJob {
             if (StringUtil.isNotBlank(transportAddresses)) {
                 cmdList.add("-D" + Constants.FESS_ES_TRANSPORT_ADDRESSES + "=" + transportAddresses);
             }
-            final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
-            if (StringUtil.isNotBlank(clusterName)) {
-                cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
-            }
+        }
+
+        final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
+        if (StringUtil.isNotBlank(clusterName)) {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
+        } else {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + fessConfig.getElasticsearchClusterName());
         }
 
         final String systemLastaEnv = System.getProperty("lasta.env");
@@ -315,6 +289,9 @@ public class CrawlJob {
             addSystemProperty(cmdList, "fess.log.level", null, null);
         } else {
             cmdList.add("-Dfess.log.level=" + logLevel);
+            if (logLevel.equalsIgnoreCase("debug")) {
+                cmdList.add("-Dorg.apache.tika.service.error.warn=true");
+            }
         }
         stream(fessConfig.getJvmCrawlerOptionsAsArray()).of(
                 stream -> stream.filter(StringUtil::isNotBlank).forEach(value -> cmdList.add(value)));
@@ -355,10 +332,6 @@ public class CrawlJob {
         if (dataConfigIds != null && dataConfigIds.length > 0) {
             cmdList.add("-d");
             cmdList.add(StringUtils.join(dataConfigIds, ','));
-        }
-        if (StringUtil.isNotBlank(operation)) {
-            cmdList.add("-o");
-            cmdList.add(operation);
         }
         if (documentExpires >= -1) {
             cmdList.add("-e");

@@ -26,12 +26,18 @@ import javax.annotation.Resource;
 
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.DynamicProperties;
+import org.codelibs.core.timer.TimeoutManager;
+import org.codelibs.core.timer.TimeoutTask;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.crawler.client.EsClient;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.exception.ContainerNotAvailableException;
 import org.codelibs.fess.helper.SuggestHelper;
+import org.codelibs.fess.timer.SystemMonitorTarget;
 import org.codelibs.fess.util.ComponentUtil;
+import org.elasticsearch.monitor.jvm.JvmInfo;
+import org.elasticsearch.monitor.os.OsProbe;
+import org.elasticsearch.monitor.process.ProcessProbe;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -43,7 +49,7 @@ import org.slf4j.LoggerFactory;
 
 public class SuggestCreator {
 
-    private static final Logger logger = LoggerFactory.getLogger(Crawler.class);
+    private static final Logger logger = LoggerFactory.getLogger(SuggestCreator.class);
 
     @Resource
     public FessEsClient fessEsClient;
@@ -66,6 +72,13 @@ public class SuggestCreator {
         public String toString() {
             return "Options [sessionId=" + sessionId + ", name=" + name + ", propertiesPath=" + propertiesPath + "]";
         }
+    }
+
+    static void initializeProbes() {
+        // Force probes to be loaded
+        ProcessProbe.getInstance();
+        OsProbe.getInstance();
+        JvmInfo.jvmInfo();
     }
 
     public static void main(final String[] args) {
@@ -101,6 +114,7 @@ public class SuggestCreator {
             System.setProperty(EsClient.CLUSTER_NAME, clusterName);
         }
 
+        TimeoutTask systemMonitorTask = null;
         int exitCode;
         try {
             SingletonLaContainerFactory.setConfigPath("app.xml");
@@ -118,6 +132,11 @@ public class SuggestCreator {
                 }
             };
             Runtime.getRuntime().addShutdownHook(shutdownCallback);
+
+            systemMonitorTask =
+                    TimeoutManager.getInstance().addTimeoutTarget(new SystemMonitorTarget(),
+                            ComponentUtil.getFessConfig().getSuggestSystemMonitorIntervalAsInteger(), true);
+
             exitCode = process(options);
         } catch (final ContainerNotAvailableException e) {
             if (logger.isDebugEnabled()) {
@@ -130,6 +149,9 @@ public class SuggestCreator {
             logger.error("Suggest creator does not work correctly.", t);
             exitCode = Constants.EXIT_FAIL;
         } finally {
+            if (systemMonitorTask != null) {
+                systemMonitorTask.cancel();
+            }
             destroyContainer();
         }
 
@@ -183,6 +205,16 @@ public class SuggestCreator {
 
         final SuggestHelper suggestHelper = ComponentUtil.getSuggestHelper();
 
+        logger.info("Create update index.");
+        suggestHelper.suggester().createNextIndex();
+
+        logger.info("storeAllBadWords");
+        suggestHelper.storeAllBadWords(true);
+
+        logger.info("storeAllElevateWords");
+        suggestHelper.storeAllElevateWords(true);
+
+        logger.info("indexFromDocuments");
         suggestHelper.indexFromDocuments(ret -> {
             logger.info("Success index from documents.");
             result.set(0);
@@ -199,6 +231,15 @@ public class SuggestCreator {
                 logger.debug("Interrupted.", ignore);
             }
         }
+
+        logger.info("storeSearchLog");
+        suggestHelper.storeSearchLog();
+
+        logger.info("switchIndex");
+        suggestHelper.suggester().switchIndex();
+
+        logger.info("removeDisableIndices");
+        suggestHelper.suggester().removeDisableIndices();
 
         return result.get();
     }

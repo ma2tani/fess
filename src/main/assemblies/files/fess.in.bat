@@ -50,11 +50,20 @@ if NOT "%FESS_USE_IPV4%" == "" (
 set JAVA_OPTS=%JAVA_OPTS% -Djava.net.preferIPv4Stack=true
 )
 
-set JAVA_OPTS=%JAVA_OPTS% -XX:+UseParNewGC
+set JAVA_OPTS=%JAVA_OPTS% -Djna.nosys=true
+set JAVA_OPTS=%JAVA_OPTS% -Djdk.io.permissionsUseCanonicalPath=true
 set JAVA_OPTS=%JAVA_OPTS% -XX:+UseConcMarkSweepGC
 
 set JAVA_OPTS=%JAVA_OPTS% -XX:CMSInitiatingOccupancyFraction=75
 set JAVA_OPTS=%JAVA_OPTS% -XX:+UseCMSInitiatingOccupancyOnly
+
+set JAVA_OPTS=%JAVA_OPTS% -Dio.netty.noUnsafe=true
+set JAVA_OPTS=%JAVA_OPTS% -Dio.netty.noKeySetOptimization=true
+set JAVA_OPTS=%JAVA_OPTS% -Dio.netty.recycler.maxCapacityPerThread=0
+
+set JAVA_OPTS=%JAVA_OPTS% -Dlog4j.shutdownHookEnabled=false
+set JAVA_OPTS=%JAVA_OPTS% -Dlog4j2.disable.jmx=true
+set JAVA_OPTS=%JAVA_OPTS% -Dlog4j.skipJansi=true
 
 if NOT "%FESS_USE_GC_LOGGING%" == "" set JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCDetails
 if NOT "%FESS_USE_GC_LOGGING%" == "" set JAVA_OPTS=%JAVA_OPTS% -XX:+PrintGCTimeStamps
@@ -103,6 +112,6 @@ set FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dlasta.env=web
 set FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dtomcat.config.path=tomcat_config.properties
 
 REM External elasticsearch cluster
-REM FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.es.http_address=http://localhost:9200
-REM FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.es.transport_addresses=localhost:9300
-REM FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.dictionary.path=%ES_HOME%\data\
+REM set FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.es.http_address=http://localhost:9200
+REM set FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.es.transport_addresses=localhost:9300
+REM set FESS_JAVA_OPTS=%FESS_JAVA_OPTS% -Dfess.dictionary.path=%ES_HOME%/config/

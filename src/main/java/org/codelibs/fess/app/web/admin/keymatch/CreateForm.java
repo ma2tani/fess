@@ -52,11 +52,12 @@ public class CreateForm {
     @ValidateTypeFailure
     public Float boost;
 
-    @Required
+    @Size(max = 1000)
+    public String virtualHost;
+
     @Size(max = 255)
     public String createdBy;
 
-    @Required
     @ValidateTypeFailure
     public Long createdTime;
 

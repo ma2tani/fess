@@ -15,6 +15,7 @@
  */
 package org.codelibs.fess.app.web.base;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.Set;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.net.URLUtil;
 import org.codelibs.fess.Constants;
@@ -37,15 +38,14 @@ import org.codelibs.fess.helper.OpenSearchHelper;
 import org.codelibs.fess.helper.PopularWordHelper;
 import org.codelibs.fess.helper.QueryHelper;
 import org.codelibs.fess.helper.RoleQueryHelper;
-import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.helper.UserInfoHelper;
-import org.codelibs.fess.helper.ViewHelper;
 import org.codelibs.fess.thumbnail.ThumbnailManager;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.optional.OptionalThing;
 import org.lastaflute.web.login.LoginManager;
 import org.lastaflute.web.response.ActionResponse;
 import org.lastaflute.web.response.HtmlResponse;
+import org.lastaflute.web.response.next.HtmlNext;
 import org.lastaflute.web.ruts.process.ActionRuntime;
 
 public abstract class FessSearchAction extends FessBaseAction {
@@ -62,9 +62,6 @@ public abstract class FessSearchAction extends FessBaseAction {
     protected LabelTypeHelper labelTypeHelper;
 
     @Resource
-    protected ViewHelper viewHelper;
-
-    @Resource
     protected QueryHelper queryHelper;
 
     @Resource
@@ -72,9 +69,6 @@ public abstract class FessSearchAction extends FessBaseAction {
 
     @Resource
     protected UserInfoHelper userInfoHelper;
-
-    @Resource
-    protected SystemHelper systemHelper;
 
     @Resource
     protected OpenSearchHelper openSearchHelper;
@@ -100,7 +94,13 @@ public abstract class FessSearchAction extends FessBaseAction {
         runtime.registerData("favoriteSupport", favoriteSupport);
         runtime.registerData("thumbnailSupport", thumbnailSupport);
         if (fessConfig.isWebApiPopularWord()) {
-            runtime.registerData("popularWords", popularWordHelper.getWordList(SearchRequestType.SEARCH, null, null, null, null, null));
+            final List<String> tagList = new ArrayList<>();
+            final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+            if (StringUtil.isNotBlank(key)) {
+                tagList.add(key);
+            }
+            runtime.registerData("popularWords", popularWordHelper.getWordList(SearchRequestType.SEARCH, null,
+                    tagList.toArray(new String[tagList.size()]), null, null, null));
         }
         return super.hookBefore(runtime);
     }
@@ -219,5 +219,9 @@ public abstract class FessSearchAction extends FessBaseAction {
     protected HtmlResponse redirectToRoot() {
         final String contextPath = request.getServletContext().getContextPath();
         return newHtmlResponseAsRediect(StringUtil.isBlank(contextPath) ? "/" : contextPath);
+    }
+
+    protected HtmlNext virtualHost(final HtmlNext path) {
+        return fessConfig.getVirtualHostPath(path);
     }
 }

@@ -24,11 +24,13 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.codelibs.core.stream.StreamUtil;
 import org.codelibs.fess.helper.QueryHelper;
 import org.codelibs.fess.helper.ViewHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.dbflute.optional.OptionalEntity;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.common.document.DocumentField;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
@@ -38,6 +40,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class QueryResponseList implements List<Map<String, Object>> {
+
+    private static final String SCORE = "score";
 
     private static final Logger logger = LoggerFactory.getLogger(QueryResponseList.class);
 
@@ -84,9 +88,10 @@ public class QueryResponseList implements List<Map<String, Object>> {
 
     public void init(final OptionalEntity<SearchResponse> searchResponseOpt, final int start, final int pageSize) {
         searchResponseOpt.ifPresent(searchResponse -> {
+            final FessConfig fessConfig = ComponentUtil.getFessConfig();
             final SearchHits searchHits = searchResponse.getHits();
             allRecordCount = searchHits.getTotalHits();
-            queryTime = searchResponse.getTookInMillis();
+            queryTime = searchResponse.getTook().millis();
 
             if (searchResponse.getTotalShards() != searchResponse.getSuccessfulShards()) {
                 partialResults = true;
@@ -96,45 +101,28 @@ public class QueryResponseList implements List<Map<String, Object>> {
                 final QueryHelper queryHelper = ComponentUtil.getQueryHelper();
                 final String hlPrefix = queryHelper.getHighlightPrefix();
                 for (final SearchHit searchHit : searchHits.getHits()) {
-                    final Map<String, Object> docMap = new HashMap<>();
-                    if (searchHit.getSource() == null) {
-                        searchHit.getFields().forEach((key, value) -> {
-                            docMap.put(key, value.getValue());
-                        });
-                    } else {
-                        docMap.putAll(searchHit.getSource());
-                    }
+                    final Map<String, Object> docMap = parseSearchHit(fessConfig, hlPrefix, searchHit);
 
-                    final Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
-                    try {
-                        if (highlightFields != null) {
-                            for (final Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
-                                final HighlightField highlightField = entry.getValue();
-                                final Text[] fragments = highlightField.fragments();
-                                if (fragments != null && fragments.length != 0) {
-                                    final String[] texts = new String[fragments.length];
-                                    for (int i = 0; i < fragments.length; i++) {
-                                        texts[i] = fragments[i].string();
+                    if (fessConfig.isResultCollapsed()) {
+                        final Map<String, SearchHits> innerHits = searchHit.getInnerHits();
+                        if (innerHits != null) {
+                            final SearchHits innerSearchHits = innerHits.get(fessConfig.getQueryCollapseInnerHitsName());
+                            if (innerSearchHits != null) {
+                                final long totalHits = innerSearchHits.getTotalHits();
+                                if (totalHits > 1) {
+                                    docMap.put(fessConfig.getQueryCollapseInnerHitsName() + "_count", totalHits);
+                                    final DocumentField bitsField = searchHit.getFields().get(fessConfig.getIndexFieldContentMinhashBits());
+                                    if (bitsField != null && !bitsField.getValues().isEmpty()) {
+                                        docMap.put(fessConfig.getQueryCollapseInnerHitsName() + "_hash", bitsField.getValues().get(0));
                                     }
-                                    final String value = StringUtils.join(texts, "...");
-                                    docMap.put(hlPrefix + highlightField.getName(), value);
+                                    docMap.put(
+                                            fessConfig.getQueryCollapseInnerHitsName(),
+                                            StreamUtil.stream(innerSearchHits.getHits()).get(
+                                                    stream -> stream.map(v -> parseSearchHit(fessConfig, hlPrefix, v)).toArray(
+                                                            n -> new Map[n])));
                                 }
                             }
                         }
-                    } catch (final Exception e) {
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("Could not create a highlighting value: " + docMap, e);
-                        }
-                    }
-
-                    // ContentTitle
-                    final ViewHelper viewHelper = ComponentUtil.getViewHelper();
-                    if (viewHelper != null) {
-                        final FessConfig fessConfig = ComponentUtil.getFessConfig();
-                        docMap.put(fessConfig.getResponseFieldContentTitle(), viewHelper.getContentTitle(docMap));
-                        docMap.put(fessConfig.getResponseFieldContentDescription(), viewHelper.getContentDescription(docMap));
-                        docMap.put(fessConfig.getResponseFieldUrlLink(), viewHelper.getUrlLink(docMap));
-                        docMap.put(fessConfig.getResponseFieldSitePath(), viewHelper.getSitePath(docMap));
                     }
 
                     parent.add(docMap);
@@ -151,12 +139,64 @@ public class QueryResponseList implements List<Map<String, Object>> {
         calculatePageInfo(start, pageSize);
     }
 
+    private Map<String, Object> parseSearchHit(final FessConfig fessConfig, final String hlPrefix, final SearchHit searchHit) {
+        final Map<String, Object> docMap = new HashMap<>();
+        if (searchHit.getSourceAsMap() == null) {
+            searchHit.getFields().forEach((key, value) -> {
+                docMap.put(key, value.getValue());
+            });
+        } else {
+            docMap.putAll(searchHit.getSourceAsMap());
+        }
+
+        final Map<String, HighlightField> highlightFields = searchHit.getHighlightFields();
+        try {
+            if (highlightFields != null) {
+                for (final Map.Entry<String, HighlightField> entry : highlightFields.entrySet()) {
+                    final HighlightField highlightField = entry.getValue();
+                    final Text[] fragments = highlightField.fragments();
+                    if (fragments != null && fragments.length != 0) {
+                        final String[] texts = new String[fragments.length];
+                        for (int i = 0; i < fragments.length; i++) {
+                            texts[i] = fragments[i].string();
+                        }
+                        final String value = StringUtils.join(texts, "...");
+                        docMap.put(hlPrefix + highlightField.getName(), value);
+                    }
+                }
+            }
+        } catch (final Exception e) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Could not create a highlighting value: " + docMap, e);
+            }
+        }
+
+        // ContentTitle
+        final ViewHelper viewHelper = ComponentUtil.getViewHelper();
+        if (viewHelper != null) {
+            docMap.put(fessConfig.getResponseFieldContentTitle(), viewHelper.getContentTitle(docMap));
+            docMap.put(fessConfig.getResponseFieldContentDescription(), viewHelper.getContentDescription(docMap));
+            docMap.put(fessConfig.getResponseFieldUrlLink(), viewHelper.getUrlLink(docMap));
+            docMap.put(fessConfig.getResponseFieldSitePath(), viewHelper.getSitePath(docMap));
+        }
+
+        if (!docMap.containsKey(SCORE)) {
+            docMap.put(SCORE, searchHit.getScore());
+        }
+        return docMap;
+    }
+
     protected void calculatePageInfo(final int start, final int size) {
         pageSize = size;
         allPageCount = (int) ((allRecordCount - 1) / pageSize) + 1;
         existPrevPage = start > 0;
         existNextPage = start < (long) (allPageCount - 1) * (long) pageSize;
         currentPageNumber = start / pageSize + 1;
+        if (existNextPage && size() < pageSize) {
+            // collapsing
+            existNextPage = false;
+            allPageCount = currentPageNumber;
+        }
         currentStartRecordNumber = allRecordCount != 0 ? (currentPageNumber - 1) * pageSize + 1 : 0;
         currentEndRecordNumber = (long) currentPageNumber * pageSize;
         currentEndRecordNumber = allRecordCount < currentEndRecordNumber ? allRecordCount : currentEndRecordNumber;
@@ -174,7 +214,6 @@ public class QueryResponseList implements List<Map<String, Object>> {
         for (int i = startPageRangeSize; i <= endPageRangeSize; i++) {
             pageNumberList.add(String.valueOf(i));
         }
-
     }
 
     @Override

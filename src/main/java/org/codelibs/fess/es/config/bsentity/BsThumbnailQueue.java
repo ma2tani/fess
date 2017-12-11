@@ -43,17 +43,17 @@ public class BsThumbnailQueue extends EsAbstractEntity {
     /** createdTime */
     protected Long createdTime;
 
-    /** target */
-    protected String target;
-
     /** generator */
     protected String generator;
 
     /** path */
     protected String path;
 
-    /** url */
-    protected String url;
+    /** target */
+    protected String target;
+
+    /** thumbnail_id */
+    protected String thumbnailId;
 
     // [Referrers] *comment only
 
@@ -77,24 +77,28 @@ public class BsThumbnailQueue extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
-        }
-        if (target != null) {
-            sourceMap.put("target", target);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (generator != null) {
-            sourceMap.put("generator", generator);
+            addFieldToSource(sourceMap, "generator", generator);
         }
         if (path != null) {
-            sourceMap.put("path", path);
+            addFieldToSource(sourceMap, "path", path);
         }
-        if (url != null) {
-            sourceMap.put("url", url);
+        if (target != null) {
+            addFieldToSource(sourceMap, "target", target);
+        }
+        if (thumbnailId != null) {
+            addFieldToSource(sourceMap, "thumbnail_id", thumbnailId);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -105,10 +109,10 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         StringBuilder sb = new StringBuilder();
         sb.append(dm).append(createdBy);
         sb.append(dm).append(createdTime);
-        sb.append(dm).append(target);
         sb.append(dm).append(generator);
         sb.append(dm).append(path);
-        sb.append(dm).append(url);
+        sb.append(dm).append(target);
+        sb.append(dm).append(thumbnailId);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -139,16 +143,6 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         this.createdTime = value;
     }
 
-    public String getTarget() {
-        checkSpecifiedProperty("target");
-        return convertEmptyToNull(target);
-    }
-
-    public void setTarget(String value) {
-        registerModifiedProperty("target");
-        this.target = value;
-    }
-
     public String getGenerator() {
         checkSpecifiedProperty("generator");
         return convertEmptyToNull(generator);
@@ -169,13 +163,23 @@ public class BsThumbnailQueue extends EsAbstractEntity {
         this.path = value;
     }
 
-    public String getUrl() {
-        checkSpecifiedProperty("url");
-        return convertEmptyToNull(url);
+    public String getTarget() {
+        checkSpecifiedProperty("target");
+        return convertEmptyToNull(target);
     }
 
-    public void setUrl(String value) {
-        registerModifiedProperty("url");
-        this.url = value;
+    public void setTarget(String value) {
+        registerModifiedProperty("target");
+        this.target = value;
+    }
+
+    public String getThumbnailId() {
+        checkSpecifiedProperty("thumbnailId");
+        return convertEmptyToNull(thumbnailId);
+    }
+
+    public void setThumbnailId(String value) {
+        registerModifiedProperty("thumbnailId");
+        this.thumbnailId = value;
     }
 }

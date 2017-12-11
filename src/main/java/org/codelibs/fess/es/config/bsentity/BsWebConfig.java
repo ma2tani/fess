@@ -73,9 +73,6 @@ public class BsWebConfig extends EsAbstractEntity {
     /** intervalTime */
     protected Integer intervalTime;
 
-    /** timeToLive */
-    protected Integer timeToLive;
-
     /** maxAccessCount */
     protected Long maxAccessCount;
 
@@ -91,6 +88,9 @@ public class BsWebConfig extends EsAbstractEntity {
     /** sortOrder */
     protected Integer sortOrder;
 
+    /** timeToLive */
+    protected Integer timeToLive;
+
     /** updatedBy */
     protected String updatedBy;
 
@@ -102,6 +102,9 @@ public class BsWebConfig extends EsAbstractEntity {
 
     /** userAgent */
     protected String userAgent;
+
+    /** virtualHosts */
+    protected String[] virtualHosts;
 
     // [Referrers] *comment only
 
@@ -125,72 +128,79 @@ public class BsWebConfig extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (available != null) {
-            sourceMap.put("available", available);
+            addFieldToSource(sourceMap, "available", available);
         }
         if (boost != null) {
-            sourceMap.put("boost", boost);
+            addFieldToSource(sourceMap, "boost", boost);
         }
         if (configParameter != null) {
-            sourceMap.put("configParameter", configParameter);
+            addFieldToSource(sourceMap, "configParameter", configParameter);
         }
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (depth != null) {
-            sourceMap.put("depth", depth);
+            addFieldToSource(sourceMap, "depth", depth);
         }
         if (description != null) {
-            sourceMap.put("description", description);
+            addFieldToSource(sourceMap, "description", description);
         }
         if (excludedDocUrls != null) {
-            sourceMap.put("excludedDocUrls", excludedDocUrls);
+            addFieldToSource(sourceMap, "excludedDocUrls", excludedDocUrls);
         }
         if (excludedUrls != null) {
-            sourceMap.put("excludedUrls", excludedUrls);
+            addFieldToSource(sourceMap, "excludedUrls", excludedUrls);
         }
         if (includedDocUrls != null) {
-            sourceMap.put("includedDocUrls", includedDocUrls);
+            addFieldToSource(sourceMap, "includedDocUrls", includedDocUrls);
         }
         if (includedUrls != null) {
-            sourceMap.put("includedUrls", includedUrls);
+            addFieldToSource(sourceMap, "includedUrls", includedUrls);
         }
         if (intervalTime != null) {
-            sourceMap.put("intervalTime", intervalTime);
-        }
-        if (timeToLive != null) {
-            sourceMap.put("timeToLive", timeToLive);
+            addFieldToSource(sourceMap, "intervalTime", intervalTime);
         }
         if (maxAccessCount != null) {
-            sourceMap.put("maxAccessCount", maxAccessCount);
+            addFieldToSource(sourceMap, "maxAccessCount", maxAccessCount);
         }
         if (name != null) {
-            sourceMap.put("name", name);
+            addFieldToSource(sourceMap, "name", name);
         }
         if (numOfThread != null) {
-            sourceMap.put("numOfThread", numOfThread);
+            addFieldToSource(sourceMap, "numOfThread", numOfThread);
         }
         if (permissions != null) {
-            sourceMap.put("permissions", permissions);
+            addFieldToSource(sourceMap, "permissions", permissions);
         }
         if (sortOrder != null) {
-            sourceMap.put("sortOrder", sortOrder);
+            addFieldToSource(sourceMap, "sortOrder", sortOrder);
+        }
+        if (timeToLive != null) {
+            addFieldToSource(sourceMap, "timeToLive", timeToLive);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
         }
         if (urls != null) {
-            sourceMap.put("urls", urls);
+            addFieldToSource(sourceMap, "urls", urls);
         }
         if (userAgent != null) {
-            sourceMap.put("userAgent", userAgent);
+            addFieldToSource(sourceMap, "userAgent", userAgent);
+        }
+        if (virtualHosts != null) {
+            addFieldToSource(sourceMap, "virtualHosts", virtualHosts);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -211,16 +221,17 @@ public class BsWebConfig extends EsAbstractEntity {
         sb.append(dm).append(includedDocUrls);
         sb.append(dm).append(includedUrls);
         sb.append(dm).append(intervalTime);
-        sb.append(dm).append(timeToLive);
         sb.append(dm).append(maxAccessCount);
         sb.append(dm).append(name);
         sb.append(dm).append(numOfThread);
         sb.append(dm).append(permissions);
         sb.append(dm).append(sortOrder);
+        sb.append(dm).append(timeToLive);
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
         sb.append(dm).append(urls);
         sb.append(dm).append(userAgent);
+        sb.append(dm).append(virtualHosts);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -351,16 +362,6 @@ public class BsWebConfig extends EsAbstractEntity {
         this.intervalTime = value;
     }
 
-    public Integer getTimeToLive() {
-        checkSpecifiedProperty("timeToLive");
-        return timeToLive;
-    }
-
-    public void setTimeToLive(Integer value) {
-        registerModifiedProperty("timeToLive");
-        this.timeToLive = value;
-    }
-
     public Long getMaxAccessCount() {
         checkSpecifiedProperty("maxAccessCount");
         return maxAccessCount;
@@ -411,6 +412,16 @@ public class BsWebConfig extends EsAbstractEntity {
         this.sortOrder = value;
     }
 
+    public Integer getTimeToLive() {
+        checkSpecifiedProperty("timeToLive");
+        return timeToLive;
+    }
+
+    public void setTimeToLive(Integer value) {
+        registerModifiedProperty("timeToLive");
+        this.timeToLive = value;
+    }
+
     public String getUpdatedBy() {
         checkSpecifiedProperty("updatedBy");
         return convertEmptyToNull(updatedBy);
@@ -449,5 +460,15 @@ public class BsWebConfig extends EsAbstractEntity {
     public void setUserAgent(String value) {
         registerModifiedProperty("userAgent");
         this.userAgent = value;
+    }
+
+    public String[] getVirtualHosts() {
+        checkSpecifiedProperty("virtualHosts");
+        return virtualHosts;
+    }
+
+    public void setVirtualHosts(String[] value) {
+        registerModifiedProperty("virtualHosts");
+        this.virtualHosts = value;
     }
 }

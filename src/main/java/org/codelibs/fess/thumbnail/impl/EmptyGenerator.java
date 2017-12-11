@@ -20,17 +20,12 @@ import java.io.File;
 public class EmptyGenerator extends BaseThumbnailGenerator {
 
     @Override
-    public boolean generate(final String url, final File outputFile) {
+    public boolean generate(final String thumbnailId, final File outputFile) {
         return false;
     }
 
     @Override
     public void destroy() {
         // nothing
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return true;
     }
 }

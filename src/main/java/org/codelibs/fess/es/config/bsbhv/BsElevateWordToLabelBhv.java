@@ -51,7 +51,7 @@ public abstract class BsElevateWordToLabelBhv extends EsAbstractBehavior<Elevate
 
     @Override
     protected String asEsIndex() {
-        return ".fess_config";
+        return ".fess_config.elevate_word_to_label";
     }
 
     @Override
@@ -75,11 +75,15 @@ public abstract class BsElevateWordToLabelBhv extends EsAbstractBehavior<Elevate
             final RESULT result = entityType.newInstance();
             result.setElevateWordId(DfTypeUtil.toString(source.get("elevateWordId")));
             result.setLabelTypeId(DfTypeUtil.toString(source.get("labelTypeId")));
-            return result;
+            return updateEntity(source, result);
         } catch (InstantiationException | IllegalAccessException e) {
             final String msg = "Cannot create a new instance: " + entityType.getName();
             throw new IllegalBehaviorStateException(msg, e);
         }
+    }
+
+    protected <RESULT extends ElevateWordToLabel> RESULT updateEntity(Map<String, Object> source, RESULT result) {
+        return result;
     }
 
     // ===================================================================================

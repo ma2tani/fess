@@ -104,7 +104,7 @@ public interface FessTransformer {
             } catch (final Exception e) {}
         }
 
-        return StringUtils.abbreviate(url, getMaxSiteLength());
+        return abbreviateSite(url);
     }
 
     public default void putResultDataBody(final Map<String, Object> dataMap, final String key, final Object value) {
@@ -139,9 +139,12 @@ public interface FessTransformer {
             final String template) {
         Object target = value;
         if (template != null) {
-            final Map<String, Object> paramMap = new HashMap<>(dataMap.size() + 1);
+            final Map<String, Object> contextMap = new HashMap<>();
+            contextMap.put("doc", dataMap);
+            final Map<String, Object> paramMap = new HashMap<>(dataMap.size() + 2);
             paramMap.putAll(dataMap);
             paramMap.put("value", target);
+            paramMap.put("context", contextMap);
             target = evaluateValue(template, paramMap);
         }
         if (key != null && target != null) {
@@ -177,13 +180,21 @@ public interface FessTransformer {
         return getFessConfig().getCrawlerDocumentMaxSiteLengthAsInteger();
     }
 
+    public default String abbreviateSite(final String value) {
+        final int maxSiteLength = getMaxSiteLength();
+        if (maxSiteLength > -1) {
+            return StringUtils.abbreviate(value, maxSiteLength);
+        } else {
+            return value;
+        }
+    }
+
     public default String getFileName(final String url, final String encoding) {
         if (StringUtil.isBlank(url)) {
             return StringUtil.EMPTY;
         }
 
-        String u = decodeUrlAsName(url, url.startsWith("file:"));
-
+        String u = url;
         int idx = u.lastIndexOf('?');
         if (idx >= 0) {
             u = u.substring(0, idx);
@@ -193,7 +204,7 @@ public interface FessTransformer {
         if (idx >= 0) {
             u = u.substring(0, idx);
         }
-
+        u = decodeUrlAsName(u, u.startsWith("file:"));
         idx = u.lastIndexOf('/');
         if (idx >= 0) {
             if (u.length() > idx + 1) {
@@ -201,12 +212,6 @@ public interface FessTransformer {
             } else {
                 u = StringUtil.EMPTY;
             }
-        }
-
-        try {
-            u = URLDecoder.decode(u, encoding);
-        } catch (final Exception e) {
-            // ignore
         }
         return u;
     }

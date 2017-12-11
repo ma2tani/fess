@@ -61,6 +61,9 @@ public class BsKeyMatch extends EsAbstractEntity {
     /** updatedTime */
     protected Long updatedTime;
 
+    /** virtualHost */
+    protected String virtualHost;
+
     // [Referrers] *comment only
 
     // ===================================================================================
@@ -83,30 +86,37 @@ public class BsKeyMatch extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (boost != null) {
-            sourceMap.put("boost", boost);
+            addFieldToSource(sourceMap, "boost", boost);
         }
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (maxSize != null) {
-            sourceMap.put("maxSize", maxSize);
+            addFieldToSource(sourceMap, "maxSize", maxSize);
         }
         if (query != null) {
-            sourceMap.put("query", query);
+            addFieldToSource(sourceMap, "query", query);
         }
         if (term != null) {
-            sourceMap.put("term", term);
+            addFieldToSource(sourceMap, "term", term);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
+        }
+        if (virtualHost != null) {
+            addFieldToSource(sourceMap, "virtualHost", virtualHost);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -123,6 +133,7 @@ public class BsKeyMatch extends EsAbstractEntity {
         sb.append(dm).append(term);
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
+        sb.append(dm).append(virtualHost);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -211,5 +222,15 @@ public class BsKeyMatch extends EsAbstractEntity {
     public void setUpdatedTime(Long value) {
         registerModifiedProperty("updatedTime");
         this.updatedTime = value;
+    }
+
+    public String getVirtualHost() {
+        checkSpecifiedProperty("virtualHost");
+        return convertEmptyToNull(virtualHost);
+    }
+
+    public void setVirtualHost(String value) {
+        registerModifiedProperty("virtualHost");
+        this.virtualHost = value;
     }
 }

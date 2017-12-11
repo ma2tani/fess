@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.fess.app.service.FailureUrlService;
 import org.codelibs.fess.crawler.builder.RequestDataBuilder;
 import org.codelibs.fess.crawler.client.CrawlerClient;
 import org.codelibs.fess.crawler.client.smb.SmbClient;
@@ -39,8 +40,10 @@ import org.codelibs.fess.crawler.log.LogType;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.es.config.exentity.CrawlingConfig;
 import org.codelibs.fess.exception.ContainerNotAvailableException;
+import org.codelibs.fess.exception.ContentNotFoundException;
 import org.codelibs.fess.helper.CrawlingConfigHelper;
 import org.codelibs.fess.helper.CrawlingInfoHelper;
+import org.codelibs.fess.helper.DuplicateHostHelper;
 import org.codelibs.fess.helper.IndexingHelper;
 import org.codelibs.fess.helper.SambaHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
@@ -125,8 +128,8 @@ public class FessCrawlerThread extends CrawlerThread {
                 final Date expires = DocumentUtil.getValue(document, fessConfig.getIndexFieldExpires(), Date.class);
                 if (expires != null && expires.getTime() < System.currentTimeMillis()) {
                     final Object idValue = document.get(fessConfig.getIndexFieldId());
-                    if (idValue != null) {
-                        indexingHelper.deleteDocument(fessEsClient, idValue.toString());
+                    if (idValue != null && !indexingHelper.deleteDocument(fessEsClient, idValue.toString())) {
+                        logger.debug("Failed to delete expired document: " + url);
                     }
                     return true;
                 }
@@ -152,7 +155,9 @@ public class FessCrawlerThread extends CrawlerThread {
                 }
                 if (httpStatusCode == 404) {
                     storeChildUrlsToQueue(urlQueue, getAnchorSet(document.get(fessConfig.getIndexFieldAnchor())));
-                    indexingHelper.deleteDocument(fessEsClient, id);
+                    if (!indexingHelper.deleteDocument(fessEsClient, id)) {
+                        logger.debug("Failed to delete 404 document: " + url);
+                    }
                     return false;
                 } else if (responseData.getLastModified() == null) {
                     return true;
@@ -167,6 +172,12 @@ public class FessCrawlerThread extends CrawlerThread {
                     processResponse(urlQueue, responseData);
 
                     storeChildUrlsToQueue(urlQueue, getAnchorSet(document.get(fessConfig.getIndexFieldAnchor())));
+
+                    final Date documentExpires = crawlingInfoHelper.getDocumentExpires(crawlingConfig);
+                    if (documentExpires != null
+                            && !indexingHelper.updateDocument(fessEsClient, id, fessConfig.getIndexFieldExpires(), documentExpires)) {
+                        logger.debug("Failed to update " + fessConfig.getIndexFieldExpires() + " at " + url);
+                    }
 
                     return false;
                 }
@@ -236,5 +247,30 @@ public class FessCrawlerThread extends CrawlerThread {
             }
         }
         return urlSet;
+    }
+
+    @Override
+    protected void processResponse(final UrlQueue<?> urlQueue, final ResponseData responseData) {
+        super.processResponse(urlQueue, responseData);
+
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        if (fessConfig.isCrawlerFailureUrlStatusCodes(responseData.getHttpStatusCode())) {
+            final String sessionId = crawlerContext.getSessionId();
+            final CrawlingConfig crawlingConfig = ComponentUtil.getCrawlingConfigHelper().get(sessionId);
+            final String url = urlQueue.getUrl();
+
+            final FailureUrlService failureUrlService = ComponentUtil.getComponent(FailureUrlService.class);
+            failureUrlService.store(crawlingConfig, ContentNotFoundException.class.getCanonicalName(), url, new ContentNotFoundException(
+                    url));
+        }
+    }
+
+    @Override
+    protected void storeChildUrl(final String childUrl, final String parentUrl, final String metaData, final int depth) {
+        if (StringUtil.isNotBlank(childUrl)) {
+            final DuplicateHostHelper duplicateHostHelper = ComponentUtil.getDuplicateHostHelper();
+            final String url = duplicateHostHelper.convert(childUrl);
+            super.storeChildUrl(url, parentUrl, metaData, depth);
+        }
     }
 }

@@ -46,6 +46,9 @@ public class BsJobLog extends EsAbstractEntity {
     /** jobStatus */
     protected String jobStatus;
 
+    /** lastUpdated */
+    protected Long lastUpdated;
+
     /** scriptData */
     protected String scriptData;
 
@@ -60,9 +63,6 @@ public class BsJobLog extends EsAbstractEntity {
 
     /** target */
     protected String target;
-
-    /** lastUpdated */
-    protected Long lastUpdated;
 
     // [Referrers] *comment only
 
@@ -86,33 +86,37 @@ public class BsJobLog extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (endTime != null) {
-            sourceMap.put("endTime", endTime);
+            addFieldToSource(sourceMap, "endTime", endTime);
         }
         if (jobName != null) {
-            sourceMap.put("jobName", jobName);
+            addFieldToSource(sourceMap, "jobName", jobName);
         }
         if (jobStatus != null) {
-            sourceMap.put("jobStatus", jobStatus);
-        }
-        if (scriptData != null) {
-            sourceMap.put("scriptData", scriptData);
-        }
-        if (scriptResult != null) {
-            sourceMap.put("scriptResult", scriptResult);
-        }
-        if (scriptType != null) {
-            sourceMap.put("scriptType", scriptType);
-        }
-        if (startTime != null) {
-            sourceMap.put("startTime", startTime);
-        }
-        if (target != null) {
-            sourceMap.put("target", target);
+            addFieldToSource(sourceMap, "jobStatus", jobStatus);
         }
         if (lastUpdated != null) {
-            sourceMap.put("lastUpdated", lastUpdated);
+            addFieldToSource(sourceMap, "lastUpdated", lastUpdated);
+        }
+        if (scriptData != null) {
+            addFieldToSource(sourceMap, "scriptData", scriptData);
+        }
+        if (scriptResult != null) {
+            addFieldToSource(sourceMap, "scriptResult", scriptResult);
+        }
+        if (scriptType != null) {
+            addFieldToSource(sourceMap, "scriptType", scriptType);
+        }
+        if (startTime != null) {
+            addFieldToSource(sourceMap, "startTime", startTime);
+        }
+        if (target != null) {
+            addFieldToSource(sourceMap, "target", target);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -124,12 +128,12 @@ public class BsJobLog extends EsAbstractEntity {
         sb.append(dm).append(endTime);
         sb.append(dm).append(jobName);
         sb.append(dm).append(jobStatus);
+        sb.append(dm).append(lastUpdated);
         sb.append(dm).append(scriptData);
         sb.append(dm).append(scriptResult);
         sb.append(dm).append(scriptType);
         sb.append(dm).append(startTime);
         sb.append(dm).append(target);
-        sb.append(dm).append(lastUpdated);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -168,6 +172,16 @@ public class BsJobLog extends EsAbstractEntity {
     public void setJobStatus(String value) {
         registerModifiedProperty("jobStatus");
         this.jobStatus = value;
+    }
+
+    public Long getLastUpdated() {
+        checkSpecifiedProperty("lastUpdated");
+        return lastUpdated;
+    }
+
+    public void setLastUpdated(Long value) {
+        registerModifiedProperty("lastUpdated");
+        this.lastUpdated = value;
     }
 
     public String getScriptData() {
@@ -218,15 +232,5 @@ public class BsJobLog extends EsAbstractEntity {
     public void setTarget(String value) {
         registerModifiedProperty("target");
         this.target = value;
-    }
-
-    public Long getLastUpdated() {
-        checkSpecifiedProperty("lastUpdated");
-        return lastUpdated;
-    }
-
-    public void setLastUpdated(Long value) {
-        registerModifiedProperty("lastUpdated");
-        this.lastUpdated = value;
     }
 }

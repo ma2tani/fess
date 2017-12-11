@@ -37,11 +37,11 @@ public class BsGroup extends EsAbstractEntity {
     // ===================================================================================
     //                                                                           Attribute
     //                                                                           =========
-    /** name */
-    protected String name;
-
     /** gidNumber */
     protected Long gidNumber;
+
+    /** name */
+    protected String name;
 
     // [Referrers] *comment only
 
@@ -64,13 +64,17 @@ public class BsGroup extends EsAbstractEntity {
     @Override
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
-        if (name != null) {
-            sourceMap.put("name", name);
-        }
         if (gidNumber != null) {
-            sourceMap.put("gidNumber", gidNumber);
+            addFieldToSource(sourceMap, "gidNumber", gidNumber);
+        }
+        if (name != null) {
+            addFieldToSource(sourceMap, "name", name);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -79,8 +83,8 @@ public class BsGroup extends EsAbstractEntity {
     @Override
     protected String doBuildColumnString(String dm) {
         StringBuilder sb = new StringBuilder();
-        sb.append(dm).append(name);
         sb.append(dm).append(gidNumber);
+        sb.append(dm).append(name);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -91,16 +95,6 @@ public class BsGroup extends EsAbstractEntity {
     // ===================================================================================
     //                                                                            Accessor
     //                                                                            ========
-    public String getName() {
-        checkSpecifiedProperty("name");
-        return convertEmptyToNull(name);
-    }
-
-    public void setName(String value) {
-        registerModifiedProperty("name");
-        this.name = value;
-    }
-
     public Long getGidNumber() {
         checkSpecifiedProperty("gidNumber");
         return gidNumber;
@@ -109,5 +103,15 @@ public class BsGroup extends EsAbstractEntity {
     public void setGidNumber(Long value) {
         registerModifiedProperty("gidNumber");
         this.gidNumber = value;
+    }
+
+    public String getName() {
+        checkSpecifiedProperty("name");
+        return convertEmptyToNull(name);
+    }
+
+    public void setName(String value) {
+        registerModifiedProperty("name");
+        this.name = value;
     }
 }

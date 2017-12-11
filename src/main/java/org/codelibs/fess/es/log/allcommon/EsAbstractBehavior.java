@@ -15,8 +15,10 @@
  */
 package org.codelibs.fess.es.log.allcommon;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -143,7 +145,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         final EsPagingResultBean<RESULT> list = new EsPagingResultBean<>(builder);
         final SearchHits searchHits = response.getHits();
         searchHits.forEach(hit -> {
-            final Map<String, Object> source = hit.getSource();
+            final Map<String, Object> source = hit.getSourceAsMap();
             final RESULT entity = createEntity(source, entityType);
             final DocMeta docMeta = ((EsAbstractEntity) entity).asDocMeta();
             docMeta.id(hit.getId());
@@ -152,10 +154,10 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         });
 
         list.setPageSize(size);
-        list.setAllRecordCount((int) searchHits.totalHits());
+        list.setAllRecordCount((int) searchHits.getTotalHits());
         list.setCurrentPageNumber(cb.getFetchPageNumber());
 
-        list.setTook(response.getTookInMillis());
+        list.setTook(response.getTook().getMillis());
         list.setTotalShards(response.getTotalShards());
         list.setSuccessfulShards(response.getSuccessfulShards());
         list.setFailedShards(response.getFailedShards());
@@ -181,7 +183,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
                 if (handler.isBreakCursor()) {
                     return;
                 }
-                final Map<String, Object> source = hit.getSource();
+                final Map<String, Object> source = hit.getSourceAsMap();
                 final RESULT entity = createEntity(source, entityType);
                 final DocMeta docMeta = ((EsAbstractEntity) entity).asDocMeta();
                 docMeta.id(hit.getId());
@@ -202,7 +204,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
         delegateBulkRequest(cb, searchHits -> {
             List<RESULT> list = new ArrayList<>();
             searchHits.forEach(hit -> {
-                final Map<String, Object> source = hit.getSource();
+                final Map<String, Object> source = hit.getSourceAsMap();
                 final RESULT entity = createEntity(source, entityType);
                 final DocMeta docMeta = ((EsAbstractEntity) entity).asDocMeta();
                 docMeta.id(hit.getId());
@@ -271,7 +273,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
     }
 
     protected IndexRequestBuilder createInsertRequest(final EsAbstractEntity esEntity) {
-        final IndexRequestBuilder builder = client.prepareIndex(asEsIndex(), asEsIndexType()).setSource(esEntity.toSource());
+        final IndexRequestBuilder builder = client.prepareIndex(asEsIndex(), asEsIndexType()).setSource(toSource(esEntity));
         final String id = esEntity.asDocMeta().id();
         if (id != null) {
             builder.setId(id);
@@ -298,7 +300,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
 
     protected IndexRequestBuilder createUpdateRequest(final EsAbstractEntity esEntity) {
         final IndexRequestBuilder builder =
-                client.prepareIndex(asEsIndex(), asEsIndexType(), esEntity.asDocMeta().id()).setSource(esEntity.toSource());
+                client.prepareIndex(asEsIndex(), asEsIndexType(), esEntity.asDocMeta().id()).setSource(toSource(esEntity));
         final RequestOptionCall<IndexRequestBuilder> indexOption = esEntity.asDocMeta().indexOption();
         if (indexOption != null) {
             indexOption.callback(builder);
@@ -308,6 +310,10 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
             builder.setVersion(version);
         }
         return builder;
+    }
+
+    protected Map<String, Object> toSource(final EsAbstractEntity esEntity) {
+        return esEntity.toSource();
     }
 
     @Override
@@ -494,7 +500,7 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
     // ===================================================================================
     //                                                                        Assist Logic
     //                                                                        ============
-    public static String[] toStringArray(final Object value) {
+    protected String[] toStringArray(final Object value) {
         if (value instanceof String[]) {
             return (String[]) value;
         } else if (value instanceof List) {
@@ -505,6 +511,14 @@ public abstract class EsAbstractBehavior<ENTITY extends Entity, CB extends Condi
             return null;
         }
         return new String[] { str };
+    }
+
+    protected LocalDateTime toLocalDateTime(Object value) {
+        return DfTypeUtil.toLocalDateTime(value);
+    }
+
+    protected Date toDate(Object value) {
+        return DfTypeUtil.toDate(value);
     }
 
     public static class BulkList<E, B> implements List<E> {

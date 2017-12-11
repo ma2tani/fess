@@ -43,6 +43,10 @@ public class PathMappingHelper {
 
     @PostConstruct
     public void init() {
+        update();
+    }
+
+    public int update() {
         final List<String> ptList = new ArrayList<>();
         ptList.add(Constants.PROCESS_TYPE_DISPLAYING);
         ptList.add(Constants.PROCESS_TYPE_BOTH);
@@ -54,9 +58,11 @@ public class PathMappingHelper {
                 cb.query().setProcessType_InScope(ptList);
                 cb.fetchFirst(ComponentUtil.getFessConfig().getPagePathMappingMaxFetchSizeAsInteger());
             });
+            return cachedPathMappingList.size();
         } catch (final Exception e) {
             logger.warn("Failed to load path mappings.", e);
         }
+        return 0;
     }
 
     public void setPathMappingList(final String sessionId, final List<PathMapping> pathMappingList) {
@@ -99,8 +105,11 @@ public class PathMappingHelper {
         String result = text;
         for (final PathMapping pathMapping : cachedPathMappingList) {
             if (matchUserAgent(pathMapping)) {
-                result =
-                        result.replaceAll("(\"[^\"]*)" + pathMapping.getRegex() + "([^\"]*\")", "$1" + pathMapping.getReplacement() + "$2");
+                String replacement = pathMapping.getReplacement();
+                if (replacement == null) {
+                    replacement = StringUtil.EMPTY;
+                }
+                result = result.replaceAll("(\"[^\"]*)" + pathMapping.getRegex() + "([^\"]*\")", "$1" + replacement + "$2");
             }
         }
         return result;
@@ -123,7 +132,11 @@ public class PathMappingHelper {
             if (matchUserAgent(pathMapping)) {
                 final Matcher matcher = pathMapping.getMatcher(newUrl);
                 if (matcher.find()) {
-                    newUrl = matcher.replaceAll(pathMapping.getReplacement());
+                    String replacement = pathMapping.getReplacement();
+                    if (replacement == null) {
+                        replacement = StringUtil.EMPTY;
+                    }
+                    newUrl = matcher.replaceAll(replacement);
                 }
             }
         }

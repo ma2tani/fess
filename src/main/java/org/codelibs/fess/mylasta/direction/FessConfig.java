@@ -31,6 +31,15 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. http://localhost:9201 */
     String ELASTICSEARCH_HTTP_URL = "elasticsearch.http.url";
 
+    /** The key of the configuration. e.g. false */
+    String ELASTICSEARCH_TRANSPORT_SNIFF = "elasticsearch.transport.sniff";
+
+    /** The key of the configuration. e.g. 1m */
+    String ELASTICSEARCH_TRANSPORT_ping_timeout = "elasticsearch.transport.ping_timeout";
+
+    /** The key of the configuration. e.g. 5s */
+    String ELASTICSEARCH_TRANSPORT_nodes_sampler_interval = "elasticsearch.transport.nodes_sampler_interval";
+
     /** The key of the configuration. e.g. aes */
     String APP_CIPHER_ALGORISM = "app.cipher.algorism";
 
@@ -41,6 +50,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String APP_DIGEST_ALGORISM = "app.digest.algorism";
 
     /** The key of the configuration. e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
     -server
     -Xmx512m
     -XX:MaxMetaspaceSize=128m
@@ -48,7 +60,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:-UseGCOverheadLimit
     -XX:+UseConcMarkSweepGC
     -XX:CMSInitiatingOccupancyFraction=75
-    -XX:+UseParNewGC
+    -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
     -XX:+HeapDumpOnOutOfMemoryError
@@ -57,10 +69,19 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -Djcifs.smb.client.soTimeout=35000
     -Djcifs.smb.client.responseTimeout=30000
     -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
     */
     String JVM_CRAWLER_OPTIONS = "jvm.crawler.options";
 
     /** The key of the configuration. e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
     -server
     -Xmx256m
     -XX:MaxMetaspaceSize=128m
@@ -68,11 +89,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:-UseGCOverheadLimit
     -XX:+UseConcMarkSweepGC
     -XX:CMSInitiatingOccupancyFraction=75
-    -XX:+UseParNewGC
+    -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
     -XX:+HeapDumpOnOutOfMemoryError
     -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
     */
     String JVM_SUGGEST_OPTIONS = "jvm.suggest.options";
 
@@ -88,7 +115,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. Data Crawler - {0} */
     String JOB_TEMPLATE_TITLE_DATA = "job.template.title.data";
 
-    /** The key of the configuration. e.g. return container.getComponent("crawlJob").logLevel("info").sessionId("{3}").execute(executor, [{0}] as String[],[{1}] as String[],[{2}] as String[], ""); */
+    /** The key of the configuration. e.g. return container.getComponent("crawlJob").logLevel("info").sessionId("{3}").webConfigIds([{0}] as String[]).fileConfigIds([{1}] as String[]).dataConfigIds([{2}] as String[]).jobExecutor(executor).execute(); */
     String JOB_TEMPLATE_SCRIPT = "job.template.script";
 
     /** The key of the configuration. e.g. java */
@@ -115,7 +142,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. license.properties */
     String SUPPORTED_UPLOADED_FILES = "supported.uploaded.files";
 
-    /** The key of the configuration. e.g. ar,bg,ca,da,de,el,en,es,eu,fa,fi,fr,ga,gl,hi,hu,hy,id,it,ja,lv,ko,nl,no,pt,ro,ru,sv,th,tr,zh_CN,zh_TW,zh */
+    /** The key of the configuration. e.g. ar,bg,bn,ca,ckb_IQ,cs,da,de,el,en,en_IE,es,et,eu,fa,fi,fr,gl,gu,he,hi,hr,hu,hy,id,it,ja,ko,lt,lv,mk,ml,nl,no,pa,pl,pt,pt_BR,ro,ru,si,sq,sv,ta,te,th,tl,tr,uk,ur,vi,zh_CN,zh_TW,zh */
     String SUPPORTED_LANGUAGES = "supported.languages";
 
     /** The key of the configuration. e.g. 60 */
@@ -123,6 +150,24 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. false */
     String API_ACCESS_TOKEN_REQUIRED = "api.access.token.required";
+
+    /** The key of the configuration. e.g. Radmin-api */
+    String API_ADMIN_ACCESS_PERMISSIONS = "api.admin.access.permissions";
+
+    /** The key of the configuration. e.g.  */
+    String VIRTUAL_HOST_HEADERS = "virtual.host.headers";
+
+    /** The key of the configuration. e.g.  */
+    String HTTP_PROXY_HOST = "http.proxy.host";
+
+    /** The key of the configuration. e.g. 8080 */
+    String HTTP_PROXY_PORT = "http.proxy.port";
+
+    /** The key of the configuration. e.g.  */
+    String HTTP_PROXY_USERNAME = "http.proxy.username";
+
+    /** The key of the configuration. e.g.  */
+    String HTTP_PROXY_PASSWORD = "http.proxy.password";
 
     /** The key of the configuration. e.g. 50 */
     String CRAWLER_DOCUMENT_MAX_SITE_LENGTH = "crawler.document.max.site.length";
@@ -166,6 +211,15 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. false */
     String CRAWLER_IGNORE_META_ROBOTS = "crawler.ignore.meta.robots";
 
+    /** The key of the configuration. e.g. true */
+    String CRAWLER_IGNORE_CONTENT_EXCEPTION = "crawler.ignore.content.exception";
+
+    /** The key of the configuration. e.g. 404 */
+    String CRAWLER_FAILURE_URL_STATUS_CODES = "crawler.failure.url.status.codes";
+
+    /** The key of the configuration. e.g. 60 */
+    String CRAWLER_SYSTEM_MONITOR_INTERVAL = "crawler.system.monitor.interval";
+
     /** The key of the configuration. e.g. resourceName,X-Parsed-By,Content-Encoding.*,Content-Type.* */
     String CRAWLER_METADATA_CONTENT_EXCLUDES = "crawler.metadata.content.excludes";
 
@@ -184,9 +238,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String CRAWLER_DOCUMENT_HTML_DIGEST_XPATH = "crawler.document.html.digest.xpath";
 
     /** The key of the configuration. e.g. //LINK[@rel='canonical']/@href */
-    String CRAWLER_DOCUMENT_HTML_CANNONICAL_XPATH = "crawler.document.html.cannonical.xpath";
+    String CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH = "crawler.document.html.canonical.xpath";
 
-    /** The key of the configuration. e.g. noscript,script,style */
+    /** The key of the configuration. e.g. noscript,script,style,header,footer,nav,a[rel=nofollow] */
     String CRAWLER_DOCUMENT_HTML_PRUNED_TAGS = "crawler.document.html.pruned.tags";
 
     /** The key of the configuration. e.g. 200 */
@@ -243,13 +297,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 5000 */
     String INDEXER_WEBFS_COMMIT_MARGIN_TIME = "indexer.webfs.commit.margin.time";
 
-    /** The key of the configuration. e.g. 360 */
+    /** The key of the configuration. e.g. 3600 */
     String INDEXER_WEBFS_MAX_EMPTY_LIST_COUNT = "indexer.webfs.max.empty.list.count";
 
     /** The key of the configuration. e.g. 10000 */
     String INDEXER_WEBFS_UPDATE_INTERVAL = "indexer.webfs.update.interval";
 
-    /** The key of the configuration. e.g. 100 */
+    /** The key of the configuration. e.g. 20 */
     String INDEXER_WEBFS_MAX_DOCUMENT_CACHE_SIZE = "indexer.webfs.max.document.cache.size";
 
     /** The key of the configuration. e.g. 10485760 */
@@ -327,6 +381,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. content */
     String INDEX_FIELD_CONTENT = "index.field.content";
 
+    /** The key of the configuration. e.g. content_minhash */
+    String INDEX_FIELD_content_minhash = "index.field.content_minhash";
+
+    /** The key of the configuration. e.g. content_minhash_bits */
+    String INDEX_FIELD_content_minhash_bits = "index.field.content_minhash_bits";
+
     /** The key of the configuration. e.g. cache */
     String INDEX_FIELD_CACHE = "index.field.cache";
 
@@ -351,6 +411,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. filename */
     String INDEX_FIELD_FILENAME = "index.field.filename";
 
+    /** The key of the configuration. e.g. thumbnail */
+    String INDEX_FIELD_THUMBNAIL = "index.field.thumbnail";
+
+    /** The key of the configuration. e.g. virtual_host */
+    String INDEX_FIELD_virtual_host = "index.field.virtual_host";
+
     /** The key of the configuration. e.g. content_title */
     String RESPONSE_FIELD_content_title = "response.field.content_title";
 
@@ -362,6 +428,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. site_path */
     String RESPONSE_FIELD_site_path = "response.field.site_path";
+
+    /** The key of the configuration. e.g. 50 */
+    String RESPONSE_MAX_TITLE_LENGTH = "response.max.title.length";
+
+    /** The key of the configuration. e.g. 50 */
+    String RESPONSE_MAX_SITE_PATH_LENGTH = "response.max.site.path.length";
 
     /** The key of the configuration. e.g. fess.search */
     String INDEX_DOCUMENT_SEARCH_INDEX = "index.document.search.index";
@@ -377,6 +449,15 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. .crawler */
     String INDEX_DOCUMENT_CRAWLER_INDEX = "index.document.crawler.index";
+
+    /** The key of the configuration. e.g. .fess_config */
+    String INDEX_CONFIG_INDEX = "index.config.index";
+
+    /** The key of the configuration. e.g. .fess_user */
+    String INDEX_USER_INDEX = "index.user.index";
+
+    /** The key of the configuration. e.g. fess_log */
+    String INDEX_LOG_INDEX = "index.log.index";
 
     /** The key of the configuration. e.g. lang,role,label,anchor */
     String INDEX_ADMIN_ARRAY_FIELDS = "index.admin.array.fields";
@@ -396,7 +477,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g.  */
     String INDEX_ADMIN_DOUBLE_FIELDS = "index.admin.double.fields";
 
-    /** The key of the configuration. e.g. doc_id,url,title,role,boost */
+    /** The key of the configuration. e.g. url,title,role,boost */
     String INDEX_ADMIN_REQUIRED_FIELDS = "index.admin.required.fields";
 
     /** The key of the configuration. e.g. 3m */
@@ -423,6 +504,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 1000 */
     String QUERY_MAX_LENGTH = "query.max.length";
 
+    /** The key of the configuration. e.g. 10000 */
+    String QUERY_TIMEOUT = "query.timeout";
+
     /** The key of the configuration. e.g. location */
     String QUERY_GEO_FIELDS = "query.geo.fields";
 
@@ -437,6 +521,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. 5 */
     String QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS = "query.highlight.number.of.fragments";
+
+    /** The key of the configuration. e.g. fvh */
+    String QUERY_HIGHLIGHT_TYPE = "query.highlight.type";
 
     /** The key of the configuration. e.g. 100000 */
     String QUERY_MAX_SEARCH_RESULT_OFFSET = "query.max.search.result.offset";
@@ -465,6 +552,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g.  */
     String QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS = "query.additional.not.analyzed.fields";
 
+    /** The key of the configuration. e.g. UE,U,T,RK,S,LANG */
+    String QUERY_GSA_RESPONSE_FIELDS = "query.gsa.response.fields";
+
+    /** The key of the configuration. e.g. 4 */
+    String QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS = "query.collapse.max.concurrent.group.results";
+
+    /** The key of the configuration. e.g. similar_docs */
+    String QUERY_COLLAPSE_INNER_HITS_NAME = "query.collapse.inner.hits.name";
+
+    /** The key of the configuration. e.g. 0 */
+    String QUERY_COLLAPSE_INNER_HITS_SIZE = "query.collapse.inner.hits.size";
+
+    /** The key of the configuration. e.g.  */
+    String QUERY_COLLAPSE_INNER_HITS_SORTS = "query.collapse.inner.hits.sorts";
+
     /** The key of the configuration. e.g.  */
     String QUERY_DEFAULT_LANGUAGES = "query.default.languages";
 
@@ -472,21 +574,28 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     bg=bg
     bn=bn
     ca=ca
+    ckb-iq=ckb-iq
+    ckb_IQ=ckb-iq
     cs=cs
     da=da
     de=de
     el=el
     en=en
+    en-ie=en-ie
+    en_IE=en-ie
     es=es
     et=et
+    eu=eu
     fa=fa
     fi=fi
     fr=fr
+    gl=gl
     gu=gu
     he=he
     hi=hi
     hr=hr
     hu=hu
+    hy=hy
     id=id
     it=it
     ja=ja
@@ -500,6 +609,8 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     pa=pa
     pl=pl
     pt=pt
+    pt-br=pt-br
+    pt_BR=pt-br
     ro=ro
     ru=ru
     si=si
@@ -513,9 +624,11 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     uk=uk
     ur=ur
     vi=vi
-    zh=zh-cn
     zh-cn=zh-cn
+    zh_CN=zh-cn
     zh-tw=zh-tw
+    zh_TW=zh-tw
+    zh=zh
     */
     String QUERY_LANGUAGE_MAPPING = "query.language.mapping";
 
@@ -537,8 +650,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 1,2 */
     String SMB_AVAILABLE_SID_TYPES = "smb.available.sid.types";
 
+    /** The key of the configuration. e.g. true */
+    String FILE_ROLE_FROM_FILE = "file.role.from.file";
+
+    /** The key of the configuration. e.g. true */
+    String FTP_ROLE_FROM_FILE = "ftp.role.from.file";
+
     /** The key of the configuration. e.g. .fess_basic_config.bulk,.fess_config.bulk,.fess_user.bulk,system.properties */
     String INDEX_BACKUP_TARGETS = "index.backup.targets";
+
+    /** The key of the configuration. e.g. click_log.ndjson,favorite_log.ndjson,search_log.ndjson,user_info.ndjson */
+    String INDEX_BACKUP_LOG_TARGETS = "index.backup.log.targets";
 
     /** The key of the configuration. e.g. 4000 */
     String FORM_ADMIN_MAX_INPUT_SIZE = "form.admin.max.input.size";
@@ -660,8 +782,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 1000 */
     String PAGE_DICTIONARY_MAX_FETCH_SIZE = "page.dictionary.max.fetch.size";
 
+    /** The key of the configuration. e.g. 5000 */
+    String PAGE_RELATEDCONTENT_MAX_FETCH_SIZE = "page.relatedcontent.max.fetch.size";
+
+    /** The key of the configuration. e.g. 5000 */
+    String PAGE_RELATEDQUERY_MAX_FETCH_SIZE = "page.relatedquery.max.fetch.size";
+
     /** The key of the configuration. e.g. 100 */
     String PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE = "page.thumbnail.queue.max.fetch.size";
+
+    /** The key of the configuration. e.g. 100 */
+    String PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE = "page.thumbnail.purge.max.fetch.size";
 
     /** The key of the configuration. e.g. 0 */
     String PAGING_SEARCH_PAGE_START = "paging.search.page.start";
@@ -672,14 +803,80 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 100 */
     String PAGING_SEARCH_PAGE_MAX_SIZE = "paging.search.page.max.size";
 
-    /** The key of the configuration. e.g. true */
+    /** The key of the configuration. e.g. false */
     String THUMBNAIL_HTML_PHANTOMJS_ENABLED = "thumbnail.html.phantomjs.enabled";
+
+    /** The key of the configuration. e.g. 20000 */
+    String THUMBNAIL_HTML_PHANTOMJS_MAX_HEIGHT = "thumbnail.html.phantomjs.max.height";
+
+    /** The key of the configuration. e.g. 600000 */
+    String THUMBNAIL_HTML_PHANTOMJS_KEEP_ALIVE = "thumbnail.html.phantomjs.keep.alive";
+
+    /** The key of the configuration. e.g. 1200 */
+    String THUMBNAIL_HTML_PHANTOMJS_WINDOW_WIDTH = "thumbnail.html.phantomjs.window.width";
+
+    /** The key of the configuration. e.g. 800 */
+    String THUMBNAIL_HTML_PHANTOMJS_WINDOW_HEIGHT = "thumbnail.html.phantomjs.window.height";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_WIDTH = "thumbnail.html.phantomjs.thumbnail.width";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_HEIGHT = "thumbnail.html.phantomjs.thumbnail.height";
+
+    /** The key of the configuration. e.g. png */
+    String THUMBNAIL_HTML_PHANTOMJS_FORMAT = "thumbnail.html.phantomjs.format";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_IMAGE_MIN_WIDTH = "thumbnail.html.image.min.width";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_IMAGE_MIN_HEIGHT = "thumbnail.html.image.min.height";
+
+    /** The key of the configuration. e.g. 3.0 */
+    String THUMBNAIL_HTML_IMAGE_MAX_ASPECT_RATIO = "thumbnail.html.image.max.aspect.ratio";
+
+    /** The key of the configuration. e.g. 1200 */
+    String THUMBNAIL_HTML_IMAGE_WINDOW_WIDTH = "thumbnail.html.image.window.width";
+
+    /** The key of the configuration. e.g. 800 */
+    String THUMBNAIL_HTML_IMAGE_WINDOW_HEIGHT = "thumbnail.html.image.window.height";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_IMAGE_THUMBNAIL_WIDTH = "thumbnail.html.image.thumbnail.width";
+
+    /** The key of the configuration. e.g. 100 */
+    String THUMBNAIL_HTML_IMAGE_THUMBNAIL_HEIGHT = "thumbnail.html.image.thumbnail.height";
+
+    /** The key of the configuration. e.g. png */
+    String THUMBNAIL_HTML_IMAGE_FORMAT = "thumbnail.html.image.format";
+
+    /** The key of the configuration. e.g. //IMG */
+    String THUMBNAIL_HTML_IMAGE_XPATH = "thumbnail.html.image.xpath";
+
+    /** The key of the configuration. e.g. svg,html,css,js */
+    String THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS = "thumbnail.html.image.exclude.extensions";
+
+    /** The key of the configuration. e.g. 0 */
+    String THUMBNAIL_GENERATOR_INTERVAL = "thumbnail.generator.interval";
 
     /** The key of the configuration. e.g. all */
     String THUMBNAIL_GENERATOR_TARGETS = "thumbnail.generator.targets";
 
-    /** The key of the configuration. e.g. false */
+    /** The key of the configuration. e.g. true */
     String THUMBNAIL_CRAWLER_ENABLED = "thumbnail.crawler.enabled";
+
+    /** The key of the configuration. e.g. userCode */
+    String USER_CODE_REQUEST_PARAMETER = "user.code.request.parameter";
+
+    /** The key of the configuration. e.g. 20 */
+    String USER_CODE_MIN_LENGTH = "user.code.min.length";
+
+    /** The key of the configuration. e.g. 100 */
+    String USER_CODE_MAX_LENGTH = "user.code.max.length";
+
+    /** The key of the configuration. e.g. [a-zA-Z0-9_]+ */
+    String USER_CODE_PATTERN = "user.code.pattern";
 
     /** The key of the configuration. e.g. Administrator */
     String MAIL_FROM_NAME = "mail.from.name";
@@ -699,8 +896,11 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 30 */
     String SCHEDULER_MONITOR_INTERVAL = "scheduler.monitor.interval";
 
-    /** The key of the configuration. e.g. http://fess.codelibs.org/{lang}/{version}/admin/ */
+    /** The key of the configuration. e.g. https://fess.codelibs.org/{lang}/{version}/admin/ */
     String ONLINE_HELP_BASE_LINK = "online.help.base.link";
+
+    /** The key of the configuration. e.g. https://fess.codelibs.org/{lang}/{version}/install/install.html */
+    String ONLINE_HELP_INSTALLATION = "online.help.installation";
 
     /** The key of the configuration. e.g. failureurl */
     String ONLINE_HELP_NAME_FAILUREURL = "online.help.name.failureurl";
@@ -749,6 +949,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. keymatch */
     String ONLINE_HELP_NAME_KEYMATCH = "online.help.name.keymatch";
+
+    /** The key of the configuration. e.g. relatedquery */
+    String ONLINE_HELP_NAME_RELATEDQUERY = "online.help.name.relatedquery";
+
+    /** The key of the configuration. e.g. relatedcontent */
+    String ONLINE_HELP_NAME_RELATEDCONTENT = "online.help.name.relatedcontent";
 
     /** The key of the configuration. e.g. wizard */
     String ONLINE_HELP_NAME_WIZARD = "online.help.name.wizard";
@@ -855,6 +1061,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 1 */
     String SUGGEST_UPDATE_REQUEST_INTERVAL = "suggest.update.request.interval";
 
+    /** The key of the configuration. e.g. 50% */
+    String SUGGEST_UPDATE_CONTENTS_LIMIT_NUM_PERCENTAGE = "suggest.update.contents.limit.num.percentage";
+
+    /** The key of the configuration. e.g. 10000 */
+    String SUGGEST_UPDATE_CONTENTS_LIMIT_NUM = "suggest.update.contents.limit.num";
+
     /** The key of the configuration. e.g. 1 */
     String SUGGEST_SOURCE_READER_SCROLL_SIZE = "suggest.source.reader.scroll.size";
 
@@ -866,6 +1078,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. {user}guest,{role}guest */
     String SUGGEST_SEARCH_LOG_PERMISSIONS = "suggest.search.log.permissions";
+
+    /** The key of the configuration. e.g. 60 */
+    String SUGGEST_SYSTEM_MONITOR_INTERVAL = "suggest.system.monitor.interval";
 
     /** The key of the configuration. e.g. false */
     String LDAP_ADMIN_ENABLED = "ldap.admin.enabled";
@@ -1123,6 +1338,34 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getElasticsearchHttpUrl();
 
     /**
+     * Get the value for the key 'elasticsearch.transport.sniff'. <br>
+     * The value is, e.g. false <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getElasticsearchTransportSniff();
+
+    /**
+     * Is the property for the key 'elasticsearch.transport.sniff' true? <br>
+     * The value is, e.g. false <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isElasticsearchTransportSniff();
+
+    /**
+     * Get the value for the key 'elasticsearch.transport.ping_timeout'. <br>
+     * The value is, e.g. 1m <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getElasticsearchTransportPingTimeout();
+
+    /**
+     * Get the value for the key 'elasticsearch.transport.nodes_sampler_interval'. <br>
+     * The value is, e.g. 5s <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getElasticsearchTransportNodesSamplerInterval();
+
+    /**
      * Get the value for the key 'app.cipher.algorism'. <br>
      * The value is, e.g. aes <br>
      * comment: Cryptographer
@@ -1147,6 +1390,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /**
      * Get the value for the key 'jvm.crawler.options'. <br>
      * The value is, e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
     -server
     -Xmx512m
     -XX:MaxMetaspaceSize=128m
@@ -1154,7 +1400,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:-UseGCOverheadLimit
     -XX:+UseConcMarkSweepGC
     -XX:CMSInitiatingOccupancyFraction=75
-    -XX:+UseParNewGC
+    -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
     -XX:+HeapDumpOnOutOfMemoryError
@@ -1163,6 +1409,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -Djcifs.smb.client.soTimeout=35000
     -Djcifs.smb.client.responseTimeout=30000
     -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
     <br>
      * comment: JVM options
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -1172,6 +1424,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /**
      * Get the value for the key 'jvm.suggest.options'. <br>
      * The value is, e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
     -server
     -Xmx256m
     -XX:MaxMetaspaceSize=128m
@@ -1179,11 +1434,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     -XX:-UseGCOverheadLimit
     -XX:+UseConcMarkSweepGC
     -XX:CMSInitiatingOccupancyFraction=75
-    -XX:+UseParNewGC
+    -XX:+UseCMSInitiatingOccupancyOnly
     -XX:+UseTLAB
     -XX:+DisableExplicitGC
     -XX:+HeapDumpOnOutOfMemoryError
     -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
     <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
@@ -1220,7 +1481,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'job.template.script'. <br>
-     * The value is, e.g. return container.getComponent("crawlJob").logLevel("info").sessionId("{3}").execute(executor, [{0}] as String[],[{1}] as String[],[{2}] as String[], ""); <br>
+     * The value is, e.g. return container.getComponent("crawlJob").logLevel("info").sessionId("{3}").webConfigIds([{0}] as String[]).fileConfigIds([{1}] as String[]).dataConfigIds([{2}] as String[]).jobExecutor(executor).execute(); <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getJobTemplateScript();
@@ -1298,7 +1559,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'supported.languages'. <br>
-     * The value is, e.g. ar,bg,ca,da,de,el,en,es,eu,fa,fi,fr,ga,gl,hi,hu,hy,id,it,ja,lv,ko,nl,no,pt,ro,ru,sv,th,tr,zh_CN,zh_TW,zh <br>
+     * The value is, e.g. ar,bg,bn,ca,ckb_IQ,cs,da,de,el,en,en_IE,es,et,eu,fa,fi,fr,gl,gu,he,hi,hr,hu,hy,id,it,ja,ko,lt,lv,mk,ml,nl,no,pa,pl,pt,pt_BR,ro,ru,si,sq,sv,ta,te,th,tl,tr,uk,ur,vi,zh_CN,zh_TW,zh <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getSupportedLanguages();
@@ -1331,6 +1592,88 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isApiAccessTokenRequired();
+
+    /**
+     * Get the value for the key 'api.admin.access.permissions'. <br>
+     * The value is, e.g. Radmin-api <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getApiAdminAccessPermissions();
+
+    /**
+     * Get the value for the key 'virtual.host.headers'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getVirtualHostHeaders();
+
+    /**
+     * Get the value for the key 'virtual.host.headers' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getVirtualHostHeadersAsInteger();
+
+    /**
+     * Get the value for the key 'http.proxy.host'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getHttpProxyHost();
+
+    /**
+     * Get the value for the key 'http.proxy.host' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getHttpProxyHostAsInteger();
+
+    /**
+     * Get the value for the key 'http.proxy.port'. <br>
+     * The value is, e.g. 8080 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getHttpProxyPort();
+
+    /**
+     * Get the value for the key 'http.proxy.port' as {@link Integer}. <br>
+     * The value is, e.g. 8080 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getHttpProxyPortAsInteger();
+
+    /**
+     * Get the value for the key 'http.proxy.username'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getHttpProxyUsername();
+
+    /**
+     * Get the value for the key 'http.proxy.username' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getHttpProxyUsernameAsInteger();
+
+    /**
+     * Get the value for the key 'http.proxy.password'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getHttpProxyPassword();
+
+    /**
+     * Get the value for the key 'http.proxy.password' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getHttpProxyPasswordAsInteger();
 
     /**
      * Get the value for the key 'crawler.document.max.site.length'. <br>
@@ -1492,6 +1835,50 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     boolean isCrawlerIgnoreMetaRobots();
 
     /**
+     * Get the value for the key 'crawler.ignore.content.exception'. <br>
+     * The value is, e.g. true <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerIgnoreContentException();
+
+    /**
+     * Is the property for the key 'crawler.ignore.content.exception' true? <br>
+     * The value is, e.g. true <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isCrawlerIgnoreContentException();
+
+    /**
+     * Get the value for the key 'crawler.failure.url.status.codes'. <br>
+     * The value is, e.g. 404 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerFailureUrlStatusCodes();
+
+    /**
+     * Get the value for the key 'crawler.failure.url.status.codes' as {@link Integer}. <br>
+     * The value is, e.g. 404 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getCrawlerFailureUrlStatusCodesAsInteger();
+
+    /**
+     * Get the value for the key 'crawler.system.monitor.interval'. <br>
+     * The value is, e.g. 60 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerSystemMonitorInterval();
+
+    /**
+     * Get the value for the key 'crawler.system.monitor.interval' as {@link Integer}. <br>
+     * The value is, e.g. 60 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getCrawlerSystemMonitorIntervalAsInteger();
+
+    /**
      * Get the value for the key 'crawler.metadata.content.excludes'. <br>
      * The value is, e.g. resourceName,X-Parsed-By,Content-Encoding.*,Content-Type.* <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -1530,15 +1917,15 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getCrawlerDocumentHtmlDigestXpath();
 
     /**
-     * Get the value for the key 'crawler.document.html.cannonical.xpath'. <br>
+     * Get the value for the key 'crawler.document.html.canonical.xpath'. <br>
      * The value is, e.g. //LINK[@rel='canonical']/@href <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
-    String getCrawlerDocumentHtmlCannonicalXpath();
+    String getCrawlerDocumentHtmlCanonicalXpath();
 
     /**
      * Get the value for the key 'crawler.document.html.pruned.tags'. <br>
-     * The value is, e.g. noscript,script,style <br>
+     * The value is, e.g. noscript,script,style,header,footer,nav,a[rel=nofollow] <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getCrawlerDocumentHtmlPrunedTags();
@@ -1791,14 +2178,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'indexer.webfs.max.empty.list.count'. <br>
-     * The value is, e.g. 360 <br>
+     * The value is, e.g. 3600 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getIndexerWebfsMaxEmptyListCount();
 
     /**
      * Get the value for the key 'indexer.webfs.max.empty.list.count' as {@link Integer}. <br>
-     * The value is, e.g. 360 <br>
+     * The value is, e.g. 3600 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
@@ -1821,14 +2208,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'indexer.webfs.max.document.cache.size'. <br>
-     * The value is, e.g. 100 <br>
+     * The value is, e.g. 20 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getIndexerWebfsMaxDocumentCacheSize();
 
     /**
      * Get the value for the key 'indexer.webfs.max.document.cache.size' as {@link Integer}. <br>
-     * The value is, e.g. 100 <br>
+     * The value is, e.g. 20 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
@@ -2035,6 +2422,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getIndexFieldContent();
 
     /**
+     * Get the value for the key 'index.field.content_minhash'. <br>
+     * The value is, e.g. content_minhash <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexFieldContentMinhash();
+
+    /**
+     * Get the value for the key 'index.field.content_minhash_bits'. <br>
+     * The value is, e.g. content_minhash_bits <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexFieldContentMinhashBits();
+
+    /**
      * Get the value for the key 'index.field.cache'. <br>
      * The value is, e.g. cache <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2091,6 +2492,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getIndexFieldFilename();
 
     /**
+     * Get the value for the key 'index.field.thumbnail'. <br>
+     * The value is, e.g. thumbnail <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexFieldThumbnail();
+
+    /**
+     * Get the value for the key 'index.field.virtual_host'. <br>
+     * The value is, e.g. virtual_host <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexFieldVirtualHost();
+
+    /**
      * Get the value for the key 'response.field.content_title'. <br>
      * The value is, e.g. content_title <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2117,6 +2532,36 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getResponseFieldSitePath();
+
+    /**
+     * Get the value for the key 'response.max.title.length'. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getResponseMaxTitleLength();
+
+    /**
+     * Get the value for the key 'response.max.title.length' as {@link Integer}. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getResponseMaxTitleLengthAsInteger();
+
+    /**
+     * Get the value for the key 'response.max.site.path.length'. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getResponseMaxSitePathLength();
+
+    /**
+     * Get the value for the key 'response.max.site.path.length' as {@link Integer}. <br>
+     * The value is, e.g. 50 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getResponseMaxSitePathLengthAsInteger();
 
     /**
      * Get the value for the key 'index.document.search.index'. <br>
@@ -2153,6 +2598,27 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getIndexDocumentCrawlerIndex();
+
+    /**
+     * Get the value for the key 'index.config.index'. <br>
+     * The value is, e.g. .fess_config <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexConfigIndex();
+
+    /**
+     * Get the value for the key 'index.user.index'. <br>
+     * The value is, e.g. .fess_user <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexUserIndex();
+
+    /**
+     * Get the value for the key 'index.log.index'. <br>
+     * The value is, e.g. fess_log <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexLogIndex();
 
     /**
      * Get the value for the key 'index.admin.array.fields'. <br>
@@ -2215,7 +2681,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'index.admin.required.fields'. <br>
-     * The value is, e.g. doc_id,url,title,role,boost <br>
+     * The value is, e.g. url,title,role,boost <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getIndexAdminRequiredFields();
@@ -2288,6 +2754,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getQueryMaxLengthAsInteger();
 
     /**
+     * Get the value for the key 'query.timeout'. <br>
+     * The value is, e.g. 10000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryTimeout();
+
+    /**
+     * Get the value for the key 'query.timeout' as {@link Integer}. <br>
+     * The value is, e.g. 10000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryTimeoutAsInteger();
+
+    /**
      * Get the value for the key 'query.geo.fields'. <br>
      * The value is, e.g. location <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2344,6 +2825,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getQueryHighlightNumberOfFragmentsAsInteger();
+
+    /**
+     * Get the value for the key 'query.highlight.type'. <br>
+     * The value is, e.g. fvh <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightType();
 
     /**
      * Get the value for the key 'query.max.search.result.offset'. <br>
@@ -2481,6 +2969,65 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getQueryAdditionalNotAnalyzedFieldsAsInteger();
 
     /**
+     * Get the value for the key 'query.gsa.response.fields'. <br>
+     * The value is, e.g. UE,U,T,RK,S,LANG <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryGsaResponseFields();
+
+    /**
+     * Get the value for the key 'query.collapse.max.concurrent.group.results'. <br>
+     * The value is, e.g. 4 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryCollapseMaxConcurrentGroupResults();
+
+    /**
+     * Get the value for the key 'query.collapse.max.concurrent.group.results' as {@link Integer}. <br>
+     * The value is, e.g. 4 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryCollapseMaxConcurrentGroupResultsAsInteger();
+
+    /**
+     * Get the value for the key 'query.collapse.inner.hits.name'. <br>
+     * The value is, e.g. similar_docs <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryCollapseInnerHitsName();
+
+    /**
+     * Get the value for the key 'query.collapse.inner.hits.size'. <br>
+     * The value is, e.g. 0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryCollapseInnerHitsSize();
+
+    /**
+     * Get the value for the key 'query.collapse.inner.hits.size' as {@link Integer}. <br>
+     * The value is, e.g. 0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryCollapseInnerHitsSizeAsInteger();
+
+    /**
+     * Get the value for the key 'query.collapse.inner.hits.sorts'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryCollapseInnerHitsSorts();
+
+    /**
+     * Get the value for the key 'query.collapse.inner.hits.sorts' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryCollapseInnerHitsSortsAsInteger();
+
+    /**
      * Get the value for the key 'query.default.languages'. <br>
      * The value is, e.g.  <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2501,21 +3048,28 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     bg=bg
     bn=bn
     ca=ca
+    ckb-iq=ckb-iq
+    ckb_IQ=ckb-iq
     cs=cs
     da=da
     de=de
     el=el
     en=en
+    en-ie=en-ie
+    en_IE=en-ie
     es=es
     et=et
+    eu=eu
     fa=fa
     fi=fi
     fr=fr
+    gl=gl
     gu=gu
     he=he
     hi=hi
     hr=hr
     hu=hu
+    hy=hy
     id=id
     it=it
     ja=ja
@@ -2529,6 +3083,8 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     pa=pa
     pl=pl
     pt=pt
+    pt-br=pt-br
+    pt_BR=pt-br
     ro=ro
     ru=ru
     si=si
@@ -2542,9 +3098,11 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     uk=uk
     ur=ur
     vi=vi
-    zh=zh-cn
     zh-cn=zh-cn
+    zh_CN=zh-cn
     zh-tw=zh-tw
+    zh_TW=zh-tw
+    zh=zh
     <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
@@ -2644,12 +3202,47 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getSmbAvailableSidTypesAsInteger();
 
     /**
+     * Get the value for the key 'file.role.from.file'. <br>
+     * The value is, e.g. true <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getFileRoleFromFile();
+
+    /**
+     * Is the property for the key 'file.role.from.file' true? <br>
+     * The value is, e.g. true <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isFileRoleFromFile();
+
+    /**
+     * Get the value for the key 'ftp.role.from.file'. <br>
+     * The value is, e.g. true <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getFtpRoleFromFile();
+
+    /**
+     * Is the property for the key 'ftp.role.from.file' true? <br>
+     * The value is, e.g. true <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isFtpRoleFromFile();
+
+    /**
      * Get the value for the key 'index.backup.targets'. <br>
      * The value is, e.g. .fess_basic_config.bulk,.fess_config.bulk,.fess_user.bulk,system.properties <br>
      * comment: backup
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getIndexBackupTargets();
+
+    /**
+     * Get the value for the key 'index.backup.log.targets'. <br>
+     * The value is, e.g. click_log.ndjson,favorite_log.ndjson,search_log.ndjson,user_info.ndjson <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexBackupLogTargets();
 
     /**
      * Get the value for the key 'form.admin.max.input.size'. <br>
@@ -3210,6 +3803,36 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getPageDictionaryMaxFetchSizeAsInteger();
 
     /**
+     * Get the value for the key 'page.relatedcontent.max.fetch.size'. <br>
+     * The value is, e.g. 5000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getPageRelatedcontentMaxFetchSize();
+
+    /**
+     * Get the value for the key 'page.relatedcontent.max.fetch.size' as {@link Integer}. <br>
+     * The value is, e.g. 5000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getPageRelatedcontentMaxFetchSizeAsInteger();
+
+    /**
+     * Get the value for the key 'page.relatedquery.max.fetch.size'. <br>
+     * The value is, e.g. 5000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getPageRelatedqueryMaxFetchSize();
+
+    /**
+     * Get the value for the key 'page.relatedquery.max.fetch.size' as {@link Integer}. <br>
+     * The value is, e.g. 5000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getPageRelatedqueryMaxFetchSizeAsInteger();
+
+    /**
      * Get the value for the key 'page.thumbnail.queue.max.fetch.size'. <br>
      * The value is, e.g. 100 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -3223,6 +3846,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getPageThumbnailQueueMaxFetchSizeAsInteger();
+
+    /**
+     * Get the value for the key 'page.thumbnail.purge.max.fetch.size'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getPageThumbnailPurgeMaxFetchSize();
+
+    /**
+     * Get the value for the key 'page.thumbnail.purge.max.fetch.size' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getPageThumbnailPurgeMaxFetchSizeAsInteger();
 
     /**
      * Get the value for the key 'paging.search.page.start'. <br>
@@ -3273,17 +3911,255 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'thumbnail.html.phantomjs.enabled'. <br>
-     * The value is, e.g. true <br>
+     * The value is, e.g. false <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getThumbnailHtmlPhantomjsEnabled();
 
     /**
      * Is the property for the key 'thumbnail.html.phantomjs.enabled' true? <br>
-     * The value is, e.g. true <br>
+     * The value is, e.g. false <br>
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isThumbnailHtmlPhantomjsEnabled();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.max.height'. <br>
+     * The value is, e.g. 20000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsMaxHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.max.height' as {@link Integer}. <br>
+     * The value is, e.g. 20000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsMaxHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.keep.alive'. <br>
+     * The value is, e.g. 600000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsKeepAlive();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.keep.alive' as {@link Integer}. <br>
+     * The value is, e.g. 600000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsKeepAliveAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.window.width'. <br>
+     * The value is, e.g. 1200 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsWindowWidth();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.window.width' as {@link Integer}. <br>
+     * The value is, e.g. 1200 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsWindowWidthAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.window.height'. <br>
+     * The value is, e.g. 800 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsWindowHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.window.height' as {@link Integer}. <br>
+     * The value is, e.g. 800 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsWindowHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.thumbnail.width'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsThumbnailWidth();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.thumbnail.width' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsThumbnailWidthAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.thumbnail.height'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsThumbnailHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.thumbnail.height' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlPhantomjsThumbnailHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.phantomjs.format'. <br>
+     * The value is, e.g. png <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlPhantomjsFormat();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.min.width'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageMinWidth();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.min.width' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageMinWidthAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.min.height'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageMinHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.min.height' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageMinHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.max.aspect.ratio'. <br>
+     * The value is, e.g. 3.0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageMaxAspectRatio();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.max.aspect.ratio' as {@link java.math.BigDecimal}. <br>
+     * The value is, e.g. 3.0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not decimal.
+     */
+    java.math.BigDecimal getThumbnailHtmlImageMaxAspectRatioAsDecimal();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.window.width'. <br>
+     * The value is, e.g. 1200 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageWindowWidth();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.window.width' as {@link Integer}. <br>
+     * The value is, e.g. 1200 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageWindowWidthAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.window.height'. <br>
+     * The value is, e.g. 800 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageWindowHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.window.height' as {@link Integer}. <br>
+     * The value is, e.g. 800 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageWindowHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.thumbnail.width'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageThumbnailWidth();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.thumbnail.width' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageThumbnailWidthAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.thumbnail.height'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageThumbnailHeight();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.thumbnail.height' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailHtmlImageThumbnailHeightAsInteger();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.format'. <br>
+     * The value is, e.g. png <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageFormat();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.xpath'. <br>
+     * The value is, e.g. //IMG <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageXpath();
+
+    /**
+     * Get the value for the key 'thumbnail.html.image.exclude.extensions'. <br>
+     * The value is, e.g. svg,html,css,js <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailHtmlImageExcludeExtensions();
+
+    /**
+     * Get the value for the key 'thumbnail.generator.interval'. <br>
+     * The value is, e.g. 0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getThumbnailGeneratorInterval();
+
+    /**
+     * Get the value for the key 'thumbnail.generator.interval' as {@link Integer}. <br>
+     * The value is, e.g. 0 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getThumbnailGeneratorIntervalAsInteger();
 
     /**
      * Get the value for the key 'thumbnail.generator.targets'. <br>
@@ -3294,17 +4170,62 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'thumbnail.crawler.enabled'. <br>
-     * The value is, e.g. false <br>
+     * The value is, e.g. true <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getThumbnailCrawlerEnabled();
 
     /**
      * Is the property for the key 'thumbnail.crawler.enabled' true? <br>
-     * The value is, e.g. false <br>
+     * The value is, e.g. true <br>
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
     boolean isThumbnailCrawlerEnabled();
+
+    /**
+     * Get the value for the key 'user.code.request.parameter'. <br>
+     * The value is, e.g. userCode <br>
+     * comment: user
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getUserCodeRequestParameter();
+
+    /**
+     * Get the value for the key 'user.code.min.length'. <br>
+     * The value is, e.g. 20 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getUserCodeMinLength();
+
+    /**
+     * Get the value for the key 'user.code.min.length' as {@link Integer}. <br>
+     * The value is, e.g. 20 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getUserCodeMinLengthAsInteger();
+
+    /**
+     * Get the value for the key 'user.code.max.length'. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getUserCodeMaxLength();
+
+    /**
+     * Get the value for the key 'user.code.max.length' as {@link Integer}. <br>
+     * The value is, e.g. 100 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getUserCodeMaxLengthAsInteger();
+
+    /**
+     * Get the value for the key 'user.code.pattern'. <br>
+     * The value is, e.g. [a-zA-Z0-9_]+ <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getUserCodePattern();
 
     /**
      * Get the value for the key 'mail.from.name'. <br>
@@ -3369,11 +4290,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'online.help.base.link'. <br>
-     * The value is, e.g. http://fess.codelibs.org/{lang}/{version}/admin/ <br>
+     * The value is, e.g. https://fess.codelibs.org/{lang}/{version}/admin/ <br>
      * comment: ------
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getOnlineHelpBaseLink();
+
+    /**
+     * Get the value for the key 'online.help.installation'. <br>
+     * The value is, e.g. https://fess.codelibs.org/{lang}/{version}/install/install.html <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getOnlineHelpInstallation();
 
     /**
      * Get the value for the key 'online.help.name.failureurl'. <br>
@@ -3486,6 +4414,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getOnlineHelpNameKeymatch();
+
+    /**
+     * Get the value for the key 'online.help.name.relatedquery'. <br>
+     * The value is, e.g. relatedquery <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getOnlineHelpNameRelatedquery();
+
+    /**
+     * Get the value for the key 'online.help.name.relatedcontent'. <br>
+     * The value is, e.g. relatedcontent <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getOnlineHelpNameRelatedcontent();
 
     /**
      * Get the value for the key 'online.help.name.wizard'. <br>
@@ -3799,6 +4741,28 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getSuggestUpdateRequestIntervalAsInteger();
 
     /**
+     * Get the value for the key 'suggest.update.contents.limit.num.percentage'. <br>
+     * The value is, e.g. 50% <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getSuggestUpdateContentsLimitNumPercentage();
+
+    /**
+     * Get the value for the key 'suggest.update.contents.limit.num'. <br>
+     * The value is, e.g. 10000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getSuggestUpdateContentsLimitNum();
+
+    /**
+     * Get the value for the key 'suggest.update.contents.limit.num' as {@link Integer}. <br>
+     * The value is, e.g. 10000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getSuggestUpdateContentsLimitNumAsInteger();
+
+    /**
      * Get the value for the key 'suggest.source.reader.scroll.size'. <br>
      * The value is, e.g. 1 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -3849,6 +4813,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getSuggestSearchLogPermissions();
+
+    /**
+     * Get the value for the key 'suggest.system.monitor.interval'. <br>
+     * The value is, e.g. 60 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getSuggestSystemMonitorInterval();
+
+    /**
+     * Get the value for the key 'suggest.system.monitor.interval' as {@link Integer}. <br>
+     * The value is, e.g. 60 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getSuggestSystemMonitorIntervalAsInteger();
 
     /**
      * Get the value for the key 'ldap.admin.enabled'. <br>
@@ -4472,6 +5451,22 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.ELASTICSEARCH_HTTP_URL);
         }
 
+        public String getElasticsearchTransportSniff() {
+            return get(FessConfig.ELASTICSEARCH_TRANSPORT_SNIFF);
+        }
+
+        public boolean isElasticsearchTransportSniff() {
+            return is(FessConfig.ELASTICSEARCH_TRANSPORT_SNIFF);
+        }
+
+        public String getElasticsearchTransportPingTimeout() {
+            return get(FessConfig.ELASTICSEARCH_TRANSPORT_ping_timeout);
+        }
+
+        public String getElasticsearchTransportNodesSamplerInterval() {
+            return get(FessConfig.ELASTICSEARCH_TRANSPORT_nodes_sampler_interval);
+        }
+
         public String getAppCipherAlgorism() {
             return get(FessConfig.APP_CIPHER_ALGORISM);
         }
@@ -4572,6 +5567,50 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.API_ACCESS_TOKEN_REQUIRED);
         }
 
+        public String getApiAdminAccessPermissions() {
+            return get(FessConfig.API_ADMIN_ACCESS_PERMISSIONS);
+        }
+
+        public String getVirtualHostHeaders() {
+            return get(FessConfig.VIRTUAL_HOST_HEADERS);
+        }
+
+        public Integer getVirtualHostHeadersAsInteger() {
+            return getAsInteger(FessConfig.VIRTUAL_HOST_HEADERS);
+        }
+
+        public String getHttpProxyHost() {
+            return get(FessConfig.HTTP_PROXY_HOST);
+        }
+
+        public Integer getHttpProxyHostAsInteger() {
+            return getAsInteger(FessConfig.HTTP_PROXY_HOST);
+        }
+
+        public String getHttpProxyPort() {
+            return get(FessConfig.HTTP_PROXY_PORT);
+        }
+
+        public Integer getHttpProxyPortAsInteger() {
+            return getAsInteger(FessConfig.HTTP_PROXY_PORT);
+        }
+
+        public String getHttpProxyUsername() {
+            return get(FessConfig.HTTP_PROXY_USERNAME);
+        }
+
+        public Integer getHttpProxyUsernameAsInteger() {
+            return getAsInteger(FessConfig.HTTP_PROXY_USERNAME);
+        }
+
+        public String getHttpProxyPassword() {
+            return get(FessConfig.HTTP_PROXY_PASSWORD);
+        }
+
+        public Integer getHttpProxyPasswordAsInteger() {
+            return getAsInteger(FessConfig.HTTP_PROXY_PASSWORD);
+        }
+
         public String getCrawlerDocumentMaxSiteLength() {
             return get(FessConfig.CRAWLER_DOCUMENT_MAX_SITE_LENGTH);
         }
@@ -4660,6 +5699,30 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.CRAWLER_IGNORE_META_ROBOTS);
         }
 
+        public String getCrawlerIgnoreContentException() {
+            return get(FessConfig.CRAWLER_IGNORE_CONTENT_EXCEPTION);
+        }
+
+        public boolean isCrawlerIgnoreContentException() {
+            return is(FessConfig.CRAWLER_IGNORE_CONTENT_EXCEPTION);
+        }
+
+        public String getCrawlerFailureUrlStatusCodes() {
+            return get(FessConfig.CRAWLER_FAILURE_URL_STATUS_CODES);
+        }
+
+        public Integer getCrawlerFailureUrlStatusCodesAsInteger() {
+            return getAsInteger(FessConfig.CRAWLER_FAILURE_URL_STATUS_CODES);
+        }
+
+        public String getCrawlerSystemMonitorInterval() {
+            return get(FessConfig.CRAWLER_SYSTEM_MONITOR_INTERVAL);
+        }
+
+        public Integer getCrawlerSystemMonitorIntervalAsInteger() {
+            return getAsInteger(FessConfig.CRAWLER_SYSTEM_MONITOR_INTERVAL);
+        }
+
         public String getCrawlerMetadataContentExcludes() {
             return get(FessConfig.CRAWLER_METADATA_CONTENT_EXCLUDES);
         }
@@ -4680,8 +5743,8 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.CRAWLER_DOCUMENT_HTML_DIGEST_XPATH);
         }
 
-        public String getCrawlerDocumentHtmlCannonicalXpath() {
-            return get(FessConfig.CRAWLER_DOCUMENT_HTML_CANNONICAL_XPATH);
+        public String getCrawlerDocumentHtmlCanonicalXpath() {
+            return get(FessConfig.CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH);
         }
 
         public String getCrawlerDocumentHtmlPrunedTags() {
@@ -4956,6 +6019,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.INDEX_FIELD_CONTENT);
         }
 
+        public String getIndexFieldContentMinhash() {
+            return get(FessConfig.INDEX_FIELD_content_minhash);
+        }
+
+        public String getIndexFieldContentMinhashBits() {
+            return get(FessConfig.INDEX_FIELD_content_minhash_bits);
+        }
+
         public String getIndexFieldCache() {
             return get(FessConfig.INDEX_FIELD_CACHE);
         }
@@ -4988,6 +6059,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.INDEX_FIELD_FILENAME);
         }
 
+        public String getIndexFieldThumbnail() {
+            return get(FessConfig.INDEX_FIELD_THUMBNAIL);
+        }
+
+        public String getIndexFieldVirtualHost() {
+            return get(FessConfig.INDEX_FIELD_virtual_host);
+        }
+
         public String getResponseFieldContentTitle() {
             return get(FessConfig.RESPONSE_FIELD_content_title);
         }
@@ -5002,6 +6081,22 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getResponseFieldSitePath() {
             return get(FessConfig.RESPONSE_FIELD_site_path);
+        }
+
+        public String getResponseMaxTitleLength() {
+            return get(FessConfig.RESPONSE_MAX_TITLE_LENGTH);
+        }
+
+        public Integer getResponseMaxTitleLengthAsInteger() {
+            return getAsInteger(FessConfig.RESPONSE_MAX_TITLE_LENGTH);
+        }
+
+        public String getResponseMaxSitePathLength() {
+            return get(FessConfig.RESPONSE_MAX_SITE_PATH_LENGTH);
+        }
+
+        public Integer getResponseMaxSitePathLengthAsInteger() {
+            return getAsInteger(FessConfig.RESPONSE_MAX_SITE_PATH_LENGTH);
         }
 
         public String getIndexDocumentSearchIndex() {
@@ -5022,6 +6117,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getIndexDocumentCrawlerIndex() {
             return get(FessConfig.INDEX_DOCUMENT_CRAWLER_INDEX);
+        }
+
+        public String getIndexConfigIndex() {
+            return get(FessConfig.INDEX_CONFIG_INDEX);
+        }
+
+        public String getIndexUserIndex() {
+            return get(FessConfig.INDEX_USER_INDEX);
+        }
+
+        public String getIndexLogIndex() {
+            return get(FessConfig.INDEX_LOG_INDEX);
         }
 
         public String getIndexAdminArrayFields() {
@@ -5096,6 +6203,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.QUERY_MAX_LENGTH);
         }
 
+        public String getQueryTimeout() {
+            return get(FessConfig.QUERY_TIMEOUT);
+        }
+
+        public Integer getQueryTimeoutAsInteger() {
+            return getAsInteger(FessConfig.QUERY_TIMEOUT);
+        }
+
         public String getQueryGeoFields() {
             return get(FessConfig.QUERY_GEO_FIELDS);
         }
@@ -5126,6 +6241,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getQueryHighlightNumberOfFragmentsAsInteger() {
             return getAsInteger(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS);
+        }
+
+        public String getQueryHighlightType() {
+            return get(FessConfig.QUERY_HIGHLIGHT_TYPE);
         }
 
         public String getQueryMaxSearchResultOffset() {
@@ -5200,6 +6319,38 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS);
         }
 
+        public String getQueryGsaResponseFields() {
+            return get(FessConfig.QUERY_GSA_RESPONSE_FIELDS);
+        }
+
+        public String getQueryCollapseMaxConcurrentGroupResults() {
+            return get(FessConfig.QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS);
+        }
+
+        public Integer getQueryCollapseMaxConcurrentGroupResultsAsInteger() {
+            return getAsInteger(FessConfig.QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS);
+        }
+
+        public String getQueryCollapseInnerHitsName() {
+            return get(FessConfig.QUERY_COLLAPSE_INNER_HITS_NAME);
+        }
+
+        public String getQueryCollapseInnerHitsSize() {
+            return get(FessConfig.QUERY_COLLAPSE_INNER_HITS_SIZE);
+        }
+
+        public Integer getQueryCollapseInnerHitsSizeAsInteger() {
+            return getAsInteger(FessConfig.QUERY_COLLAPSE_INNER_HITS_SIZE);
+        }
+
+        public String getQueryCollapseInnerHitsSorts() {
+            return get(FessConfig.QUERY_COLLAPSE_INNER_HITS_SORTS);
+        }
+
+        public Integer getQueryCollapseInnerHitsSortsAsInteger() {
+            return getAsInteger(FessConfig.QUERY_COLLAPSE_INNER_HITS_SORTS);
+        }
+
         public String getQueryDefaultLanguages() {
             return get(FessConfig.QUERY_DEFAULT_LANGUAGES);
         }
@@ -5260,8 +6411,28 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.SMB_AVAILABLE_SID_TYPES);
         }
 
+        public String getFileRoleFromFile() {
+            return get(FessConfig.FILE_ROLE_FROM_FILE);
+        }
+
+        public boolean isFileRoleFromFile() {
+            return is(FessConfig.FILE_ROLE_FROM_FILE);
+        }
+
+        public String getFtpRoleFromFile() {
+            return get(FessConfig.FTP_ROLE_FROM_FILE);
+        }
+
+        public boolean isFtpRoleFromFile() {
+            return is(FessConfig.FTP_ROLE_FROM_FILE);
+        }
+
         public String getIndexBackupTargets() {
             return get(FessConfig.INDEX_BACKUP_TARGETS);
+        }
+
+        public String getIndexBackupLogTargets() {
+            return get(FessConfig.INDEX_BACKUP_LOG_TARGETS);
         }
 
         public String getFormAdminMaxInputSize() {
@@ -5556,12 +6727,36 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.PAGE_DICTIONARY_MAX_FETCH_SIZE);
         }
 
+        public String getPageRelatedcontentMaxFetchSize() {
+            return get(FessConfig.PAGE_RELATEDCONTENT_MAX_FETCH_SIZE);
+        }
+
+        public Integer getPageRelatedcontentMaxFetchSizeAsInteger() {
+            return getAsInteger(FessConfig.PAGE_RELATEDCONTENT_MAX_FETCH_SIZE);
+        }
+
+        public String getPageRelatedqueryMaxFetchSize() {
+            return get(FessConfig.PAGE_RELATEDQUERY_MAX_FETCH_SIZE);
+        }
+
+        public Integer getPageRelatedqueryMaxFetchSizeAsInteger() {
+            return getAsInteger(FessConfig.PAGE_RELATEDQUERY_MAX_FETCH_SIZE);
+        }
+
         public String getPageThumbnailQueueMaxFetchSize() {
             return get(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE);
         }
 
         public Integer getPageThumbnailQueueMaxFetchSizeAsInteger() {
             return getAsInteger(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE);
+        }
+
+        public String getPageThumbnailPurgeMaxFetchSize() {
+            return get(FessConfig.PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE);
+        }
+
+        public Integer getPageThumbnailPurgeMaxFetchSizeAsInteger() {
+            return getAsInteger(FessConfig.PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE);
         }
 
         public String getPagingSearchPageStart() {
@@ -5596,6 +6791,134 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.THUMBNAIL_HTML_PHANTOMJS_ENABLED);
         }
 
+        public String getThumbnailHtmlPhantomjsMaxHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_MAX_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsMaxHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_MAX_HEIGHT);
+        }
+
+        public String getThumbnailHtmlPhantomjsKeepAlive() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_KEEP_ALIVE);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsKeepAliveAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_KEEP_ALIVE);
+        }
+
+        public String getThumbnailHtmlPhantomjsWindowWidth() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_WIDTH);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsWindowWidthAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_WIDTH);
+        }
+
+        public String getThumbnailHtmlPhantomjsWindowHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsWindowHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_HEIGHT);
+        }
+
+        public String getThumbnailHtmlPhantomjsThumbnailWidth() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_WIDTH);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsThumbnailWidthAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_WIDTH);
+        }
+
+        public String getThumbnailHtmlPhantomjsThumbnailHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlPhantomjsThumbnailHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_HEIGHT);
+        }
+
+        public String getThumbnailHtmlPhantomjsFormat() {
+            return get(FessConfig.THUMBNAIL_HTML_PHANTOMJS_FORMAT);
+        }
+
+        public String getThumbnailHtmlImageMinWidth() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_WIDTH);
+        }
+
+        public Integer getThumbnailHtmlImageMinWidthAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_WIDTH);
+        }
+
+        public String getThumbnailHtmlImageMinHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlImageMinHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_HEIGHT);
+        }
+
+        public String getThumbnailHtmlImageMaxAspectRatio() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_MAX_ASPECT_RATIO);
+        }
+
+        public java.math.BigDecimal getThumbnailHtmlImageMaxAspectRatioAsDecimal() {
+            return getAsDecimal(FessConfig.THUMBNAIL_HTML_IMAGE_MAX_ASPECT_RATIO);
+        }
+
+        public String getThumbnailHtmlImageWindowWidth() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_WIDTH);
+        }
+
+        public Integer getThumbnailHtmlImageWindowWidthAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_WIDTH);
+        }
+
+        public String getThumbnailHtmlImageWindowHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlImageWindowHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_HEIGHT);
+        }
+
+        public String getThumbnailHtmlImageThumbnailWidth() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_WIDTH);
+        }
+
+        public Integer getThumbnailHtmlImageThumbnailWidthAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_WIDTH);
+        }
+
+        public String getThumbnailHtmlImageThumbnailHeight() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_HEIGHT);
+        }
+
+        public Integer getThumbnailHtmlImageThumbnailHeightAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_HEIGHT);
+        }
+
+        public String getThumbnailHtmlImageFormat() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_FORMAT);
+        }
+
+        public String getThumbnailHtmlImageXpath() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_XPATH);
+        }
+
+        public String getThumbnailHtmlImageExcludeExtensions() {
+            return get(FessConfig.THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS);
+        }
+
+        public String getThumbnailGeneratorInterval() {
+            return get(FessConfig.THUMBNAIL_GENERATOR_INTERVAL);
+        }
+
+        public Integer getThumbnailGeneratorIntervalAsInteger() {
+            return getAsInteger(FessConfig.THUMBNAIL_GENERATOR_INTERVAL);
+        }
+
         public String getThumbnailGeneratorTargets() {
             return get(FessConfig.THUMBNAIL_GENERATOR_TARGETS);
         }
@@ -5606,6 +6929,30 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public boolean isThumbnailCrawlerEnabled() {
             return is(FessConfig.THUMBNAIL_CRAWLER_ENABLED);
+        }
+
+        public String getUserCodeRequestParameter() {
+            return get(FessConfig.USER_CODE_REQUEST_PARAMETER);
+        }
+
+        public String getUserCodeMinLength() {
+            return get(FessConfig.USER_CODE_MIN_LENGTH);
+        }
+
+        public Integer getUserCodeMinLengthAsInteger() {
+            return getAsInteger(FessConfig.USER_CODE_MIN_LENGTH);
+        }
+
+        public String getUserCodeMaxLength() {
+            return get(FessConfig.USER_CODE_MAX_LENGTH);
+        }
+
+        public Integer getUserCodeMaxLengthAsInteger() {
+            return getAsInteger(FessConfig.USER_CODE_MAX_LENGTH);
+        }
+
+        public String getUserCodePattern() {
+            return get(FessConfig.USER_CODE_PATTERN);
         }
 
         public String getMailFromName() {
@@ -5642,6 +6989,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getOnlineHelpBaseLink() {
             return get(FessConfig.ONLINE_HELP_BASE_LINK);
+        }
+
+        public String getOnlineHelpInstallation() {
+            return get(FessConfig.ONLINE_HELP_INSTALLATION);
         }
 
         public String getOnlineHelpNameFailureurl() {
@@ -5706,6 +7057,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getOnlineHelpNameKeymatch() {
             return get(FessConfig.ONLINE_HELP_NAME_KEYMATCH);
+        }
+
+        public String getOnlineHelpNameRelatedquery() {
+            return get(FessConfig.ONLINE_HELP_NAME_RELATEDQUERY);
+        }
+
+        public String getOnlineHelpNameRelatedcontent() {
+            return get(FessConfig.ONLINE_HELP_NAME_RELATEDCONTENT);
         }
 
         public String getOnlineHelpNameWizard() {
@@ -5880,6 +7239,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.SUGGEST_UPDATE_REQUEST_INTERVAL);
         }
 
+        public String getSuggestUpdateContentsLimitNumPercentage() {
+            return get(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM_PERCENTAGE);
+        }
+
+        public String getSuggestUpdateContentsLimitNum() {
+            return get(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM);
+        }
+
+        public Integer getSuggestUpdateContentsLimitNumAsInteger() {
+            return getAsInteger(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM);
+        }
+
         public String getSuggestSourceReaderScrollSize() {
             return get(FessConfig.SUGGEST_SOURCE_READER_SCROLL_SIZE);
         }
@@ -5906,6 +7277,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getSuggestSearchLogPermissions() {
             return get(FessConfig.SUGGEST_SEARCH_LOG_PERMISSIONS);
+        }
+
+        public String getSuggestSystemMonitorInterval() {
+            return get(FessConfig.SUGGEST_SYSTEM_MONITOR_INTERVAL);
+        }
+
+        public Integer getSuggestSystemMonitorIntervalAsInteger() {
+            return getAsInteger(FessConfig.SUGGEST_SYSTEM_MONITOR_INTERVAL);
         }
 
         public String getLdapAdminEnabled() {
@@ -6246,6 +7625,422 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getOicDefaultGroupsAsInteger() {
             return getAsInteger(FessConfig.OIC_DEFAULT_GROUPS);
+        }
+
+        @Override
+        protected java.util.Map<String, String> prepareGeneratedDefaultMap() {
+            java.util.Map<String, String> defaultMap = super.prepareGeneratedDefaultMap();
+            defaultMap.put(FessConfig.DOMAIN_TITLE, "Fess");
+            defaultMap.put(FessConfig.ELASTICSEARCH_CLUSTER_NAME, "elasticsearch");
+            defaultMap.put(FessConfig.ELASTICSEARCH_HTTP_URL, "http://localhost:9201");
+            defaultMap.put(FessConfig.ELASTICSEARCH_TRANSPORT_SNIFF, "false");
+            defaultMap.put(FessConfig.ELASTICSEARCH_TRANSPORT_ping_timeout, "1m");
+            defaultMap.put(FessConfig.ELASTICSEARCH_TRANSPORT_nodes_sampler_interval, "5s");
+            defaultMap.put(FessConfig.APP_CIPHER_ALGORISM, "aes");
+            defaultMap.put(FessConfig.APP_CIPHER_KEY, "___change__me___");
+            defaultMap.put(FessConfig.APP_DIGEST_ALGORISM, "sha256");
+            defaultMap
+                    .put(FessConfig.JVM_CRAWLER_OPTIONS,
+                            "-Djava.awt.headless=true\n-Dfile.encoding=UTF-8\n-Djna.nosys=true\n-Djdk.io.permissionsUseCanonicalPath=true\n-server\n-Xmx512m\n-XX:MaxMetaspaceSize=128m\n-XX:CompressedClassSpaceSize=32m\n-XX:-UseGCOverheadLimit\n-XX:+UseConcMarkSweepGC\n-XX:CMSInitiatingOccupancyFraction=75\n-XX:+UseCMSInitiatingOccupancyOnly\n-XX:+UseTLAB\n-XX:+DisableExplicitGC\n-XX:+HeapDumpOnOutOfMemoryError\n-XX:-OmitStackTraceInFastThrow\n-Djcifs.smb.client.connTimeout=60000\n-Djcifs.smb.client.soTimeout=35000\n-Djcifs.smb.client.responseTimeout=30000\n-Dgroovy.use.classvalue=true\n-Dio.netty.noUnsafe=true\n-Dio.netty.noKeySetOptimization=true\n-Dio.netty.recycler.maxCapacityPerThread=0\n-Dlog4j.shutdownHookEnabled=false\n-Dlog4j2.disable.jmx=true\n-Dlog4j.skipJansi=true\n");
+            defaultMap
+                    .put(FessConfig.JVM_SUGGEST_OPTIONS,
+                            "-Djava.awt.headless=true\n-Dfile.encoding=UTF-8\n-Djna.nosys=true\n-Djdk.io.permissionsUseCanonicalPath=true\n-server\n-Xmx256m\n-XX:MaxMetaspaceSize=128m\n-XX:CompressedClassSpaceSize=32m\n-XX:-UseGCOverheadLimit\n-XX:+UseConcMarkSweepGC\n-XX:CMSInitiatingOccupancyFraction=75\n-XX:+UseCMSInitiatingOccupancyOnly\n-XX:+UseTLAB\n-XX:+DisableExplicitGC\n-XX:+HeapDumpOnOutOfMemoryError\n-Dgroovy.use.classvalue=true\n-Dio.netty.noUnsafe=true\n-Dio.netty.noKeySetOptimization=true\n-Dio.netty.recycler.maxCapacityPerThread=0\n-Dlog4j.shutdownHookEnabled=false\n-Dlog4j2.disable.jmx=true\n-Dlog4j.skipJansi=true\n");
+            defaultMap.put(FessConfig.JOB_SYSTEM_JOB_IDS, "default_crawler");
+            defaultMap.put(FessConfig.JOB_TEMPLATE_TITLE_WEB, "Web Crawler - {0}");
+            defaultMap.put(FessConfig.JOB_TEMPLATE_TITLE_FILE, "File Crawler - {0}");
+            defaultMap.put(FessConfig.JOB_TEMPLATE_TITLE_DATA, "Data Crawler - {0}");
+            defaultMap
+                    .put(FessConfig.JOB_TEMPLATE_SCRIPT,
+                            "return container.getComponent(\"crawlJob\").logLevel(\"info\").sessionId(\"{3}\").webConfigIds([{0}] as String[]).fileConfigIds([{1}] as String[]).dataConfigIds([{2}] as String[]).jobExecutor(executor).execute();");
+            defaultMap.put(FessConfig.JAVA_COMMAND_PATH, "java");
+            defaultMap.put(FessConfig.PATH_ENCODING, "UTF-8");
+            defaultMap.put(FessConfig.USE_OWN_TMP_DIR, "true");
+            defaultMap.put(FessConfig.MAX_LOG_OUTPUT_LENGTH, "4000");
+            defaultMap.put(FessConfig.SUPPORTED_UPLOADED_JS_EXTENTIONS, "js");
+            defaultMap.put(FessConfig.SUPPORTED_UPLOADED_CSS_EXTENTIONS, "css");
+            defaultMap.put(FessConfig.SUPPORTED_UPLOADED_MEDIA_EXTENTIONS, "jpg,jpeg,gif,png,swf");
+            defaultMap.put(FessConfig.SUPPORTED_UPLOADED_FILES, "license.properties");
+            defaultMap
+                    .put(FessConfig.SUPPORTED_LANGUAGES,
+                            "ar,bg,bn,ca,ckb_IQ,cs,da,de,el,en,en_IE,es,et,eu,fa,fi,fr,gl,gu,he,hi,hr,hu,hy,id,it,ja,ko,lt,lv,mk,ml,nl,no,pa,pl,pt,pt_BR,ro,ru,si,sq,sv,ta,te,th,tl,tr,uk,ur,vi,zh_CN,zh_TW,zh");
+            defaultMap.put(FessConfig.API_ACCESS_TOKEN_LENGTH, "60");
+            defaultMap.put(FessConfig.API_ACCESS_TOKEN_REQUIRED, "false");
+            defaultMap.put(FessConfig.API_ADMIN_ACCESS_PERMISSIONS, "Radmin-api");
+            defaultMap.put(FessConfig.VIRTUAL_HOST_HEADERS, "");
+            defaultMap.put(FessConfig.HTTP_PROXY_HOST, "");
+            defaultMap.put(FessConfig.HTTP_PROXY_PORT, "8080");
+            defaultMap.put(FessConfig.HTTP_PROXY_USERNAME, "");
+            defaultMap.put(FessConfig.HTTP_PROXY_PASSWORD, "");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_MAX_SITE_LENGTH, "50");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_SITE_ENCODING, "UTF-8");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_UNKNOWN_HOSTNAME, "unknown");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_USE_SITE_ENCODING_ON_ENGLISH, "false");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_APPEND_DATA, "true");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_MAX_ALPHANUM_TERM_SIZE, "20");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_MAX_SYMBOL_TERM_SIZE, "10");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_DUPLICATE_TERM_REMOVED, "false");
+            defaultMap
+                    .put(FessConfig.CRAWLER_DOCUMENT_SPACE_CHARS,
+                            "u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu200Cu202Fu205Fu3000uFEFFuFFFDu00B6");
+            defaultMap.put(FessConfig.CRAWLER_CRAWLING_DATA_ENCODING, "UTF-8");
+            defaultMap.put(FessConfig.CRAWLER_WEB_PROTOCOLS, "http,https");
+            defaultMap.put(FessConfig.CRAWLER_FILE_PROTOCOLS, "file,smb,ftp");
+            defaultMap.put(FessConfig.CRAWLER_IGNORE_ROBOTS_TXT, "false");
+            defaultMap.put(FessConfig.CRAWLER_IGNORE_META_ROBOTS, "false");
+            defaultMap.put(FessConfig.CRAWLER_IGNORE_CONTENT_EXCEPTION, "true");
+            defaultMap.put(FessConfig.CRAWLER_FAILURE_URL_STATUS_CODES, "404");
+            defaultMap.put(FessConfig.CRAWLER_SYSTEM_MONITOR_INTERVAL, "60");
+            defaultMap.put(FessConfig.CRAWLER_METADATA_CONTENT_EXCLUDES, "resourceName,X-Parsed-By,Content-Encoding.*,Content-Type.*");
+            defaultMap.put(FessConfig.CRAWLER_METADATA_NAME_MAPPING, "title=title:string\nTitle=title:string\n");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_CONTENT_XPATH, "//BODY");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_LANG_XPATH, "//HTML/@lang");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_DIGEST_XPATH, "//META[@name='description']/@content");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH, "//LINK[@rel='canonical']/@href");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_PRUNED_TAGS, "noscript,script,style,header,footer,nav,a[rel=nofollow]");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_MAX_DIGEST_LENGTH, "200");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_NAME_ENCODING, "");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_NO_TITLE_LABEL, "No title.");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_IGNORE_EMPTY_CONTENT, "false");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_MAX_TITLE_LENGTH, "100");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_MAX_DIGEST_LENGTH, "200");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_APPEND_META_CONTENT, "true");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_APPEND_BODY_CONTENT, "true");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_DEFAULT_LANG, "");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_CACHE_ENABLED, "true");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_CACHE_MAX_SIZE, "2621440");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_CACHE_SUPPORTED_MIMETYPES, "text/html");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_CACHE_HTML_MIMETYPES, "text/html");
+            defaultMap.put(FessConfig.INDEXER_THREAD_DUMP_ENABLED, "true");
+            defaultMap.put(FessConfig.INDEXER_UNPROCESSED_DOCUMENT_SIZE, "1000");
+            defaultMap.put(FessConfig.INDEXER_CLICK_COUNT_ENABLED, "true");
+            defaultMap.put(FessConfig.INDEXER_FAVORITE_COUNT_ENABLED, "true");
+            defaultMap.put(FessConfig.INDEXER_WEBFS_COMMIT_MARGIN_TIME, "5000");
+            defaultMap.put(FessConfig.INDEXER_WEBFS_MAX_EMPTY_LIST_COUNT, "3600");
+            defaultMap.put(FessConfig.INDEXER_WEBFS_UPDATE_INTERVAL, "10000");
+            defaultMap.put(FessConfig.INDEXER_WEBFS_MAX_DOCUMENT_CACHE_SIZE, "20");
+            defaultMap.put(FessConfig.INDEXER_WEBFS_MAX_DOCUMENT_REQUEST_SIZE, "10485760");
+            defaultMap.put(FessConfig.INDEXER_DATA_MAX_DOCUMENT_CACHE_SIZE, "5");
+            defaultMap.put(FessConfig.INDEXER_DATA_MAX_DOCUMENT_REQUEST_SIZE, "10485760");
+            defaultMap.put(FessConfig.INDEX_FIELD_favorite_count, "favorite_count");
+            defaultMap.put(FessConfig.INDEX_FIELD_click_count, "click_count");
+            defaultMap.put(FessConfig.INDEX_FIELD_config_id, "config_id");
+            defaultMap.put(FessConfig.INDEX_FIELD_EXPIRES, "expires");
+            defaultMap.put(FessConfig.INDEX_FIELD_URL, "url");
+            defaultMap.put(FessConfig.INDEX_FIELD_doc_id, "doc_id");
+            defaultMap.put(FessConfig.INDEX_FIELD_ID, "_id");
+            defaultMap.put(FessConfig.INDEX_FIELD_VERSION, "_version");
+            defaultMap.put(FessConfig.INDEX_FIELD_LANG, "lang");
+            defaultMap.put(FessConfig.INDEX_FIELD_has_cache, "has_cache");
+            defaultMap.put(FessConfig.INDEX_FIELD_last_modified, "last_modified");
+            defaultMap.put(FessConfig.INDEX_FIELD_ANCHOR, "anchor");
+            defaultMap.put(FessConfig.INDEX_FIELD_SEGMENT, "segment");
+            defaultMap.put(FessConfig.INDEX_FIELD_ROLE, "role");
+            defaultMap.put(FessConfig.INDEX_FIELD_BOOST, "boost");
+            defaultMap.put(FessConfig.INDEX_FIELD_CREATED, "created");
+            defaultMap.put(FessConfig.INDEX_FIELD_TIMESTAMP, "timestamp");
+            defaultMap.put(FessConfig.INDEX_FIELD_LABEL, "label");
+            defaultMap.put(FessConfig.INDEX_FIELD_MIMETYPE, "mimetype");
+            defaultMap.put(FessConfig.INDEX_FIELD_parent_id, "parent_id");
+            defaultMap.put(FessConfig.INDEX_FIELD_important_content, "important_content");
+            defaultMap.put(FessConfig.INDEX_FIELD_CONTENT, "content");
+            defaultMap.put(FessConfig.INDEX_FIELD_content_minhash, "content_minhash");
+            defaultMap.put(FessConfig.INDEX_FIELD_content_minhash_bits, "content_minhash_bits");
+            defaultMap.put(FessConfig.INDEX_FIELD_CACHE, "cache");
+            defaultMap.put(FessConfig.INDEX_FIELD_DIGEST, "digest");
+            defaultMap.put(FessConfig.INDEX_FIELD_TITLE, "title");
+            defaultMap.put(FessConfig.INDEX_FIELD_HOST, "host");
+            defaultMap.put(FessConfig.INDEX_FIELD_SITE, "site");
+            defaultMap.put(FessConfig.INDEX_FIELD_content_length, "content_length");
+            defaultMap.put(FessConfig.INDEX_FIELD_FILETYPE, "filetype");
+            defaultMap.put(FessConfig.INDEX_FIELD_FILENAME, "filename");
+            defaultMap.put(FessConfig.INDEX_FIELD_THUMBNAIL, "thumbnail");
+            defaultMap.put(FessConfig.INDEX_FIELD_virtual_host, "virtual_host");
+            defaultMap.put(FessConfig.RESPONSE_FIELD_content_title, "content_title");
+            defaultMap.put(FessConfig.RESPONSE_FIELD_content_description, "content_description");
+            defaultMap.put(FessConfig.RESPONSE_FIELD_url_link, "url_link");
+            defaultMap.put(FessConfig.RESPONSE_FIELD_site_path, "site_path");
+            defaultMap.put(FessConfig.RESPONSE_MAX_TITLE_LENGTH, "50");
+            defaultMap.put(FessConfig.RESPONSE_MAX_SITE_PATH_LENGTH, "50");
+            defaultMap.put(FessConfig.INDEX_DOCUMENT_SEARCH_INDEX, "fess.search");
+            defaultMap.put(FessConfig.INDEX_DOCUMENT_UPDATE_INDEX, "fess.update");
+            defaultMap.put(FessConfig.INDEX_DOCUMENT_TYPE, "doc");
+            defaultMap.put(FessConfig.INDEX_DOCUMENT_SUGGEST_INDEX, "fess");
+            defaultMap.put(FessConfig.INDEX_DOCUMENT_CRAWLER_INDEX, ".crawler");
+            defaultMap.put(FessConfig.INDEX_CONFIG_INDEX, ".fess_config");
+            defaultMap.put(FessConfig.INDEX_USER_INDEX, ".fess_user");
+            defaultMap.put(FessConfig.INDEX_LOG_INDEX, "fess_log");
+            defaultMap.put(FessConfig.INDEX_ADMIN_ARRAY_FIELDS, "lang,role,label,anchor");
+            defaultMap.put(FessConfig.INDEX_ADMIN_DATE_FIELDS, "expires,created,timestamp,last_modified");
+            defaultMap.put(FessConfig.INDEX_ADMIN_INTEGER_FIELDS, "");
+            defaultMap.put(FessConfig.INDEX_ADMIN_LONG_FIELDS, "content_length,favorite_count,click_count");
+            defaultMap.put(FessConfig.INDEX_ADMIN_FLOAT_FIELDS, "boost");
+            defaultMap.put(FessConfig.INDEX_ADMIN_DOUBLE_FIELDS, "");
+            defaultMap.put(FessConfig.INDEX_ADMIN_REQUIRED_FIELDS, "url,title,role,boost");
+            defaultMap.put(FessConfig.INDEX_SEARCH_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_SCROLL_SEARCH_TIMEOUT_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_INDEX_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_BULK_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_DELETE_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_HEALTH_TIMEOUT, "10m");
+            defaultMap.put(FessConfig.INDEX_INDICES_TIMEOUT, "1m");
+            defaultMap.put(FessConfig.QUERY_MAX_LENGTH, "1000");
+            defaultMap.put(FessConfig.QUERY_TIMEOUT, "10000");
+            defaultMap.put(FessConfig.QUERY_GEO_FIELDS, "location");
+            defaultMap.put(FessConfig.QUERY_BROWSER_LANG_PARAMETER_NAME, "browser_lang");
+            defaultMap.put(FessConfig.QUERY_REPLACE_TERM_WITH_PREFIX_QUERY, "true");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_FRAGMENT_SIZE, "50");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS, "5");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_TYPE, "fvh");
+            defaultMap.put(FessConfig.QUERY_MAX_SEARCH_RESULT_OFFSET, "100000");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_RESPONSE_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_API_RESPONSE_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_CACHE_RESPONSE_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_HIGHLIGHTED_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_SEARCH_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_FACET_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_SORT_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_GSA_RESPONSE_FIELDS, "UE,U,T,RK,S,LANG");
+            defaultMap.put(FessConfig.QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS, "4");
+            defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_NAME, "similar_docs");
+            defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_SIZE, "0");
+            defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_SORTS, "");
+            defaultMap.put(FessConfig.QUERY_DEFAULT_LANGUAGES, "");
+            defaultMap
+                    .put(FessConfig.QUERY_LANGUAGE_MAPPING,
+                            "ar=ar\nbg=bg\nbn=bn\nca=ca\nckb-iq=ckb-iq\nckb_IQ=ckb-iq\ncs=cs\nda=da\nde=de\nel=el\nen=en\nen-ie=en-ie\nen_IE=en-ie\nes=es\net=et\neu=eu\nfa=fa\nfi=fi\nfr=fr\ngl=gl\ngu=gu\nhe=he\nhi=hi\nhr=hr\nhu=hu\nhy=hy\nid=id\nit=it\nja=ja\nko=ko\nlt=lt\nlv=lv\nmk=mk\nml=ml\nnl=nl\nno=no\npa=pa\npl=pl\npt=pt\npt-br=pt-br\npt_BR=pt-br\nro=ro\nru=ru\nsi=si\nsq=sq\nsv=sv\nta=ta\nte=te\nth=th\ntl=tl\ntr=tr\nuk=uk\nur=ur\nvi=vi\nzh-cn=zh-cn\nzh_CN=zh-cn\nzh-tw=zh-tw\nzh_TW=zh-tw\nzh=zh\n");
+            defaultMap.put(FessConfig.QUERY_BOOST_TITLE, "0.2");
+            defaultMap.put(FessConfig.QUERY_BOOST_TITLE_LANG, "1.0");
+            defaultMap.put(FessConfig.QUERY_BOOST_CONTENT, "0.1");
+            defaultMap.put(FessConfig.QUERY_BOOST_CONTENT_LANG, "0.5");
+            defaultMap.put(FessConfig.SMB_ROLE_FROM_FILE, "true");
+            defaultMap.put(FessConfig.SMB_AVAILABLE_SID_TYPES, "1,2");
+            defaultMap.put(FessConfig.FILE_ROLE_FROM_FILE, "true");
+            defaultMap.put(FessConfig.FTP_ROLE_FROM_FILE, "true");
+            defaultMap.put(FessConfig.INDEX_BACKUP_TARGETS, ".fess_basic_config.bulk,.fess_config.bulk,.fess_user.bulk,system.properties");
+            defaultMap.put(FessConfig.INDEX_BACKUP_LOG_TARGETS, "click_log.ndjson,favorite_log.ndjson,search_log.ndjson,user_info.ndjson");
+            defaultMap.put(FessConfig.FORM_ADMIN_MAX_INPUT_SIZE, "4000");
+            defaultMap.put(FessConfig.AUTHENTICATION_ADMIN_USERS, "admin");
+            defaultMap.put(FessConfig.AUTHENTICATION_ADMIN_ROLES, "admin");
+            defaultMap.put(FessConfig.ROLE_SEARCH_DEFAULT_PERMISSIONS, "");
+            defaultMap.put(FessConfig.ROLE_SEARCH_DEFAULT_DISPLAY_PERMISSIONS, "{role}guest");
+            defaultMap.put(FessConfig.ROLE_SEARCH_GUEST_PERMISSIONS, "{role}guest");
+            defaultMap.put(FessConfig.ROLE_SEARCH_USER_PREFIX, "1");
+            defaultMap.put(FessConfig.ROLE_SEARCH_GROUP_PREFIX, "2");
+            defaultMap.put(FessConfig.ROLE_SEARCH_ROLE_PREFIX, "R");
+            defaultMap.put(FessConfig.COOKIE_DEFAULT_PATH, "/");
+            defaultMap.put(FessConfig.COOKIE_DEFAULT_EXPIRE, "3600");
+            defaultMap.put(FessConfig.COOKIE_ETERNAL_EXPIRE, "86400");
+            defaultMap.put(FessConfig.COOKIE_REMEMBER_ME_HARBOR_KEY, "FES");
+            defaultMap.put(FessConfig.PAGING_PAGE_SIZE, "25");
+            defaultMap.put(FessConfig.PAGING_PAGE_RANGE_SIZE, "5");
+            defaultMap.put(FessConfig.PAGING_PAGE_RANGE_FILL_LIMIT, "true");
+            defaultMap.put(FessConfig.PAGE_DOCBOOST_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_KEYMATCH_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_LABELTYPE_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_ROLETYPE_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_USER_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_ROLE_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_GROUP_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_CRAWLING_INFO_PARAM_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_CRAWLING_INFO_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_DATA_CONFIG_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_WEB_CONFIG_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_FILE_CONFIG_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_DUPLICATE_HOST_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_FAILURE_URL_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_FAVORITE_LOG_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_FILE_AUTH_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_WEB_AUTH_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_PATH_MAPPING_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_REQUEST_HEADER_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_SCHEDULED_JOB_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_SEARCH_FIELD_LOG_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_ELEVATE_WORD_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_BAD_WORD_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_DICTIONARY_MAX_FETCH_SIZE, "1000");
+            defaultMap.put(FessConfig.PAGE_RELATEDCONTENT_MAX_FETCH_SIZE, "5000");
+            defaultMap.put(FessConfig.PAGE_RELATEDQUERY_MAX_FETCH_SIZE, "5000");
+            defaultMap.put(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_START, "0");
+            defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_SIZE, "20");
+            defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_MAX_SIZE, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_ENABLED, "false");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_MAX_HEIGHT, "20000");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_KEEP_ALIVE, "600000");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_WIDTH, "1200");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_WINDOW_HEIGHT, "800");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_WIDTH, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_THUMBNAIL_HEIGHT, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_FORMAT, "png");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_WIDTH, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_MIN_HEIGHT, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_MAX_ASPECT_RATIO, "3.0");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_WIDTH, "1200");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_WINDOW_HEIGHT, "800");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_WIDTH, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_THUMBNAIL_HEIGHT, "100");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_FORMAT, "png");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_XPATH, "//IMG");
+            defaultMap.put(FessConfig.THUMBNAIL_HTML_IMAGE_EXCLUDE_EXTENSIONS, "svg,html,css,js");
+            defaultMap.put(FessConfig.THUMBNAIL_GENERATOR_INTERVAL, "0");
+            defaultMap.put(FessConfig.THUMBNAIL_GENERATOR_TARGETS, "all");
+            defaultMap.put(FessConfig.THUMBNAIL_CRAWLER_ENABLED, "true");
+            defaultMap.put(FessConfig.USER_CODE_REQUEST_PARAMETER, "userCode");
+            defaultMap.put(FessConfig.USER_CODE_MIN_LENGTH, "20");
+            defaultMap.put(FessConfig.USER_CODE_MAX_LENGTH, "100");
+            defaultMap.put(FessConfig.USER_CODE_PATTERN, "[a-zA-Z0-9_]+");
+            defaultMap.put(FessConfig.MAIL_FROM_NAME, "Administrator");
+            defaultMap.put(FessConfig.MAIL_FROM_ADDRESS, "root@localhost");
+            defaultMap.put(FessConfig.SCHEDULER_TARGET_NAME, "");
+            defaultMap.put(FessConfig.SCHEDULER_JOB_CLASS, "org.codelibs.fess.app.job.ScriptExecutorJob");
+            defaultMap.put(FessConfig.SCHEDULER_CONCURRENT_EXEC_MODE, "QUIT");
+            defaultMap.put(FessConfig.SCHEDULER_MONITOR_INTERVAL, "30");
+            defaultMap.put(FessConfig.ONLINE_HELP_BASE_LINK, "https://fess.codelibs.org/{lang}/{version}/admin/");
+            defaultMap.put(FessConfig.ONLINE_HELP_INSTALLATION, "https://fess.codelibs.org/{lang}/{version}/install/install.html");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_FAILUREURL, "failureurl");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_ELEVATEWORD, "elevateword");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_REQHEADER, "reqheader");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT_SYNONYM, "synonym");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT, "dict");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT_KUROMOJI, "kuromoji");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT_SEUNJEON, "seunjeon");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT_PROTWORDS, "protwords");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DICT_MAPPING, "mapping");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_WEBCONFIG, "webconfig");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_SEARCHLIST, "searchlist");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_LOG, "log");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_GENERAL, "general");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_ROLE, "role");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_JOBLOG, "joblog");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_KEYMATCH, "keymatch");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_RELATEDQUERY, "relatedquery");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_RELATEDCONTENT, "relatedcontent");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_WIZARD, "wizard");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_BADWORD, "badword");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_PATHMAP, "pathmap");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_BOOSTDOC, "boostdoc");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DATACONFIG, "dataconfig");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_SYSTEMINFO, "systeminfo");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_USER, "user");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_GROUP, "group");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DESIGN, "design");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DASHBOARD, "dashboard");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_WEBAUTH, "webauth");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_FILECONFIG, "fileconfig");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_FILEAUTH, "fileauth");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_LABELTYPE, "labeltype");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_DUPLICATEHOST, "duplicatehost");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_SCHEDULER, "scheduler");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_CRAWLINGINFO, "crawlinginfo");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_BACKUP, "backup");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_UPGRADE, "upgrade");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_ESREQ, "esreq");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_ACCESSTOKEN, "accesstoken");
+            defaultMap.put(FessConfig.ONLINE_HELP_NAME_SUGGEST, "suggest");
+            defaultMap.put(FessConfig.ONLINE_HELP_SUPPORTED_LANGS, "ja");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_SEED, "0");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_TAGS, "");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_FIELDS, "");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_EXCLUDES, "");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_SIZE, "10");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_WINDOW_SIZE, "30");
+            defaultMap.put(FessConfig.SUGGEST_MIN_HIT_COUNT, "1");
+            defaultMap.put(FessConfig.SUGGEST_FIELD_CONTENTS, "_default");
+            defaultMap.put(FessConfig.SUGGEST_FIELD_TAGS, "label");
+            defaultMap.put(FessConfig.SUGGEST_FIELD_ROLES, "role");
+            defaultMap.put(FessConfig.SUGGEST_FIELD_INDEX_CONTENTS, "content,title");
+            defaultMap.put(FessConfig.SUGGEST_UPDATE_REQUEST_INTERVAL, "1");
+            defaultMap.put(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM_PERCENTAGE, "50%");
+            defaultMap.put(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM, "10000");
+            defaultMap.put(FessConfig.SUGGEST_SOURCE_READER_SCROLL_SIZE, "1");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_CACHE_SIZE, "1000");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_CACHE_EXPIRE, "60");
+            defaultMap.put(FessConfig.SUGGEST_SEARCH_LOG_PERMISSIONS, "{user}guest,{role}guest");
+            defaultMap.put(FessConfig.SUGGEST_SYSTEM_MONITOR_INTERVAL, "60");
+            defaultMap.put(FessConfig.LDAP_ADMIN_ENABLED, "false");
+            defaultMap.put(FessConfig.LDAP_ADMIN_USER_FILTER, "uid=%s");
+            defaultMap.put(FessConfig.LDAP_ADMIN_USER_BASE_DN, "ou=People,dc=fess,dc=codelibs,dc=org");
+            defaultMap.put(FessConfig.LDAP_ADMIN_USER_OBJECT_CLASSES, "organizationalPerson,top,person,inetOrgPerson");
+            defaultMap.put(FessConfig.LDAP_ADMIN_ROLE_FILTER, "cn=%s");
+            defaultMap.put(FessConfig.LDAP_ADMIN_ROLE_BASE_DN, "ou=Role,dc=fess,dc=codelibs,dc=org");
+            defaultMap.put(FessConfig.LDAP_ADMIN_ROLE_OBJECT_CLASSES, "groupOfNames");
+            defaultMap.put(FessConfig.LDAP_ADMIN_GROUP_FILTER, "cn=%s");
+            defaultMap.put(FessConfig.LDAP_ADMIN_GROUP_BASE_DN, "ou=Group,dc=fess,dc=codelibs,dc=org");
+            defaultMap.put(FessConfig.LDAP_ADMIN_GROUP_OBJECT_CLASSES, "groupOfNames");
+            defaultMap.put(FessConfig.LDAP_ADMIN_SYNC_PASSWORD, "true");
+            defaultMap.put(FessConfig.LDAP_MAX_USERNAME_LENGTH, "-1");
+            defaultMap.put(FessConfig.LDAP_ROLE_SEARCH_USER_ENABLED, "true");
+            defaultMap.put(FessConfig.LDAP_ROLE_SEARCH_GROUP_ENABLED, "true");
+            defaultMap.put(FessConfig.LDAP_ROLE_SEARCH_ROLE_ENABLED, "true");
+            defaultMap.put(FessConfig.LDAP_ATTR_SURNAME, "sn");
+            defaultMap.put(FessConfig.LDAP_ATTR_GIVEN_NAME, "givenName");
+            defaultMap.put(FessConfig.LDAP_ATTR_EMPLOYEE_NUMBER, "employeeNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_MAIL, "mail");
+            defaultMap.put(FessConfig.LDAP_ATTR_TELEPHONE_NUMBER, "telephoneNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_HOME_PHONE, "homePhone");
+            defaultMap.put(FessConfig.LDAP_ATTR_HOME_POSTAL_ADDRESS, "homePostalAddress");
+            defaultMap.put(FessConfig.LDAP_ATTR_LABELEDURI, "labeledURI");
+            defaultMap.put(FessConfig.LDAP_ATTR_ROOM_NUMBER, "roomNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_DESCRIPTION, "description");
+            defaultMap.put(FessConfig.LDAP_ATTR_TITLE, "title");
+            defaultMap.put(FessConfig.LDAP_ATTR_PAGER, "pager");
+            defaultMap.put(FessConfig.LDAP_ATTR_STREET, "street");
+            defaultMap.put(FessConfig.LDAP_ATTR_POSTAL_CODE, "postalCode");
+            defaultMap.put(FessConfig.LDAP_ATTR_PHYSICAL_DELIVERY_OFFICE_NAME, "physicalDeliveryOfficeName");
+            defaultMap.put(FessConfig.LDAP_ATTR_DESTINATION_INDICATOR, "destinationIndicator");
+            defaultMap.put(FessConfig.LDAP_ATTR_INTERNATIONALISDN_NUMBER, "internationaliSDNNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_STATE, "st");
+            defaultMap.put(FessConfig.LDAP_ATTR_EMPLOYEE_TYPE, "employeeType");
+            defaultMap.put(FessConfig.LDAP_ATTR_FACSIMILE_TELEPHONE_NUMBER, "facsimileTelephoneNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_POST_OFFICE_BOX, "postOfficeBox");
+            defaultMap.put(FessConfig.LDAP_ATTR_INITIALS, "initials");
+            defaultMap.put(FessConfig.LDAP_ATTR_CAR_LICENSE, "carLicense");
+            defaultMap.put(FessConfig.LDAP_ATTR_MOBILE, "mobile");
+            defaultMap.put(FessConfig.LDAP_ATTR_POSTAL_ADDRESS, "postalAddress");
+            defaultMap.put(FessConfig.LDAP_ATTR_CITY, "l");
+            defaultMap.put(FessConfig.LDAP_ATTR_TELETEX_TERMINAL_IDENTIFIER, "teletexTerminalIdentifier");
+            defaultMap.put(FessConfig.LDAP_ATTR_X121_ADDRESS, "x121Address");
+            defaultMap.put(FessConfig.LDAP_ATTR_BUSINESS_CATEGORY, "businessCategory");
+            defaultMap.put(FessConfig.LDAP_ATTR_REGISTERED_ADDRESS, "registeredAddress");
+            defaultMap.put(FessConfig.LDAP_ATTR_DISPLAY_NAME, "displayName");
+            defaultMap.put(FessConfig.LDAP_ATTR_PREFERRED_LANGUAGE, "preferredLanguage");
+            defaultMap.put(FessConfig.LDAP_ATTR_DEPARTMENT_NUMBER, "departmentNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_UID_NUMBER, "uidNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_GID_NUMBER, "gidNumber");
+            defaultMap.put(FessConfig.LDAP_ATTR_HOME_DIRECTORY, "homeDirectory");
+            defaultMap.put(FessConfig.SSO_TYPE, "none");
+            defaultMap.put(FessConfig.SPNEGO_LOGGER_LEVEL, "0");
+            defaultMap.put(FessConfig.SPNEGO_KRB5_CONF, "krb5.conf");
+            defaultMap.put(FessConfig.SPNEGO_LOGIN_CONF, "auth_login.conf");
+            defaultMap.put(FessConfig.SPNEGO_PREAUTH_USERNAME, "username");
+            defaultMap.put(FessConfig.SPNEGO_PREAUTH_PASSWORD, "password");
+            defaultMap.put(FessConfig.SPNEGO_LOGIN_CLIENT_MODULE, "spnego-client");
+            defaultMap.put(FessConfig.SPNEGO_LOGIN_SERVER_MODULE, "spnego-server");
+            defaultMap.put(FessConfig.SPNEGO_ALLOW_BASIC, "true");
+            defaultMap.put(FessConfig.SPNEGO_ALLOW_UNSECURE_BASIC, "true");
+            defaultMap.put(FessConfig.SPNEGO_PROMPT_NTLM, "true");
+            defaultMap.put(FessConfig.SPNEGO_ALLOW_LOCALHOST, "true");
+            defaultMap.put(FessConfig.SPNEGO_ALLOW_DELEGATION, "false");
+            defaultMap.put(FessConfig.OIC_CLIENT_ID, "__CLIENT_ID__");
+            defaultMap.put(FessConfig.OIC_CLIENT_SECRET, "__CLIENT_SECRET__");
+            defaultMap.put(FessConfig.OIC_AUTH_SERVER_URL, "https://accounts.google.com/o/oauth2/auth");
+            defaultMap.put(FessConfig.OIC_REDIRECT_URL, "http://localhost:8080/sso/");
+            defaultMap.put(FessConfig.OIC_SCOPE, "openid email");
+            defaultMap.put(FessConfig.OIC_TOKEN_SERVER_URL, "https://accounts.google.com/o/oauth2/token");
+            defaultMap.put(FessConfig.OIC_DEFAULT_ROLES, "guest");
+            defaultMap.put(FessConfig.OIC_DEFAULT_GROUPS, "");
+            defaultMap.put(FessConfig.lasta_di_SMART_DEPLOY_MODE, "hot");
+            defaultMap.put(FessConfig.DEVELOPMENT_HERE, "true");
+            defaultMap.put(FessConfig.ENVIRONMENT_TITLE, "Local Development");
+            defaultMap.put(FessConfig.FRAMEWORK_DEBUG, "false");
+            defaultMap.put(FessConfig.TIME_ADJUST_TIME_MILLIS, "0");
+            defaultMap.put(FessConfig.MAIL_SEND_MOCK, "true");
+            defaultMap.put(FessConfig.MAIL_SMTP_SERVER_MAIN_HOST_AND_PORT, "localhost:25");
+            defaultMap.put(FessConfig.MAIL_SUBJECT_TEST_PREFIX, "[Test]");
+            defaultMap.put(FessConfig.MAIL_RETURN_PATH, "root@localhost");
+            return defaultMap;
         }
     }
 }

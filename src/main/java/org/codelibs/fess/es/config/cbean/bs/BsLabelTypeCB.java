@@ -215,5 +215,9 @@ public class BsLabelTypeCB extends EsAbstractConditionBean {
         public void columnValue() {
             doColumn("value");
         }
+
+        public void columnVirtualHost() {
+            doColumn("virtualHost");
+        }
     }
 }

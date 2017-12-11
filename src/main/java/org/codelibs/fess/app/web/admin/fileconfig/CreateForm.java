@@ -99,17 +99,18 @@ public class CreateForm {
     @CustomSize(maxKey = "form.admin.max.input.size")
     public String permissions;
 
+    @CustomSize(maxKey = "form.admin.max.input.size")
+    public String virtualHosts;
+
     @Required
     @Min(value = 0)
     @Max(value = 2147483647)
     @ValidateTypeFailure
     public Integer sortOrder;
 
-    @Required
     @Size(max = 1000)
     public String createdBy;
 
-    @Required
     @ValidateTypeFailure
     public Long createdTime;
 

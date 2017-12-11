@@ -40,26 +40,26 @@ public class BsSearchLog extends EsAbstractEntity {
     /** accessType */
     protected String accessType;
 
-    /** user */
-    protected String user;
-
-    /** roles */
-    protected String[] roles;
-
-    /** queryId */
-    protected String queryId;
-
     /** clientIp */
     protected String clientIp;
 
     /** hitCount */
     protected Long hitCount;
 
+    /** languages */
+    protected String languages;
+
+    /** queryId */
+    protected String queryId;
+
     /** queryOffset */
     protected Integer queryOffset;
 
     /** queryPageSize */
     protected Integer queryPageSize;
+
+    /** queryTime */
+    protected Long queryTime;
 
     /** referer */
     protected String referer;
@@ -70,11 +70,14 @@ public class BsSearchLog extends EsAbstractEntity {
     /** responseTime */
     protected Long responseTime;
 
-    /** queryTime */
-    protected Long queryTime;
+    /** roles */
+    protected String[] roles;
 
     /** searchWord */
     protected String searchWord;
+
+    /** user */
+    protected String user;
 
     /** userAgent */
     protected String userAgent;
@@ -85,8 +88,8 @@ public class BsSearchLog extends EsAbstractEntity {
     /** userSessionId */
     protected String userSessionId;
 
-    /** languages */
-    protected String languages;
+    /** virtualHost */
+    protected String virtualHost;
 
     // [Referrers] *comment only
 
@@ -110,57 +113,64 @@ public class BsSearchLog extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (accessType != null) {
-            sourceMap.put("accessType", accessType);
-        }
-        if (user != null) {
-            sourceMap.put("user", user);
-        }
-        if (roles != null) {
-            sourceMap.put("roles", roles);
-        }
-        if (queryId != null) {
-            sourceMap.put("queryId", queryId);
+            addFieldToSource(sourceMap, "accessType", accessType);
         }
         if (clientIp != null) {
-            sourceMap.put("clientIp", clientIp);
+            addFieldToSource(sourceMap, "clientIp", clientIp);
         }
         if (hitCount != null) {
-            sourceMap.put("hitCount", hitCount);
-        }
-        if (queryOffset != null) {
-            sourceMap.put("queryOffset", queryOffset);
-        }
-        if (queryPageSize != null) {
-            sourceMap.put("queryPageSize", queryPageSize);
-        }
-        if (referer != null) {
-            sourceMap.put("referer", referer);
-        }
-        if (requestedAt != null) {
-            sourceMap.put("requestedAt", requestedAt);
-        }
-        if (responseTime != null) {
-            sourceMap.put("responseTime", responseTime);
-        }
-        if (queryTime != null) {
-            sourceMap.put("queryTime", queryTime);
-        }
-        if (searchWord != null) {
-            sourceMap.put("searchWord", searchWord);
-        }
-        if (userAgent != null) {
-            sourceMap.put("userAgent", userAgent);
-        }
-        if (userInfoId != null) {
-            sourceMap.put("userInfoId", userInfoId);
-        }
-        if (userSessionId != null) {
-            sourceMap.put("userSessionId", userSessionId);
+            addFieldToSource(sourceMap, "hitCount", hitCount);
         }
         if (languages != null) {
-            sourceMap.put("languages", languages);
+            addFieldToSource(sourceMap, "languages", languages);
+        }
+        if (queryId != null) {
+            addFieldToSource(sourceMap, "queryId", queryId);
+        }
+        if (queryOffset != null) {
+            addFieldToSource(sourceMap, "queryOffset", queryOffset);
+        }
+        if (queryPageSize != null) {
+            addFieldToSource(sourceMap, "queryPageSize", queryPageSize);
+        }
+        if (queryTime != null) {
+            addFieldToSource(sourceMap, "queryTime", queryTime);
+        }
+        if (referer != null) {
+            addFieldToSource(sourceMap, "referer", referer);
+        }
+        if (requestedAt != null) {
+            addFieldToSource(sourceMap, "requestedAt", requestedAt);
+        }
+        if (responseTime != null) {
+            addFieldToSource(sourceMap, "responseTime", responseTime);
+        }
+        if (roles != null) {
+            addFieldToSource(sourceMap, "roles", roles);
+        }
+        if (searchWord != null) {
+            addFieldToSource(sourceMap, "searchWord", searchWord);
+        }
+        if (user != null) {
+            addFieldToSource(sourceMap, "user", user);
+        }
+        if (userAgent != null) {
+            addFieldToSource(sourceMap, "userAgent", userAgent);
+        }
+        if (userInfoId != null) {
+            addFieldToSource(sourceMap, "userInfoId", userInfoId);
+        }
+        if (userSessionId != null) {
+            addFieldToSource(sourceMap, "userSessionId", userSessionId);
+        }
+        if (virtualHost != null) {
+            addFieldToSource(sourceMap, "virtualHost", virtualHost);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -170,22 +180,23 @@ public class BsSearchLog extends EsAbstractEntity {
     protected String doBuildColumnString(String dm) {
         StringBuilder sb = new StringBuilder();
         sb.append(dm).append(accessType);
-        sb.append(dm).append(user);
-        sb.append(dm).append(roles);
-        sb.append(dm).append(queryId);
         sb.append(dm).append(clientIp);
         sb.append(dm).append(hitCount);
+        sb.append(dm).append(languages);
+        sb.append(dm).append(queryId);
         sb.append(dm).append(queryOffset);
         sb.append(dm).append(queryPageSize);
+        sb.append(dm).append(queryTime);
         sb.append(dm).append(referer);
         sb.append(dm).append(requestedAt);
         sb.append(dm).append(responseTime);
-        sb.append(dm).append(queryTime);
+        sb.append(dm).append(roles);
         sb.append(dm).append(searchWord);
+        sb.append(dm).append(user);
         sb.append(dm).append(userAgent);
         sb.append(dm).append(userInfoId);
         sb.append(dm).append(userSessionId);
-        sb.append(dm).append(languages);
+        sb.append(dm).append(virtualHost);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -204,36 +215,6 @@ public class BsSearchLog extends EsAbstractEntity {
     public void setAccessType(String value) {
         registerModifiedProperty("accessType");
         this.accessType = value;
-    }
-
-    public String getUser() {
-        checkSpecifiedProperty("user");
-        return convertEmptyToNull(user);
-    }
-
-    public void setUser(String value) {
-        registerModifiedProperty("user");
-        this.user = value;
-    }
-
-    public String[] getRoles() {
-        checkSpecifiedProperty("roles");
-        return roles;
-    }
-
-    public void setRoles(String[] value) {
-        registerModifiedProperty("roles");
-        this.roles = value;
-    }
-
-    public String getQueryId() {
-        checkSpecifiedProperty("queryId");
-        return convertEmptyToNull(queryId);
-    }
-
-    public void setQueryId(String value) {
-        registerModifiedProperty("queryId");
-        this.queryId = value;
     }
 
     public String getClientIp() {
@@ -256,6 +237,26 @@ public class BsSearchLog extends EsAbstractEntity {
         this.hitCount = value;
     }
 
+    public String getLanguages() {
+        checkSpecifiedProperty("languages");
+        return convertEmptyToNull(languages);
+    }
+
+    public void setLanguages(String value) {
+        registerModifiedProperty("languages");
+        this.languages = value;
+    }
+
+    public String getQueryId() {
+        checkSpecifiedProperty("queryId");
+        return convertEmptyToNull(queryId);
+    }
+
+    public void setQueryId(String value) {
+        registerModifiedProperty("queryId");
+        this.queryId = value;
+    }
+
     public Integer getQueryOffset() {
         checkSpecifiedProperty("queryOffset");
         return queryOffset;
@@ -274,6 +275,16 @@ public class BsSearchLog extends EsAbstractEntity {
     public void setQueryPageSize(Integer value) {
         registerModifiedProperty("queryPageSize");
         this.queryPageSize = value;
+    }
+
+    public Long getQueryTime() {
+        checkSpecifiedProperty("queryTime");
+        return queryTime;
+    }
+
+    public void setQueryTime(Long value) {
+        registerModifiedProperty("queryTime");
+        this.queryTime = value;
     }
 
     public String getReferer() {
@@ -306,14 +317,14 @@ public class BsSearchLog extends EsAbstractEntity {
         this.responseTime = value;
     }
 
-    public Long getQueryTime() {
-        checkSpecifiedProperty("queryTime");
-        return queryTime;
+    public String[] getRoles() {
+        checkSpecifiedProperty("roles");
+        return roles;
     }
 
-    public void setQueryTime(Long value) {
-        registerModifiedProperty("queryTime");
-        this.queryTime = value;
+    public void setRoles(String[] value) {
+        registerModifiedProperty("roles");
+        this.roles = value;
     }
 
     public String getSearchWord() {
@@ -324,6 +335,16 @@ public class BsSearchLog extends EsAbstractEntity {
     public void setSearchWord(String value) {
         registerModifiedProperty("searchWord");
         this.searchWord = value;
+    }
+
+    public String getUser() {
+        checkSpecifiedProperty("user");
+        return convertEmptyToNull(user);
+    }
+
+    public void setUser(String value) {
+        registerModifiedProperty("user");
+        this.user = value;
     }
 
     public String getUserAgent() {
@@ -356,13 +377,13 @@ public class BsSearchLog extends EsAbstractEntity {
         this.userSessionId = value;
     }
 
-    public String getLanguages() {
-        checkSpecifiedProperty("languages");
-        return convertEmptyToNull(languages);
+    public String getVirtualHost() {
+        checkSpecifiedProperty("virtualHost");
+        return convertEmptyToNull(virtualHost);
     }
 
-    public void setLanguages(String value) {
-        registerModifiedProperty("languages");
-        this.languages = value;
+    public void setVirtualHost(String value) {
+        registerModifiedProperty("virtualHost");
+        this.virtualHost = value;
     }
 }

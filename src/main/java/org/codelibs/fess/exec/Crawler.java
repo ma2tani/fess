@@ -17,8 +17,10 @@ package org.codelibs.fess.exec;
 
 import static org.codelibs.core.stream.StreamUtil.stream;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,13 +28,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 
 import org.codelibs.core.CoreLibConstants;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.DynamicProperties;
+import org.codelibs.core.timer.TimeoutManager;
+import org.codelibs.core.timer.TimeoutTask;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.service.CrawlingInfoService;
 import org.codelibs.fess.app.service.PathMappingService;
@@ -46,7 +53,12 @@ import org.codelibs.fess.helper.PathMappingHelper;
 import org.codelibs.fess.helper.WebFsIndexHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.mylasta.mail.CrawlerPostcard;
+import org.codelibs.fess.timer.SystemMonitorTarget;
 import org.codelibs.fess.util.ComponentUtil;
+import org.codelibs.fess.util.ThreadDumpUtil;
+import org.elasticsearch.monitor.jvm.JvmInfo;
+import org.elasticsearch.monitor.os.OsProbe;
+import org.elasticsearch.monitor.process.ProcessProbe;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
@@ -67,6 +79,8 @@ public class Crawler {
 
     private static AtomicBoolean running = new AtomicBoolean(false);
 
+    private static Queue<String> errors = new ConcurrentLinkedQueue<>();
+
     @Resource
     protected FessEsClient fessEsClient;
 
@@ -81,6 +95,12 @@ public class Crawler {
 
     @Resource
     protected CrawlingInfoService crawlingInfoService;
+
+    public static void addError(final String msg) {
+        if (StringUtil.isNotBlank(msg)) {
+            errors.offer(msg);
+        }
+    }
 
     public static class Options {
 
@@ -150,6 +170,13 @@ public class Crawler {
 
     }
 
+    static void initializeProbes() {
+        // Force probes to be loaded
+        ProcessProbe.getInstance();
+        OsProbe.getInstance();
+        JvmInfo.jvmInfo();
+    }
+
     public static void main(final String[] args) {
         final Options options = new Options();
 
@@ -174,6 +201,8 @@ public class Crawler {
             }
         }
 
+        initializeProbes();
+
         final String transportAddresses = System.getProperty(Constants.FESS_ES_TRANSPORT_ADDRESSES);
         if (StringUtil.isNotBlank(transportAddresses)) {
             System.setProperty(EsClient.TRANSPORT_ADDRESSES, transportAddresses);
@@ -183,6 +212,8 @@ public class Crawler {
             System.setProperty(EsClient.CLUSTER_NAME, clusterName);
         }
 
+        TimeoutTask systemMonitorTask = null;
+        Thread commandThread = null;
         int exitCode;
         try {
             running.set(true);
@@ -200,6 +231,40 @@ public class Crawler {
             };
             Runtime.getRuntime().addShutdownHook(shutdownCallback);
 
+            commandThread = new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+                    String command;
+                    while (true) {
+                        try {
+                            while (!reader.ready()) {
+                                Thread.sleep(1000L);
+                            }
+                            command = reader.readLine().trim();
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("Process command: " + command);
+                            }
+                            if (Constants.CRAWLER_PROCESS_COMMAND_THREAD_DUMP.equals(command)) {
+                                ThreadDumpUtil.printThreadDump();
+                            } else {
+                                logger.warn("Unknown process command: " + command);
+                            }
+                            if (Thread.interrupted()) {
+                                return;
+                            }
+                        } catch (InterruptedException e) {
+                            return;
+                        }
+                    }
+                } catch (IOException e) {
+                    logger.debug("I/O exception.", e);
+                }
+            }, "ProcessCommand");
+            commandThread.start();
+
+            systemMonitorTask =
+                    TimeoutManager.getInstance().addTimeoutTarget(new SystemMonitorTarget(),
+                            ComponentUtil.getFessConfig().getCrawlerSystemMonitorIntervalAsInteger(), true);
+
             exitCode = process(options);
         } catch (final ContainerNotAvailableException e) {
             if (logger.isDebugEnabled()) {
@@ -212,6 +277,12 @@ public class Crawler {
             logger.error("Crawler does not work correctly.", t);
             exitCode = Constants.EXIT_FAIL;
         } finally {
+            if (commandThread != null && commandThread.isAlive()) {
+                commandThread.interrupt();
+            }
+            if (systemMonitorTask != null) {
+                systemMonitorTask.cancel();
+            }
             destroyContainer();
         }
 
@@ -367,7 +438,6 @@ public class Crawler {
 
         final CrawlingInfoHelper crawlingInfoHelper = ComponentUtil.getCrawlingInfoHelper();
 
-        boolean completed = false;
         try {
             writeTimeToSessionInfo(crawlingInfoHelper, Constants.CRAWLER_START_TIME);
 
@@ -423,7 +493,6 @@ public class Crawler {
             if (logger.isInfoEnabled()) {
                 logger.info("Finished Crawler");
             }
-            completed = true;
 
             return Constants.EXIT_OK;
         } catch (final Throwable t) {
@@ -431,7 +500,11 @@ public class Crawler {
             return Constants.EXIT_FAIL;
         } finally {
             pathMappingHelper.removePathMappingList(options.sessionId);
-            crawlingInfoHelper.putToInfoMap(Constants.CRAWLER_STATUS, completed ? Constants.T.toString() : Constants.F.toString());
+            crawlingInfoHelper.putToInfoMap(Constants.CRAWLER_STATUS, errors.isEmpty() ? Constants.T.toString() : Constants.F.toString());
+            if (!errors.isEmpty()) {
+                crawlingInfoHelper.putToInfoMap(Constants.CRAWLER_ERRORS, errors.stream().map(s -> s.replace(" ", StringUtil.EMPTY))
+                        .collect(Collectors.joining(" ")));
+            }
             writeTimeToSessionInfo(crawlingInfoHelper, Constants.CRAWLER_END_TIME);
             crawlingInfoHelper.putToInfoMap(Constants.CRAWLER_EXEC_TIME, Long.toString(System.currentTimeMillis() - totalTime));
 

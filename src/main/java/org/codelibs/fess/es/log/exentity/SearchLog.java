@@ -15,14 +15,20 @@
  */
 package org.codelibs.fess.es.log.exentity;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.es.log.bsentity.BsSearchLog;
-import org.codelibs.fess.es.log.exbhv.SearchFieldLogBhv;
 import org.codelibs.fess.es.log.exbhv.UserInfoBhv;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.optional.OptionalEntity;
@@ -34,9 +40,11 @@ public class SearchLog extends BsSearchLog {
 
     private static final long serialVersionUID = 1L;
 
-    private List<SearchFieldLog> searchFieldLogList;
+    private final List<Pair<String, String>> searchFieldLogList = new ArrayList<>();
 
     private OptionalEntity<UserInfo> userInfo;
+
+    private Map<String, Object> fields;
 
     public String getId() {
         return asDocMeta().id();
@@ -54,19 +62,9 @@ public class SearchLog extends BsSearchLog {
         asDocMeta().version(version);
     }
 
-    public void setClickLogList(final List<ClickLog> clickLogList) {
-
-    }
-
     public void addSearchFieldLogValue(final String name, final String value) {
         if (StringUtil.isNotBlank(name) && StringUtil.isNotBlank(value)) {
-            final SearchFieldLog fieldLog = new SearchFieldLog();
-            fieldLog.setName(name);
-            fieldLog.setValue(value);
-            if (searchFieldLogList == null) {
-                searchFieldLogList = new ArrayList<>();
-            }
-            searchFieldLogList.add(fieldLog);
+            searchFieldLogList.add(new Pair<>(name, value));
         }
     }
 
@@ -88,15 +86,36 @@ public class SearchLog extends BsSearchLog {
         this.userInfo = userInfo;
     }
 
-    public List<SearchFieldLog> getSearchFieldLogList() {
-        if (searchFieldLogList == null) {
-            final SearchFieldLogBhv searchFieldLogBhv = ComponentUtil.getComponent(SearchFieldLogBhv.class);
-            searchFieldLogList = searchFieldLogBhv.selectList(cb -> {
-                cb.query().setSearchLogId_Equal(getId());
-                cb.fetchFirst(ComponentUtil.getFessConfig().getPageSearchFieldLogMaxFetchSizeAsInteger());
-            });
-        }
+    public List<Pair<String, String>> getSearchFieldLogList() {
         return searchFieldLogList;
+    }
+
+    public void addField(final String key, final Object value) {
+        fields.put(key, value);
+    }
+
+    @Override
+    public Map<String, Object> toSource() {
+        final Map<String, Object> sourceMap = super.toSource();
+        if (fields != null) {
+            sourceMap.putAll(fields);
+        }
+        final Map<String, List<String>> searchFieldMap =
+                searchFieldLogList.stream().collect(
+                        Collectors.groupingBy(Pair::getFirst, Collectors.mapping(Pair::getSecond, Collectors.toList())));
+        sourceMap.put("searchField", searchFieldMap);
+        return sourceMap;
+    }
+
+    @Override
+    protected void addFieldToSource(final Map<String, Object> sourceMap, final String field, final Object value) {
+        if (value instanceof LocalDateTime) {
+            final LocalDateTime ldt = (LocalDateTime) value;
+            final ZonedDateTime zdt = ZonedDateTime.of(ldt, ZoneId.systemDefault());
+            super.addFieldToSource(sourceMap, field, DateTimeFormatter.ISO_INSTANT.format(zdt));
+        } else {
+            super.addFieldToSource(sourceMap, field, value);
+        }
     }
 
     @Override

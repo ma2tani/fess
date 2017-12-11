@@ -5,17 +5,17 @@
 <head profile="http://a9.com/-/spec/opensearch/1.1/">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title><la:message key="labels.system_error_title" /></title>
-<link href="${f:url('/css/style-base.css')}" rel="stylesheet"
+<link href="${fe:url('/css/style-base.css')}" rel="stylesheet"
 	type="text/css" />
-<link href="${f:url('/css/style.css')}" rel="stylesheet"
+<link href="${fe:url('/css/style.css')}" rel="stylesheet"
 	type="text/css" />
-<link href="${f:url('/css/font-awesome.min.css')}"
+<link href="${fe:url('/css/font-awesome.min.css')}"
 	rel="stylesheet" type="text/css" />
 </head>
 <body class="error">
-	<jsp:include page="header.jsp" />
+	<jsp:include page="../header.jsp" />
 	<div class="container">
 		<div class="content">
 			<div class="center row">
@@ -27,14 +27,14 @@
 				</div>
 			</div>
 		</div>
-		<jsp:include page="footer.jsp" />
+		<jsp:include page="../footer.jsp" />
 	</div>
 	<input type="hidden" id="contextPath" value="<%=request.getContextPath()%>" />
 	<script type="text/javascript"
-		src="${f:url('/js/jquery-2.2.4.min.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/bootstrap.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/suggestor.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/search.js')}"></script>
+		src="${fe:url('/js/jquery-2.2.4.min.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/bootstrap.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/suggestor.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/search.js')}"></script>
 </body>
 </html>
 <% }catch(Exception e){ session.invalidate();}%>

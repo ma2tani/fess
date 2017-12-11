@@ -67,6 +67,9 @@ public class BsLabelType extends EsAbstractEntity {
     /** value */
     protected String value;
 
+    /** virtualHost */
+    protected String virtualHost;
+
     // [Referrers] *comment only
 
     // ===================================================================================
@@ -89,36 +92,43 @@ public class BsLabelType extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (excludedPaths != null) {
-            sourceMap.put("excludedPaths", excludedPaths);
+            addFieldToSource(sourceMap, "excludedPaths", excludedPaths);
         }
         if (includedPaths != null) {
-            sourceMap.put("includedPaths", includedPaths);
+            addFieldToSource(sourceMap, "includedPaths", includedPaths);
         }
         if (name != null) {
-            sourceMap.put("name", name);
+            addFieldToSource(sourceMap, "name", name);
         }
         if (permissions != null) {
-            sourceMap.put("permissions", permissions);
+            addFieldToSource(sourceMap, "permissions", permissions);
         }
         if (sortOrder != null) {
-            sourceMap.put("sortOrder", sortOrder);
+            addFieldToSource(sourceMap, "sortOrder", sortOrder);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
         }
         if (value != null) {
-            sourceMap.put("value", value);
+            addFieldToSource(sourceMap, "value", value);
+        }
+        if (virtualHost != null) {
+            addFieldToSource(sourceMap, "virtualHost", virtualHost);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -137,6 +147,7 @@ public class BsLabelType extends EsAbstractEntity {
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
         sb.append(dm).append(value);
+        sb.append(dm).append(virtualHost);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -245,5 +256,15 @@ public class BsLabelType extends EsAbstractEntity {
     public void setValue(String value) {
         registerModifiedProperty("value");
         this.value = value;
+    }
+
+    public String getVirtualHost() {
+        checkSpecifiedProperty("virtualHost");
+        return convertEmptyToNull(virtualHost);
+    }
+
+    public void setVirtualHost(String value) {
+        registerModifiedProperty("virtualHost");
+        this.virtualHost = value;
     }
 }

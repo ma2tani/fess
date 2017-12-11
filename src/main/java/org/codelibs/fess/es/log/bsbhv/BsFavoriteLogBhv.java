@@ -51,7 +51,7 @@ public abstract class BsFavoriteLogBhv extends EsAbstractBehavior<FavoriteLog, F
 
     @Override
     protected String asEsIndex() {
-        return "fess_log";
+        return "fess_log.favorite_log";
     }
 
     @Override
@@ -73,16 +73,20 @@ public abstract class BsFavoriteLogBhv extends EsAbstractBehavior<FavoriteLog, F
     protected <RESULT extends FavoriteLog> RESULT createEntity(Map<String, Object> source, Class<? extends RESULT> entityType) {
         try {
             final RESULT result = entityType.newInstance();
-            result.setCreatedAt(DfTypeUtil.toLocalDateTime(source.get("createdAt")));
-            result.setUrl(DfTypeUtil.toString(source.get("url")));
+            result.setCreatedAt(toLocalDateTime(source.get("createdAt")));
             result.setDocId(DfTypeUtil.toString(source.get("docId")));
             result.setQueryId(DfTypeUtil.toString(source.get("queryId")));
+            result.setUrl(DfTypeUtil.toString(source.get("url")));
             result.setUserInfoId(DfTypeUtil.toString(source.get("userInfoId")));
-            return result;
+            return updateEntity(source, result);
         } catch (InstantiationException | IllegalAccessException e) {
             final String msg = "Cannot create a new instance: " + entityType.getName();
             throw new IllegalBehaviorStateException(msg, e);
         }
+    }
+
+    protected <RESULT extends FavoriteLog> RESULT updateEntity(Map<String, Object> source, RESULT result) {
+        return result;
     }
 
     // ===================================================================================

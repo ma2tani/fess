@@ -51,7 +51,7 @@ public abstract class BsThumbnailQueueBhv extends EsAbstractBehavior<ThumbnailQu
 
     @Override
     protected String asEsIndex() {
-        return ".fess_config";
+        return ".fess_config.thumbnail_queue";
     }
 
     @Override
@@ -75,15 +75,19 @@ public abstract class BsThumbnailQueueBhv extends EsAbstractBehavior<ThumbnailQu
             final RESULT result = entityType.newInstance();
             result.setCreatedBy(DfTypeUtil.toString(source.get("createdBy")));
             result.setCreatedTime(DfTypeUtil.toLong(source.get("createdTime")));
-            result.setTarget(DfTypeUtil.toString(source.get("target")));
             result.setGenerator(DfTypeUtil.toString(source.get("generator")));
             result.setPath(DfTypeUtil.toString(source.get("path")));
-            result.setUrl(DfTypeUtil.toString(source.get("url")));
-            return result;
+            result.setTarget(DfTypeUtil.toString(source.get("target")));
+            result.setThumbnailId(DfTypeUtil.toString(source.get("thumbnail_id")));
+            return updateEntity(source, result);
         } catch (InstantiationException | IllegalAccessException e) {
             final String msg = "Cannot create a new instance: " + entityType.getName();
             throw new IllegalBehaviorStateException(msg, e);
         }
+    }
+
+    protected <RESULT extends ThumbnailQueue> RESULT updateEntity(Map<String, Object> source, RESULT result) {
+        return result;
     }
 
     // ===================================================================================

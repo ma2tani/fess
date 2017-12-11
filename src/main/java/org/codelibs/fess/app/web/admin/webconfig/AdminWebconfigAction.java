@@ -34,6 +34,7 @@ import org.codelibs.fess.app.web.CrudMode;
 import org.codelibs.fess.app.web.base.FessAdminAction;
 import org.codelibs.fess.es.config.exentity.WebConfig;
 import org.codelibs.fess.helper.PermissionHelper;
+import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.RenderDataUtil;
 import org.dbflute.optional.OptionalEntity;
@@ -143,13 +144,16 @@ public class AdminWebconfigAction extends FessAdminAction {
                         entity -> {
                             copyBeanToBean(entity, form, copyOp -> {
                                 copyOp.excludeNull();
-                                copyOp.exclude(Constants.PERMISSIONS);
+                                copyOp.exclude(Constants.PERMISSIONS, Constants.VIRTUAL_HOSTS);
                             });
                             final PermissionHelper permissionHelper = ComponentUtil.getPermissionHelper();
                             form.permissions =
                                     stream(entity.getPermissions()).get(
                                             stream -> stream.map(s -> permissionHelper.decode(s)).filter(StringUtil::isNotBlank).distinct()
                                                     .collect(Collectors.joining("\n")));
+                            form.virtualHosts =
+                                    stream(entity.getVirtualHosts()).get(
+                                            stream -> stream.filter(StringUtil::isNotBlank).collect(Collectors.joining("\n")));
                         }).orElse(() -> {
                     throwValidationError(messages -> messages.addErrorsCrudCouldNotFindCrudTable(GLOBAL, id), () -> asListHtml());
                 });
@@ -181,7 +185,7 @@ public class AdminWebconfigAction extends FessAdminAction {
                                         entity -> {
                                             copyBeanToBean(entity, form, copyOp -> {
                                                 copyOp.excludeNull();
-                                                copyOp.exclude(Constants.PERMISSIONS);
+                                                copyOp.exclude(Constants.PERMISSIONS, Constants.VIRTUAL_HOSTS);
                                             });
                                             final PermissionHelper permissionHelper = ComponentUtil.getPermissionHelper();
                                             form.permissions =
@@ -189,6 +193,10 @@ public class AdminWebconfigAction extends FessAdminAction {
                                                             stream -> stream.map(s -> permissionHelper.decode(s))
                                                                     .filter(StringUtil::isNotBlank).distinct()
                                                                     .collect(Collectors.joining("\n")));
+                                            form.virtualHosts =
+                                                    stream(entity.getVirtualHosts()).get(
+                                                            stream -> stream.filter(StringUtil::isNotBlank).collect(
+                                                                    Collectors.joining("\n")));
                                             form.crudMode = crudMode;
                                         })
                                 .orElse(() -> {
@@ -269,7 +277,7 @@ public class AdminWebconfigAction extends FessAdminAction {
     // ===================================================================================
     //                                                                        Assist Logic
     //                                                                        ============
-    private OptionalEntity<WebConfig> getEntity(final CreateForm form, final String username, final long currentTime) {
+    public static OptionalEntity<WebConfig> getEntity(final CreateForm form, final String username, final long currentTime) {
         switch (form.crudMode) {
         case CrudMode.CREATE:
             return OptionalEntity.of(new WebConfig()).map(entity -> {
@@ -279,7 +287,7 @@ public class AdminWebconfigAction extends FessAdminAction {
             });
         case CrudMode.EDIT:
             if (form instanceof EditForm) {
-                return webConfigService.getWebConfig(((EditForm) form).id);
+                return ComponentUtil.getComponent(WebConfigService.class).getWebConfig(((EditForm) form).id);
             }
             break;
         default:
@@ -288,19 +296,25 @@ public class AdminWebconfigAction extends FessAdminAction {
         return OptionalEntity.empty();
     }
 
-    protected OptionalEntity<WebConfig> getWebConfig(final CreateForm form) {
+    public static OptionalEntity<WebConfig> getWebConfig(final CreateForm form) {
+        final SystemHelper systemHelper = ComponentUtil.getSystemHelper();
         final String username = systemHelper.getUsername();
         final long currentTime = systemHelper.getCurrentTimeAsLong();
         return getEntity(form, username, currentTime).map(
                 entity -> {
                     entity.setUpdatedBy(username);
                     entity.setUpdatedTime(currentTime);
-                    copyBeanToBean(form, entity, op -> op.exclude(Stream.concat(Stream.of(Constants.COMMON_CONVERSION_RULE),
-                            Stream.of(Constants.PERMISSIONS)).toArray(n -> new String[n])));
+                    copyBeanToBean(
+                            form,
+                            entity,
+                            op -> op.exclude(Stream.concat(Stream.of(Constants.COMMON_CONVERSION_RULE),
+                                    Stream.of(Constants.PERMISSIONS, Constants.VIRTUAL_HOSTS)).toArray(n -> new String[n])));
                     final PermissionHelper permissionHelper = ComponentUtil.getPermissionHelper();
                     entity.setPermissions(split(form.permissions, "\n").get(
                             stream -> stream.map(s -> permissionHelper.encode(s)).filter(StringUtil::isNotBlank).distinct()
                                     .toArray(n -> new String[n])));
+                    entity.setVirtualHosts(split(form.virtualHosts, "\n").get(
+                            stream -> stream.filter(StringUtil::isNotBlank).distinct().toArray(n -> new String[n])));
                     return entity;
                 });
     }

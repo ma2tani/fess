@@ -1,60 +1,84 @@
-Enterprise Search Server: Fess 
+Enterprise Search Server: Fess [![Build Status](https://travis-ci.org/codelibs/fess.svg?branch=master)](https://travis-ci.org/codelibs/fess)
 ====
 
 ## Overview
 
-Fess is very powerful and easily deployable Enterprise Search Server. You can install and run Fess quickly on any platforms, which have Java runtime environment. Fess is provided under Apache license.
+Fess is very powerful and easily deployable Enterprise Search Server.
+You can install and run Fess quickly on any platforms, which have Java runtime environment.
+Fess is provided under Apache license.
 
-Fess is Elasticsearch based search server, but knowledge/experience about Elasticsearch is NOT needed because of All-in-One Enterprise Search Server. Fess provides Administration GUI to configure the system on your browser. Fess also contains a crawler, which can crawl documents on Web/FileSystem/DB and supports many file formats, such as MS Office, pdf and zip.
+Fess is Elasticsearch based search server, but knowledge/experience about Elasticsearch is NOT needed because of All-in-One Enterprise Search Server.
+Fess provides Administration GUI to configure the system on your browser.
+Fess also contains a crawler, which can crawl documents on Web/FileSystem/DB and supports many file formats, such as MS Office, pdf and zip.
+
+For Site Search feature, see [FSS JS Genertor](https://fss-generator.codelibs.org/docs/manual).
+Fess Site Search is Google Site Search alternative.
 
 ## Web Sites
 
- - [English](http://fess.codelibs.org/)
- - [Japanese](http://fess.codelibs.org/ja/)
+[fess.codelibs.org](http://fess.codelibs.org/)
 
 ## Issues/Questions
 
-Please file an [issue](https://github.com/codelibs/fess/issues "issue").
-(Japanese forum is [here](https://github.com/codelibs/codelibs-ja-forum "here").)
-For submitted questions, see [label:question](https://github.com/codelibs/fess/issues?q=label%3Aquestion%20 "label:question").
+Please check filed [questions](https://github.com/codelibs/fess/issues?q=label%3Aquestion), and then file an [issue](https://github.com/codelibs/fess/issues "issue") if not filed.
 
 ## Getting Started
 
 ### Download
 
-Fess 10.3 is available.
+Fess 11.4 is available.
 The release page is [HERE](https://github.com/codelibs/fess/releases "download").
 
 ### Install/Run Fess
 
-    $ unzip fess-10.3.x.zip
-    $ cd fess-10.3.x
+    $ unzip fess-11.4.x.zip
+    $ cd fess-11.4.x
     $ ./bin/fess
 
-For the details, see [Installation Guide](http://fess.codelibs.org/10.3/install/index.html).
+For the details, see [Installation Guide](http://fess.codelibs.org/11.3/install/index.html).
 
 ### Access Fess
 
 - Search UI: http://localhost:8080/
+
+![Search UI](http://fess.codelibs.org/_images/fess_search_result1.png)
+
 - Admin UI: http://localhost:8080/admin/ (username/password is admin/admin)
+
+![Admin UI](http://fess.codelibs.org/_images/fess_admin_dashboard.png)
 
 You can register crawling targets on Web/File System/Data Store of admin pages, and then start Crawler on Scheduler page manually.
 
 ## Fess on Docker Hub
 
-We provide Docker image on Docker Hub. 
+We provide Docker image on Docker Hub.
 For more details, see [Public Repository](https://hub.docker.com/r/codelibs/fess/).
+
+## Migration from Other Systems
+
+Please see [MIGRATION.md](https://github.com/codelibs/fess/blob/master/MIGRATION.md).
+
+## Localization
+
+### Japanese
+
+ - [Web Site](http://fess.codelibs.org/ja/)
+
+### Korean
+
+ - [PDF Document](https://github.com/nocode2k/fess/releases/download/11.0.1-ko/Fess-ko_11.0.1_manual.pdf)
+ - [Forum](https://github.com/nocode2k/fess-kr-forum)
 
 ## Development Information
 
 ### Get Source Code
 
-First of all, clone Fess's repositories:
+First of all, clone Fess's repository:
 
     $ cd ~/workspace
     $ git clone https://github.com/codelibs/fess.git
 
-and then imports it as Maven project on eclipse or ohter IDE.
+and then import it as Maven project on Eclipse or other IDE.
 
 ### Setup for Elasticsearch Plugins
 
@@ -64,7 +88,7 @@ Run antrun:run to download plugins into plugins directory:
 
 ### Run Fess
 
-Run or debug org.codelibs.fess.FessBoot on IDE, and then access http://localhost:8080/fess/
+Run or debug org.codelibs.fess.FessBoot on IDE, and then access http://localhost:8080/
 
 ### Build Package
 
@@ -76,18 +100,21 @@ Run package goal and then the release file is created in target/releases.
 
 ### Generate Source Code
 
-    $ mvn antrun:run # (one time command)
+    $ mvn dbflute:download # (one time command)
     $ mvn dbflute:freegen
     $ mvn license:format
 
-## Localization
+### Integration Tests
 
-Fess is internationalized software, and supports the following languages at the moment:
+Launch Fess Server and run the following command:
 
-* English
-* Japanese
+    $ mvn test -P integrationTests -Dtest.fess.url="http://localhost:8080" -Dtest.es.url="http://localhost:9201"
 
-If you want to add labels/messages for your language, please translate properties file and then rename to fess\_*_[lang].properties.
+### Translate In Your Language
+
+Fess is internationalized software.
+
+If you want to add labels/messages for your language, please translate properties file and then rename to fess\_\*\_[lang].properties.
 
 * [fess_label_en.properties](https://github.com/codelibs/fess/blob/master/src/main/resources/fess_label_en.properties)
 * [fess_message_en.properties](https://github.com/codelibs/fess/blob/master/src/main/resources/fess_message_en.properties)

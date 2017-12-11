@@ -9,8 +9,17 @@
 		<postConstruct name="add">
 			<arg>msofficeThumbnailGenerator</arg>
 		</postConstruct>
+		<postConstruct name="add">
+			<arg>pdfThumbnailGenerator</arg>
+		</postConstruct>
+		<postConstruct name="add">
+			<arg>psThumbnailGenerator</arg>
+		</postConstruct>
+		<postConstruct name="add">
+			<arg>imageThumbnailGenerator</arg>
+		</postConstruct>
 	</component>
-	<component name="htmlThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.EmptyGenerator">
+	<component name="htmlThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.HtmlTagBasedGenerator">
 		<property name="name">"htmlThumbnailGenerator"</property>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
@@ -19,34 +28,48 @@
 	</component>
 	<component name="msofficeThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.EmptyGenerator">
 		<property name="name">"msofficeThumbnailGenerator"</property>
+		<property name="generatorList">
+			["${path}/generate-thumbnail"]
+		</property>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"text/html"</arg>
+			<arg>"application/vnd.openxmlformats-officedocument.wordprocessingml.document"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-			</arg>
+			<arg>"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-			</arg>
+			<arg>"application/vnd.openxmlformats-officedocument.presentationml.presentation"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/vnd.openxmlformats-officedocument.presentationml.presentation"
-			</arg>
+			<arg>"application/msword"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/msword"
-			</arg>
+			<arg>"application/vnd.ms-excel"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/vnd.ms-excel"
-			</arg>
+			<arg>"application/vnd.ms-excel.sheet.2"</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/vnd.ms-excel.sheet.3"</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/vnd.ms-excel.sheet.4"</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/vnd.ms-excel.workspace.3"</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/vnd.ms-excel.workspace.4"</arg>
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
@@ -55,7 +78,89 @@
 		</postConstruct>
 		<postConstruct name="addCondition">
 			<arg>"mimetype"</arg>
-			<arg>"application/rtf"
+			<arg>"application/rtf"</arg>
+		</postConstruct>
+	</component>
+	<component name="pdfThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.EmptyGenerator">
+		<property name="name">"pdfThumbnailGenerator"</property>
+		<property name="generatorList">
+			["${path}/generate-thumbnail"]
+		</property>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/pdf"
+			</arg>
+		</postConstruct>
+	</component>
+	<component name="psThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.EmptyGenerator">
+		<property name="name">"psThumbnailGenerator"</property>
+		<property name="generatorList">
+			["${path}/generate-thumbnail"]
+		</property>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/postscript"
+			</arg>
+		</postConstruct>
+	</component>
+	<component name="imageThumbnailGenerator" class="org.codelibs.fess.thumbnail.impl.EmptyGenerator">
+		<property name="name">"imageThumbnailGenerator"</property>
+		<property name="generatorList">
+			["${path}/generate-thumbnail"]
+		</property>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/jpeg"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/tiff"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/bmp"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/x-windows-bmp"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/x-ms-bmp"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/gif"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/png"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/vnd.adobe.photoshop"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"image/photoshop"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/x-photoshop"
+			</arg>
+		</postConstruct>
+		<postConstruct name="addCondition">
+			<arg>"mimetype"</arg>
+			<arg>"application/photoshop"
 			</arg>
 		</postConstruct>
 	</component>

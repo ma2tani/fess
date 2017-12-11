@@ -73,7 +73,7 @@ public class AdminGeneralAction extends FessAdminAction {
         saveToken();
         return asHtml(path_AdminGeneral_AdminGeneralJsp).useForm(EditForm.class, setup -> {
             setup.setup(form -> {
-                updateForm(form);
+                updateForm(fessConfig, form);
             });
         });
     }
@@ -119,7 +119,14 @@ public class AdminGeneralAction extends FessAdminAction {
             return asHtml(path_AdminGeneral_AdminGeneralJsp);
         });
 
+        updateConfig(fessConfig, form);
+        saveInfo(messages -> messages.addSuccessUpdateCrawlerParams(GLOBAL));
+        return redirect(getClass());
+    }
+
+    public static void updateConfig(final FessConfig fessConfig, final EditForm form) {
         fessConfig.setLoginRequired(Constants.ON.equalsIgnoreCase(form.loginRequired));
+        fessConfig.setResultCollapsed(Constants.ON.equalsIgnoreCase(form.resultCollapsed));
         fessConfig.setLoginLinkEnabled(Constants.ON.equalsIgnoreCase(form.loginLink));
         fessConfig.setThumbnailEnabled(Constants.ON.equalsIgnoreCase(form.thumbnail));
         fessConfig.setIncrementalCrawling(Constants.ON.equalsIgnoreCase(form.incrementalCrawling));
@@ -131,6 +138,7 @@ public class AdminGeneralAction extends FessAdminAction {
         fessConfig.setWebApiJson(Constants.ON.equalsIgnoreCase(form.webApiJson));
         fessConfig.setDefaultLabelValue(form.defaultLabelValue);
         fessConfig.setDefaultSortValue(form.defaultSortValue);
+        fessConfig.setVirtualHostValue(form.virtualHostValue);
         fessConfig.setAppendQueryParameter(Constants.ON.equalsIgnoreCase(form.appendQueryParameter));
         fessConfig.setIgnoreFailureType(form.ignoreFailureType);
         fessConfig.setFailureCountThreshold(form.failureCountThreshold);
@@ -158,12 +166,12 @@ public class AdminGeneralAction extends FessAdminAction {
 
         fessConfig.storeSystemProperties();
         ComponentUtil.getLdapManager().updateConfig();
-        saveInfo(messages -> messages.addSuccessUpdateCrawlerParams(GLOBAL));
-        return redirect(getClass());
+        ComponentUtil.getSystemHelper().refreshDesignJspFiles();
     }
 
-    protected void updateForm(final EditForm form) {
+    public static void updateForm(final FessConfig fessConfig, final EditForm form) {
         form.loginRequired = fessConfig.isLoginRequired() ? Constants.TRUE : Constants.FALSE;
+        form.resultCollapsed = fessConfig.isResultCollapsed() ? Constants.TRUE : Constants.FALSE;
         form.loginLink = fessConfig.isLoginLinkEnabled() ? Constants.TRUE : Constants.FALSE;
         form.thumbnail = fessConfig.isThumbnailEnabled() ? Constants.TRUE : Constants.FALSE;
         form.incrementalCrawling = fessConfig.isIncrementalCrawling() ? Constants.TRUE : Constants.FALSE;
@@ -175,6 +183,7 @@ public class AdminGeneralAction extends FessAdminAction {
         form.webApiJson = fessConfig.isWebApiJson() ? Constants.TRUE : Constants.FALSE;
         form.defaultLabelValue = fessConfig.getDefaultLabelValue();
         form.defaultSortValue = fessConfig.getDefaultSortValue();
+        form.virtualHostValue = fessConfig.getVirtualHostValue();
         form.appendQueryParameter = fessConfig.isAppendQueryParameter() ? Constants.TRUE : Constants.FALSE;
         form.ignoreFailureType = fessConfig.getIgnoreFailureType();
         form.failureCountThreshold = fessConfig.getFailureCountThreshold();
@@ -191,7 +200,8 @@ public class AdminGeneralAction extends FessAdminAction {
         form.ldapProviderUrl = fessConfig.getLdapProviderUrl();
         form.ldapSecurityPrincipal = fessConfig.getLdapSecurityPrincipal();
         form.ldapAdminSecurityPrincipal = fessConfig.getLdapAdminSecurityPrincipal();
-        form.ldapAdminSecurityCredentials = DUMMY_PASSWORD;//fessConfig.getLdapAdminSecurityCredentials();
+        form.ldapAdminSecurityCredentials =
+                StringUtil.isNotBlank(fessConfig.getLdapAdminSecurityCredentials()) ? DUMMY_PASSWORD : StringUtil.EMPTY;
         form.ldapBaseDn = fessConfig.getLdapBaseDn();
         form.ldapAccountFilter = fessConfig.getLdapAccountFilter();
         form.ldapMemberofAttribute = fessConfig.getLdapMemberofAttribute();
