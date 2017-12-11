@@ -224,10 +224,6 @@ public class BsWebConfigCB extends EsAbstractConditionBean {
             doColumn("intervalTime");
         }
 
-        public void columnTimeToLive() {
-            doColumn("timeToLive");
-        }
-
         public void columnMaxAccessCount() {
             doColumn("maxAccessCount");
         }
@@ -248,6 +244,10 @@ public class BsWebConfigCB extends EsAbstractConditionBean {
             doColumn("sortOrder");
         }
 
+        public void columnTimeToLive() {
+            doColumn("timeToLive");
+        }
+
         public void columnUpdatedBy() {
             doColumn("updatedBy");
         }
@@ -262,6 +262,10 @@ public class BsWebConfigCB extends EsAbstractConditionBean {
 
         public void columnUserAgent() {
             doColumn("userAgent");
+        }
+
+        public void columnVirtualHosts() {
+            doColumn("virtualHosts");
         }
     }
 }

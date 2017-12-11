@@ -26,8 +26,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.api.BaseJsonApiManager;
 import org.codelibs.fess.app.service.SearchService;
@@ -79,6 +79,12 @@ public class SuggestApiManager extends BaseJsonApiManager {
             builder.setSize(parameter.getNum());
             stream(langs).of(stream -> stream.forEach(builder::addLang));
 
+            stream(parameter.getTags()).of(stream -> stream.forEach(builder::addTag));
+            final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+            if (StringUtil.isNotBlank(key)) {
+                builder.addTag(key);
+            }
+
             builder.addKind(SuggestItem.Kind.USER.toString());
             if (ComponentUtil.getFessConfig().isSuggestSearchLog()) {
                 builder.addKind(SuggestItem.Kind.QUERY.toString());
@@ -115,25 +121,6 @@ public class SuggestApiManager extends BaseJsonApiManager {
                         buf.append('\"').append(StringEscapeUtils.escapeJson(item.getTags()[i])).append('\"');
                     }
                     buf.append(']');
-
-                    buf.append(",\"roles\":[");
-                    for (int i = 0; i < item.getRoles().length; i++) {
-                        if (i > 0) {
-                            buf.append(',');
-                        }
-                        buf.append('\"').append(StringEscapeUtils.escapeJson(item.getRoles()[i])).append('\"');
-                    }
-                    buf.append(']');
-
-                    buf.append(",\"fields\":[");
-                    for (int i = 0; i < item.getFields().length; i++) {
-                        if (i > 0) {
-                            buf.append(',');
-                        }
-                        buf.append('\"').append(StringEscapeUtils.escapeJson(item.getFields()[i])).append('\"');
-                    }
-                    buf.append(']');
-
                     buf.append('}');
                 }
                 buf.append(']');
@@ -168,8 +155,12 @@ public class SuggestApiManager extends BaseJsonApiManager {
 
         private final HttpServletRequest request;
 
-        protected RequestParameter(final HttpServletRequest request, final String query, final String[] fields, final int num) {
+        private final String[] tags;
+
+        protected RequestParameter(final HttpServletRequest request, final String query, final String[] tags, final String[] fields,
+                final int num) {
             this.query = query;
+            this.tags = tags;
             this.fields = fields;
             this.num = num;
             this.request = request;
@@ -193,7 +184,15 @@ public class SuggestApiManager extends BaseJsonApiManager {
                 num = 10;
             }
 
-            return new RequestParameter(request, query, fields, num);
+            final String tagsStr = request.getParameter("tags");
+            final String[] tags;
+            if (StringUtil.isNotBlank(tagsStr)) {
+                tags = tagsStr.split(",");
+            } else {
+                tags = new String[0];
+            }
+
+            return new RequestParameter(request, query, tags, fields, num);
         }
 
         @Override
@@ -212,6 +211,10 @@ public class SuggestApiManager extends BaseJsonApiManager {
         @Override
         public Map<String, String[]> getFields() {
             throw new UnsupportedOperationException();
+        }
+
+        public String[] getTags() {
+            return tags;
         }
 
         @Override
@@ -262,6 +265,11 @@ public class SuggestApiManager extends BaseJsonApiManager {
         @Override
         public SearchRequestType getType() {
             return SearchRequestType.SUGGEST;
+        }
+
+        @Override
+        public String getSimilarDocHash() {
+            throw new UnsupportedOperationException();
         }
     }
 }

@@ -15,21 +15,29 @@
  */
 package org.codelibs.fess.app.web.base;
 
+import java.util.function.Consumer;
+
 import javax.annotation.Resource;
 
+import org.codelibs.core.beans.util.BeanUtil;
+import org.codelibs.core.beans.util.CopyOptions;
 import org.codelibs.fess.app.web.base.login.FessLoginAssist;
 import org.codelibs.fess.helper.ActivityHelper;
+import org.codelibs.fess.helper.SystemHelper;
+import org.codelibs.fess.helper.ViewHelper;
 import org.codelibs.fess.mylasta.action.FessHtmlPath;
 import org.codelibs.fess.mylasta.action.FessMessages;
 import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.dbflute.hook.AccessContext;
 import org.dbflute.optional.OptionalThing;
+import org.lastaflute.core.message.MessageManager;
 import org.lastaflute.core.time.TimeManager;
 import org.lastaflute.db.dbflute.accesscontext.AccessContextArranger;
 import org.lastaflute.web.TypicalAction;
 import org.lastaflute.web.response.ActionResponse;
 import org.lastaflute.web.ruts.process.ActionRuntime;
+import org.lastaflute.web.servlet.request.RequestManager;
 import org.lastaflute.web.servlet.request.ResponseManager;
 import org.lastaflute.web.servlet.session.SessionManager;
 import org.lastaflute.web.validation.ActionValidator;
@@ -72,6 +80,18 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
     @Resource
     protected TimeManager timeManager;
 
+    @Resource
+    protected SystemHelper systemHelper;
+
+    @Resource
+    protected ViewHelper viewHelper;
+
+    @Resource
+    private MessageManager messageManager;
+
+    @Resource
+    private RequestManager requestManager;
+
     // ===================================================================================
     //                                                                               Hook
     //                                                                              ======
@@ -79,28 +99,28 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
     // you should remove the 'final' if you need to override this
     @Override
     public ActionResponse godHandPrologue(final ActionRuntime runtime) {
-        return super.godHandPrologue(runtime);
+        return viewHelper.getActionHook().godHandPrologue(runtime, r -> super.godHandPrologue(r));
     }
 
     @Override
     public final ActionResponse godHandMonologue(final ActionRuntime runtime) {
-        return super.godHandMonologue(runtime);
+        return viewHelper.getActionHook().godHandMonologue(runtime, r -> super.godHandMonologue(r));
     }
 
     @Override
     public final void godHandEpilogue(final ActionRuntime runtime) {
-        super.godHandEpilogue(runtime);
+        viewHelper.getActionHook().godHandEpilogue(runtime, r -> super.godHandEpilogue(r));
     }
 
     // #app_customize you can customize the action hook
     @Override
     public ActionResponse hookBefore(final ActionRuntime runtime) { // application may override
-        return super.hookBefore(runtime);
+        return viewHelper.getActionHook().hookBefore(runtime, r -> super.hookBefore(r));
     }
 
     @Override
     public void hookFinally(final ActionRuntime runtime) {
-        super.hookFinally(runtime);
+        viewHelper.getActionHook().hookFinally(runtime, r -> super.hookFinally(r));
     }
 
     // ===================================================================================
@@ -141,7 +161,7 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
     @SuppressWarnings("unchecked")
     @Override
     public ActionValidator<FessMessages> createValidator() {
-        return super.createValidator();
+        return systemHelper.createValidator(requestManager, () -> createMessages(), myValidationGroups());
     }
 
     @Override
@@ -163,5 +183,23 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
         final FessMessages messages = createMessages();
         validationMessagesLambda.message(messages);
         sessionManager.errors().saveMessages(messages);
+    }
+
+    protected static void copyBeanToBean(final Object src, final Object dest, final Consumer<CopyOptions> option) {
+        BeanUtil.copyBeanToBean(src, dest, option);
+    }
+
+    protected static <T> T copyBeanToNewBean(final Object src, final Class<T> destClass) {
+        return BeanUtil.copyBeanToNewBean(src, destClass);
+    }
+
+    protected String buildThrowableMessage(final Throwable t) {
+        final StringBuilder buf = new StringBuilder(100);
+        Throwable current = t;
+        while (current != null) {
+            buf.append(current.getLocalizedMessage()).append(' ');
+            current = current.getCause();
+        }
+        return buf.toString();
     }
 }

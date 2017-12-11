@@ -15,11 +15,23 @@
  */
 package org.codelibs.fess.es.config.exbhv;
 
+import java.util.regex.Pattern;
+
 import org.codelibs.fess.es.config.bsbhv.BsFailureUrlBhv;
+import org.codelibs.fess.util.ComponentUtil;
 
 /**
  * @author FreeGen
  */
 public class FailureUrlBhv extends BsFailureUrlBhv {
+    private String indexName = null;
 
+    @Override
+    protected String asEsIndex() {
+        if (indexName == null) {
+            final String name = ComponentUtil.getFessConfig().getIndexConfigIndex();
+            indexName = super.asEsIndex().replaceFirst(Pattern.quote(".fess_config"), name);
+        }
+        return indexName;
+    }
 }

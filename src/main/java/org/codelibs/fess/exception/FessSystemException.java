@@ -31,4 +31,8 @@ public class FessSystemException extends RuntimeException {
         super(cause);
     }
 
+    protected FessSystemException(final String message, final boolean enableSuppression, final boolean writableStackTrace) {
+        super(message, null, enableSuppression, writableStackTrace);
+    }
+
 }

@@ -20,9 +20,9 @@ import static org.codelibs.core.stream.StreamUtil.stream;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,12 +32,13 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.codelibs.core.lang.StringUtil;
+import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.es.config.exbhv.BadWordBhv;
 import org.codelibs.fess.es.config.exbhv.ElevateWordBhv;
 import org.codelibs.fess.es.config.exentity.BadWord;
 import org.codelibs.fess.es.config.exentity.ElevateWord;
-import org.codelibs.fess.es.log.exentity.SearchFieldLog;
+import org.codelibs.fess.es.log.exbhv.SearchLogBhv;
 import org.codelibs.fess.es.log.exentity.SearchLog;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.suggest.Suggester;
@@ -48,8 +49,12 @@ import org.codelibs.fess.suggest.index.contents.document.ESSourceReader;
 import org.codelibs.fess.suggest.settings.SuggestSettings;
 import org.codelibs.fess.suggest.util.SuggestUtil;
 import org.codelibs.fess.util.ComponentUtil;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,15 +74,17 @@ public class SuggestHelper {
 
     protected Suggester suggester;
 
-    private FessConfig fessConfig;
+    protected FessConfig fessConfig;
 
-    private final Set<String> contentFieldNameSet = new HashSet<>();
+    protected final Set<String> contentFieldNameSet = new HashSet<>();
 
-    private final Set<String> tagFieldNameSet = new HashSet<>();
+    protected final Set<String> tagFieldNameSet = new HashSet<>();
 
-    private final Set<String> roleFieldNameSet = new HashSet<>();
+    protected final Set<String> roleFieldNameSet = new HashSet<>();
 
-    private List<String> contentFieldList;
+    protected List<String> contentFieldList;
+
+    protected PopularWordHelper popularWordHelper = null;
 
     @PostConstruct
     public void init() {
@@ -96,17 +103,42 @@ public class SuggestHelper {
                 stream -> stream.filter(StringUtil::isNotBlank).forEach(
                         field -> suggester.settings().array().add(SuggestSettings.DefaultKeys.SUPPORTED_FIELDS, field)));
         suggester.createIndexIfNothing();
+
+        final Set<String> undefinedAnalyzer = suggester.settings().analyzer().checkAnalyzer();
+        if (undefinedAnalyzer.size() > 0) {
+            logger.warn("Undefined lang analyzer. " + undefinedAnalyzer.toString());
+        }
+
+        if (ComponentUtil.hasPopularWordHelper()) {
+            popularWordHelper = ComponentUtil.getPopularWordHelper();
+        }
     }
 
     public Suggester suggester() {
         return suggester;
     }
 
+    public void storeSearchLog() {
+        final SearchLogBhv searchLogBhv = ComponentUtil.getComponent(SearchLogBhv.class);
+
+        searchLogBhv.selectBulk((cb) -> {
+            final String from = LocalDateTime.now().minusDays(fessConfig.getPurgeSuggestSearchLogDay()).format(DateTimeFormatter.ISO_DATE);
+            cb.query().addQuery(QueryBuilders.rangeQuery("requestedAt").gte(from));
+            cb.query().addOrderBy_RequestedAt_Asc();
+        }, (searchLogsList) -> indexFromSearchLog(searchLogsList));
+    }
+
     public void indexFromSearchLog(final List<SearchLog> searchLogList) {
+        final Set<String> sessionIdSet = new HashSet<>();
         searchLogList.stream().forEach(
                 searchLog -> {
                     if (searchLog.getHitCount() == null
                             || searchLog.getHitCount().longValue() < fessConfig.getSuggestMinHitCountAsInteger().longValue()) {
+                        return;
+                    }
+
+                    final String sessionId = searchLog.getUserSessionId();
+                    if (sessionId == null || sessionIdSet.contains(sessionId)) {
                         return;
                     }
 
@@ -115,19 +147,24 @@ public class SuggestHelper {
                     final List<String> tags = new ArrayList<>();
                     final List<String> roles = new ArrayList<>();
 
-                    for (final SearchFieldLog searchFieldLog : searchLog.getSearchFieldLogList()) {
-                        final String name = searchFieldLog.getName();
+                    for (final Pair<String, String> searchFieldLog : searchLog.getSearchFieldLogList()) {
+                        final String name = searchFieldLog.getFirst();
                         if (contentFieldNameSet.contains(name)) {
                             if (sb.length() > 0) {
                                 sb.append(TEXT_SEP);
                             }
-                            sb.append(searchFieldLog.getValue());
+                            sb.append(searchFieldLog.getSecond());
                             fields.add(name);
                         } else if (tagFieldNameSet.contains(name)) {
-                            tags.add(searchFieldLog.getValue());
+                            tags.add(searchFieldLog.getSecond());
                         } else if (roleFieldNameSet.contains(name)) {
-                            roles.add(searchFieldLog.getValue());
+                            roles.add(searchFieldLog.getSecond());
                         }
+                    }
+
+                    final String virtualHost = searchLog.getVirtualHost();
+                    if (virtualHost != null) {
+                        tags.add(virtualHost);
                     }
 
                     if (sb.length() > 0) {
@@ -136,10 +173,11 @@ public class SuggestHelper {
                         if (fessConfig.isValidSearchLogPermissions(roles.toArray(new String[roles.size()]))) {
                             suggester.indexer().indexFromSearchWord(sb.toString(), fields.toArray(new String[fields.size()]),
                                     tags.toArray(new String[tags.size()]), roles.toArray(new String[roles.size()]), 1, langs);
+                            sessionIdSet.add(sessionId);
                         }
                     }
                 });
-        suggester.refresh();
+        refresh();
     }
 
     public void indexFromDocuments(final Consumer<Boolean> success, final Consumer<Throwable> error) {
@@ -151,10 +189,21 @@ public class SuggestHelper {
                             final ESSourceReader reader =
                                     new ESSourceReader(fessEsClient, suggester.settings(), fessConfig.getIndexDocumentSearchIndex(),
                                             fessConfig.getIndexDocumentType());
-                            reader.setScrollSize(fessConfig.getSuggestSourceReaderScrollSizeAsInteger().intValue());
+                            reader.setScrollSize(fessConfig.getSuggestSourceReaderScrollSizeAsInteger());
+                            reader.setLimitDocNumPercentage(fessConfig.getSuggestUpdateContentsLimitNumPercentage());
+                            reader.setLimitNumber(fessConfig.getSuggestUpdateContentsLimitNumAsInteger());
+
+                            final List<FunctionScoreQueryBuilder.FilterFunctionBuilder> flist = new ArrayList<>();
+                            flist.add(new FunctionScoreQueryBuilder.FilterFunctionBuilder(ScoreFunctionBuilders.randomFunction().seed(
+                                    System.currentTimeMillis())));
+                            reader.setQuery(QueryBuilders.functionScoreQuery(QueryBuilders.matchAllQuery(),
+                                    flist.toArray(new FunctionScoreQueryBuilder.FilterFunctionBuilder[flist.size()])).boostMode(
+                                    CombineFunction.MULTIPLY));
+                            reader.addSort(SortBuilders.fieldSort(fessConfig.getIndexFieldClickCount()));
+                            reader.addSort(SortBuilders.scoreSort());
                             return reader;
                         }, 2, fessConfig.getSuggestUpdateRequestIntervalAsInteger().longValue()).then(response -> {
-                    suggester.refresh();
+                    refresh();
                     success.accept(true);
                 }).error(t -> error.accept(t));
     }
@@ -201,7 +250,7 @@ public class SuggestHelper {
             logger.warn("Failed to delete all words.", response.getErrors().get(0));
             return false;
         }
-        suggester.refresh();
+        refresh();
         return true;
     }
 
@@ -211,7 +260,7 @@ public class SuggestHelper {
             logger.warn("Failed to delete document words.", response.getErrors().get(0));
             return false;
         }
-        suggester.refresh();
+        refresh();
         return true;
     }
 
@@ -221,17 +270,12 @@ public class SuggestHelper {
             logger.warn("Failed to delete query words.", response.getErrors().get(0));
             return false;
         }
-        suggester.refresh();
+        refresh();
         return true;
     }
 
-    public void refreshWords() {
-        deleteAllBadWords();
-        storeAllElevateWords();
-    }
-
-    public void storeAllElevateWords() {
-        deleteAllBadWords();
+    public void storeAllElevateWords(final boolean apply) {
+        deleteAllElevateWord(apply);
 
         final List<ElevateWord> list = elevateWordBhv.selectList(cb -> {
             cb.query().matchAll();
@@ -240,53 +284,62 @@ public class SuggestHelper {
 
         for (final ElevateWord elevateWord : list) {
             addElevateWord(elevateWord.getSuggestWord(), elevateWord.getReading(), elevateWord.getLabelTypeValues(),
-                    elevateWord.getPermissions(), elevateWord.getBoost(), false);
+                    elevateWord.getPermissions(), elevateWord.getBoost(), apply);
         }
-        suggester.refresh();
+        refresh();
     }
 
-    public void deleteAllElevateWord() {
+    public void deleteAllElevateWord(final boolean apply) {
         final List<ElevateWord> list = elevateWordBhv.selectList(cb -> {
             cb.query().matchAll();
             cb.fetchFirst(ComponentUtil.getFessConfig().getPageElevateWordMaxFetchSizeAsInteger());
         });
 
         for (final ElevateWord elevateWord : list) {
-            suggester.indexer().deleteElevateWord(elevateWord.getSuggestWord());
+            suggester.indexer().deleteElevateWord(elevateWord.getSuggestWord(), apply);
         }
-        suggester.refresh();
+        refresh();
     }
 
-    public void deleteElevateWord(final String word) {
-        suggester.indexer().deleteElevateWord(word);
-        suggester.refresh();
+    public void deleteElevateWord(final String word, final boolean apply) {
+        suggester.indexer().deleteElevateWord(word, apply);
+        refresh();
     }
 
-    public void addElevateWord(final String word, final String reading, final String[] tags, final String[] permissions, final Float boost) {
-        addElevateWord(word, reading, tags, permissions, boost, true);
-    }
+    public void addElevateWord(final String word, final String reading, final String[] tags, final String[] permissions, final Float boost,
+            final boolean apply) {
+        final String[] readings;
+        if (StringUtil.isBlank(reading)) {
+            readings = word.replace("　", TEXT_SEP).replaceAll(TEXT_SEP + "+", TEXT_SEP).split(TEXT_SEP);
+        } else {
+            readings = reading.replace("　", TEXT_SEP).replaceAll(TEXT_SEP + "+", TEXT_SEP).split(TEXT_SEP);
+        }
 
-    public void addElevateWord(final String word, final String reading, final String[] tags, final String[] permissions, final float boost,
-            final boolean commit) {
         final List<String> labelList = new ArrayList<>();
-        for (final String label : tags) {
-            labelList.add(label);
+        if (tags != null) {
+            for (final String label : tags) {
+                labelList.add(label);
+            }
         }
         final List<String> roleList = new ArrayList<>();
-        for (final String permission : permissions) {
-            roleList.add(permission);
+        if (permissions != null) {
+            for (final String permission : permissions) {
+                roleList.add(permission);
+            }
         }
 
         suggester.indexer().addElevateWord(
-                new org.codelibs.fess.suggest.entity.ElevateWord(word, boost, Collections.singletonList(reading), contentFieldList,
-                        labelList, roleList));
+                new org.codelibs.fess.suggest.entity.ElevateWord(word, boost, Arrays.asList(readings), contentFieldList, labelList,
+                        roleList), apply);
+
+        refresh();
     }
 
-    public void deleteAllBadWords() {
+    protected void deleteAllBadWords() {
         suggester.settings().badword().deleteAll();
     }
 
-    public void storeAllBadWords() {
+    public void storeAllBadWords(final boolean apply) {
         deleteAllBadWords();
         final List<BadWord> list = badWordBhv.selectList(cb -> {
             cb.query().matchAll();
@@ -294,16 +347,25 @@ public class SuggestHelper {
         });
         for (final BadWord badWord : list) {
             final String word = badWord.getSuggestWord();
-            suggester.indexer().addBadWord(word);
+            suggester.indexer().addBadWord(word, apply);
         }
+        refresh();
     }
 
-    public void addBadWord(final String badWord) {
-        suggester.indexer().addBadWord(badWord);
+    public void addBadWord(final String badWord, final boolean apply) {
+        suggester.indexer().addBadWord(badWord, apply);
+        refresh();
     }
 
     public void deleteBadWord(final String badWord) {
         suggester.indexer().deleteBadWord(badWord);
+        refresh();
     }
 
+    public synchronized void refresh() {
+        suggester.refresh();
+        if (popularWordHelper != null) {
+            popularWordHelper.clearCache();
+        }
+    }
 }

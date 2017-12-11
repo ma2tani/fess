@@ -4,12 +4,12 @@
 <head profile="http://a9.com/-/spec/opensearch/1.1/">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <title><la:message key="labels.search_title" /></title>
-<link href="${f:url('/css/style-base.css')}" rel="stylesheet"
+<link href="${fe:url('/css/style-base.css')}" rel="stylesheet"
 	type="text/css" />
-<link href="${f:url('/css/style.css')}" rel="stylesheet" type="text/css" />
-<link href="${f:url('/css/font-awesome.min.css')}"
+<link href="${fe:url('/css/style.css')}" rel="stylesheet" type="text/css" />
+<link href="${fe:url('/css/font-awesome.min.css')}"
 	rel="stylesheet" type="text/css" />
 </head>
 <body class="help">
@@ -29,9 +29,9 @@
 	</div>
 	<input type="hidden" id="contextPath" value="${contextPath}" />
 	<script type="text/javascript"
-		src="${f:url('/js/jquery-2.2.4.min.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/bootstrap.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/suggestor.js')}"></script>
-	<script type="text/javascript" src="${f:url('/js/help.js')}"></script>
+		src="${fe:url('/js/jquery-2.2.4.min.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/bootstrap.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/suggestor.js')}"></script>
+	<script type="text/javascript" src="${fe:url('/js/help.js')}"></script>
 </body>
 </html>

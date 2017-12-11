@@ -15,6 +15,7 @@
  */
 package org.codelibs.fess.job;
 
+import static org.codelibs.core.stream.StreamUtil.split;
 import static org.codelibs.core.stream.StreamUtil.stream;
 
 import java.io.File;
@@ -43,6 +44,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SuggestJob {
+    private static final String REMOTE_DEBUG_OPTIONS = "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=localhost:8000";
+
     private static final Logger logger = LoggerFactory.getLogger(SuggestJob.class);
 
     protected JobExecutor jobExecutor;
@@ -54,6 +57,10 @@ public class SuggestJob {
     protected String logFilePath;
 
     protected String logLevel;
+
+    protected String jvmOptions;
+
+    protected String lastaEnv;
 
     public SuggestJob jobExecutor(final JobExecutor jobExecutor) {
         this.jobExecutor = jobExecutor;
@@ -77,6 +84,20 @@ public class SuggestJob {
 
     public SuggestJob useLocaleElasticsearch(final boolean useLocaleElasticsearch) {
         this.useLocaleElasticsearch = useLocaleElasticsearch;
+        return this;
+    }
+
+    public SuggestJob remoteDebug() {
+        return jvmOptions(REMOTE_DEBUG_OPTIONS);
+    }
+
+    public SuggestJob jvmOptions(final String option) {
+        this.jvmOptions = option;
+        return this;
+    }
+
+    public SuggestJob lastaEnv(final String env) {
+        this.lastaEnv = env;
         return this;
     }
 
@@ -160,19 +181,24 @@ public class SuggestJob {
             if (StringUtil.isNotBlank(transportAddresses)) {
                 cmdList.add("-D" + Constants.FESS_ES_TRANSPORT_ADDRESSES + "=" + transportAddresses);
             }
-            final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
-            if (StringUtil.isNotBlank(clusterName)) {
-                cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
-            }
         }
 
-        final String lastaEnv = System.getProperty("lasta.env");
-        if (StringUtil.isNotBlank(lastaEnv)) {
-            if (lastaEnv.equals("web")) {
+        final String clusterName = System.getProperty(Constants.FESS_ES_CLUSTER_NAME);
+        if (StringUtil.isNotBlank(clusterName)) {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + clusterName);
+        } else {
+            cmdList.add("-D" + Constants.FESS_ES_CLUSTER_NAME + "=" + fessConfig.getElasticsearchClusterName());
+        }
+
+        final String systemLastaEnv = System.getProperty("lasta.env");
+        if (StringUtil.isNotBlank(systemLastaEnv)) {
+            if (systemLastaEnv.equals("web")) {
                 cmdList.add("-Dlasta.env=suggest");
             } else {
-                cmdList.add("-Dlasta.env=" + lastaEnv);
+                cmdList.add("-Dlasta.env=" + systemLastaEnv);
             }
+        } else if (StringUtil.isNotBlank(lastaEnv)) {
+            cmdList.add("-Dlasta.env=" + lastaEnv);
         }
 
         cmdList.add("-Dfess.suggest.process=true");
@@ -199,6 +225,10 @@ public class SuggestJob {
             } else {
                 ownTmpDir = null;
             }
+        }
+
+        if (StringUtil.isNotBlank(jvmOptions)) {
+            split(jvmOptions, " ").of(stream -> stream.filter(StringUtil::isNotBlank).forEach(s -> cmdList.add(s)));
         }
 
         cmdList.add(SuggestCreator.class.getCanonicalName());

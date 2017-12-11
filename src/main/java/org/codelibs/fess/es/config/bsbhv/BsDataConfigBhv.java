@@ -51,7 +51,7 @@ public abstract class BsDataConfigBhv extends EsAbstractBehavior<DataConfig, Dat
 
     @Override
     protected String asEsIndex() {
-        return ".fess_config";
+        return ".fess_config.data_config";
     }
 
     @Override
@@ -86,11 +86,16 @@ public abstract class BsDataConfigBhv extends EsAbstractBehavior<DataConfig, Dat
             result.setSortOrder(DfTypeUtil.toInteger(source.get("sortOrder")));
             result.setUpdatedBy(DfTypeUtil.toString(source.get("updatedBy")));
             result.setUpdatedTime(DfTypeUtil.toLong(source.get("updatedTime")));
-            return result;
+            result.setVirtualHosts(toStringArray(source.get("virtualHosts")));
+            return updateEntity(source, result);
         } catch (InstantiationException | IllegalAccessException e) {
             final String msg = "Cannot create a new instance: " + entityType.getName();
             throw new IllegalBehaviorStateException(msg, e);
         }
+    }
+
+    protected <RESULT extends DataConfig> RESULT updateEntity(Map<String, Object> source, RESULT result) {
+        return result;
     }
 
     // ===================================================================================

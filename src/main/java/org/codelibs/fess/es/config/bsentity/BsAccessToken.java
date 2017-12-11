@@ -37,26 +37,26 @@ public class BsAccessToken extends EsAbstractEntity {
     // ===================================================================================
     //                                                                           Attribute
     //                                                                           =========
-    /** name */
-    protected String name;
-
-    /** token */
-    protected String token;
-
-    /** permissions */
-    protected String[] permissions;
-
-    /** parameter_name */
-    protected String parameterName;
-
-    /** expiredTime */
-    protected Long expiredTime;
-
     /** createdBy */
     protected String createdBy;
 
     /** createdTime */
     protected Long createdTime;
+
+    /** expiredTime */
+    protected Long expiredTime;
+
+    /** name */
+    protected String name;
+
+    /** parameter_name */
+    protected String parameterName;
+
+    /** permissions */
+    protected String[] permissions;
+
+    /** token */
+    protected String token;
 
     /** updatedBy */
     protected String updatedBy;
@@ -85,34 +85,38 @@ public class BsAccessToken extends EsAbstractEntity {
     @Override
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
-        if (name != null) {
-            sourceMap.put("name", name);
-        }
-        if (token != null) {
-            sourceMap.put("token", token);
-        }
-        if (permissions != null) {
-            sourceMap.put("permissions", permissions);
-        }
-        if (parameterName != null) {
-            sourceMap.put("parameter_name", parameterName);
-        }
-        if (expiredTime != null) {
-            sourceMap.put("expiredTime", expiredTime);
-        }
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
+        }
+        if (expiredTime != null) {
+            addFieldToSource(sourceMap, "expiredTime", expiredTime);
+        }
+        if (name != null) {
+            addFieldToSource(sourceMap, "name", name);
+        }
+        if (parameterName != null) {
+            addFieldToSource(sourceMap, "parameter_name", parameterName);
+        }
+        if (permissions != null) {
+            addFieldToSource(sourceMap, "permissions", permissions);
+        }
+        if (token != null) {
+            addFieldToSource(sourceMap, "token", token);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -121,13 +125,13 @@ public class BsAccessToken extends EsAbstractEntity {
     @Override
     protected String doBuildColumnString(String dm) {
         StringBuilder sb = new StringBuilder();
-        sb.append(dm).append(name);
-        sb.append(dm).append(token);
-        sb.append(dm).append(permissions);
-        sb.append(dm).append(parameterName);
-        sb.append(dm).append(expiredTime);
         sb.append(dm).append(createdBy);
         sb.append(dm).append(createdTime);
+        sb.append(dm).append(expiredTime);
+        sb.append(dm).append(name);
+        sb.append(dm).append(parameterName);
+        sb.append(dm).append(permissions);
+        sb.append(dm).append(token);
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
         if (sb.length() > dm.length()) {
@@ -140,56 +144,6 @@ public class BsAccessToken extends EsAbstractEntity {
     // ===================================================================================
     //                                                                            Accessor
     //                                                                            ========
-    public String getName() {
-        checkSpecifiedProperty("name");
-        return convertEmptyToNull(name);
-    }
-
-    public void setName(String value) {
-        registerModifiedProperty("name");
-        this.name = value;
-    }
-
-    public String getToken() {
-        checkSpecifiedProperty("token");
-        return convertEmptyToNull(token);
-    }
-
-    public void setToken(String value) {
-        registerModifiedProperty("token");
-        this.token = value;
-    }
-
-    public String[] getPermissions() {
-        checkSpecifiedProperty("permissions");
-        return permissions;
-    }
-
-    public void setPermissions(String[] value) {
-        registerModifiedProperty("permissions");
-        this.permissions = value;
-    }
-
-    public String getParameterName() {
-        checkSpecifiedProperty("parameterName");
-        return convertEmptyToNull(parameterName);
-    }
-
-    public void setParameterName(String value) {
-        registerModifiedProperty("parameterName");
-        this.parameterName = value;
-    }
-
-    public Long getExpiredTime() {
-        checkSpecifiedProperty("expiredTime");
-        return expiredTime;
-    }
-
-    public void setExpiredTime(Long value) {
-        registerModifiedProperty("expiredTime");
-        this.expiredTime = value;
-    }
-
     public String getCreatedBy() {
         checkSpecifiedProperty("createdBy");
         return convertEmptyToNull(createdBy);
@@ -208,6 +162,56 @@ public class BsAccessToken extends EsAbstractEntity {
     public void setCreatedTime(Long value) {
         registerModifiedProperty("createdTime");
         this.createdTime = value;
+    }
+
+    public Long getExpiredTime() {
+        checkSpecifiedProperty("expiredTime");
+        return expiredTime;
+    }
+
+    public void setExpiredTime(Long value) {
+        registerModifiedProperty("expiredTime");
+        this.expiredTime = value;
+    }
+
+    public String getName() {
+        checkSpecifiedProperty("name");
+        return convertEmptyToNull(name);
+    }
+
+    public void setName(String value) {
+        registerModifiedProperty("name");
+        this.name = value;
+    }
+
+    public String getParameterName() {
+        checkSpecifiedProperty("parameterName");
+        return convertEmptyToNull(parameterName);
+    }
+
+    public void setParameterName(String value) {
+        registerModifiedProperty("parameterName");
+        this.parameterName = value;
+    }
+
+    public String[] getPermissions() {
+        checkSpecifiedProperty("permissions");
+        return permissions;
+    }
+
+    public void setPermissions(String[] value) {
+        registerModifiedProperty("permissions");
+        this.permissions = value;
+    }
+
+    public String getToken() {
+        checkSpecifiedProperty("token");
+        return convertEmptyToNull(token);
+    }
+
+    public void setToken(String value) {
+        registerModifiedProperty("token");
+        this.token = value;
     }
 
     public String getUpdatedBy() {

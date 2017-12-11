@@ -15,11 +15,48 @@
  */
 package org.codelibs.fess.es.log.exbhv;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.regex.Pattern;
+
 import org.codelibs.fess.es.log.bsbhv.BsFavoriteLogBhv;
+import org.codelibs.fess.util.ComponentUtil;
+import org.dbflute.util.DfTypeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author FreeGen
  */
 public class FavoriteLogBhv extends BsFavoriteLogBhv {
+    private static final Logger logger = LoggerFactory.getLogger(FavoriteLogBhv.class);
+
+    private String indexName = null;
+
+    @Override
+    protected String asEsIndex() {
+        if (indexName == null) {
+            final String name = ComponentUtil.getFessConfig().getIndexLogIndex();
+            indexName = super.asEsIndex().replaceFirst(Pattern.quote("fess_log"), name);
+        }
+        return indexName;
+    }
+
+    @Override
+    protected LocalDateTime toLocalDateTime(final Object value) {
+        if (value != null) {
+            try {
+                final Instant instant = Instant.from(DateTimeFormatter.ISO_INSTANT.parse(value.toString()));
+                final LocalDateTime date = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+                return date;
+            } catch (final DateTimeParseException e) {
+                logger.debug("Invalid date format: " + value, e);
+            }
+        }
+        return DfTypeUtil.toLocalDateTime(value);
+    }
 
 }

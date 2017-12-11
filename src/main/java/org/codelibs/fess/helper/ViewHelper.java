@@ -25,27 +25,29 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.connector.ClientAbortException;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.codelibs.core.CoreLibConstants;
 import org.codelibs.core.lang.StringUtil;
-import org.codelibs.core.misc.Base64Util;
 import org.codelibs.core.misc.DynamicProperties;
 import org.codelibs.fess.Constants;
-import org.codelibs.fess.app.service.DataConfigService;
-import org.codelibs.fess.app.service.FileConfigService;
-import org.codelibs.fess.app.service.WebConfigService;
 import org.codelibs.fess.crawler.builder.RequestDataBuilder;
 import org.codelibs.fess.crawler.client.CrawlerClient;
 import org.codelibs.fess.crawler.client.CrawlerClientFactory;
@@ -53,7 +55,6 @@ import org.codelibs.fess.crawler.entity.ResponseData;
 import org.codelibs.fess.crawler.util.CharUtil;
 import org.codelibs.fess.entity.FacetQueryView;
 import org.codelibs.fess.es.config.exentity.CrawlingConfig;
-import org.codelibs.fess.es.config.exentity.CrawlingConfig.ConfigType;
 import org.codelibs.fess.exception.FessSystemException;
 import org.codelibs.fess.helper.UserAgentHelper.UserAgentType;
 import org.codelibs.fess.mylasta.direction.FessConfig;
@@ -61,7 +62,9 @@ import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.DocumentUtil;
 import org.codelibs.fess.util.ResourceUtil;
 import org.lastaflute.taglib.function.LaFunctions;
+import org.lastaflute.web.response.ActionResponse;
 import org.lastaflute.web.response.StreamResponse;
+import org.lastaflute.web.ruts.process.ActionRuntime;
 import org.lastaflute.web.util.LaRequestUtil;
 import org.lastaflute.web.util.LaResponseUtil;
 import org.lastaflute.web.util.LaServletContextUtil;
@@ -75,6 +78,8 @@ import com.github.jknack.handlebars.io.FileTemplateLoader;
 import com.ibm.icu.text.SimpleDateFormat;
 
 public class ViewHelper {
+
+    private static final String CONTENT_DISPOSITION = "Content-Disposition";
 
     private static final String HL_CACHE = "hl_cache";
 
@@ -97,8 +102,10 @@ public class ViewHelper {
     @Resource
     protected UserAgentHelper userAgentHelper;
 
+    @Deprecated
     public int titleLength = 50;
 
+    @Deprecated
     public int sitePathLength = 50;
 
     public boolean encodeUrlLink = false;
@@ -131,6 +138,10 @@ public class ViewHelper {
 
     private String escapedHighlightPost = null;
 
+    protected ActionHook actionHook = new ActionHook();
+
+    private final Set<String> inlineMimeTypeSet = new HashSet<>();
+
     @PostConstruct
     public void init() {
         escapedHighlightPre = LaFunctions.h(originalHighlightTagPre);
@@ -138,7 +149,6 @@ public class ViewHelper {
     }
 
     public String getContentTitle(final Map<String, Object> document) {
-        final int size = titleLength;
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         String title = DocumentUtil.getValue(document, fessConfig.getIndexFieldTitle(), String.class);
         if (StringUtil.isBlank(title)) {
@@ -147,7 +157,12 @@ public class ViewHelper {
                 title = DocumentUtil.getValue(document, fessConfig.getIndexFieldUrl(), String.class);
             }
         }
-        return StringUtils.abbreviate(title, size);
+        final int size = fessConfig.getResponseMaxTitleLengthAsInteger();
+        if (size > -1) {
+            return StringUtils.abbreviate(title, size);
+        } else {
+            return title;
+        }
     }
 
     public String getContentDescription(final Map<String, Object> document) {
@@ -170,26 +185,31 @@ public class ViewHelper {
     }
 
     public String getUrlLink(final Map<String, Object> document) {
-        // file protocol
-        String url = DocumentUtil.getValue(document, "url", String.class);
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        String url = DocumentUtil.getValue(document, fessConfig.getIndexFieldUrl(), String.class);
 
-        if (url == null) {
-            // TODO should redirect to a invalid page?
-            return "#";
+        if (StringUtil.isBlank(url)) {
+            return "#not-found-" + DocumentUtil.getValue(document, fessConfig.getIndexFieldDocId(), String.class);
         }
 
-        final boolean isFileUrl = url.startsWith("smb:") || url.startsWith("ftp:");
+        final boolean isSmbUrl = url.startsWith("smb:");
+        final boolean isFtpUrl = url.startsWith("ftp:");
+        final boolean isSmbOrFtpUrl = isSmbUrl || isFtpUrl;
 
         // replacing url with mapping data
-        url = pathMappingHelper.replaceUrl(url);
-
-        if (url.startsWith("smb:")) {
-            url = url.replace("smb:", "file:");
-        } else if (url.startsWith("ftp:")) {
-            url = url.replace("ftp:", "file:");
+        if (pathMappingHelper != null) {
+            url = pathMappingHelper.replaceUrl(url);
         }
 
-        if (url.startsWith("http:") && isFileUrl) {
+        final boolean isHttpUrl = url.startsWith("http:") || url.startsWith("https:");
+
+        if (isSmbUrl) {
+            url = url.replace("smb:", "file:");
+        }
+
+        if (isHttpUrl && isSmbOrFtpUrl) {
+            //  smb/ftp->http
+            // encode
             final StringBuilder buf = new StringBuilder(url.length() + 100);
             for (final char c : url.toCharArray()) {
                 if (CharUtil.isUrlChar(c)) {
@@ -198,89 +218,96 @@ public class ViewHelper {
                     try {
                         buf.append(URLEncoder.encode(String.valueOf(c), urlLinkEncoding));
                     } catch (final UnsupportedEncodingException e) {
-                        // NOP
+                        buf.append(c);
                     }
                 }
             }
             url = buf.toString();
         } else if (url.startsWith("file:")) {
-
-            final int pos = url.indexOf(':', 5);
-            final boolean isLocalFile = pos > 0 && pos < 12;
-
-            final UserAgentType ua = userAgentHelper.getUserAgentType();
-            switch (ua) {
-            case IE:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.ie", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.ie", "file://"));
-                }
-                break;
-            case FIREFOX:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.firefox", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.firefox", "file://///"));
-                }
-                break;
-            case CHROME:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.chrome", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.chrome", "file://"));
-                }
-                break;
-            case SAFARI:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.safari", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.safari", "file:////"));
-                }
-                break;
-            case OPERA:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.opera", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.opera", "file://"));
-                }
-                break;
-            default:
-                if (isLocalFile) {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.other", "file://"));
-                } else {
-                    url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.other", "file://"));
-                }
-                break;
-            }
+            // file, smb/ftp->http
+            url = updateFileProtocol(url);
 
             if (encodeUrlLink) {
                 return appendQueryParameter(document, url);
-            } else {
-                final String urlLink = appendQueryParameter(document, url).replace("+", "%2B");
-                final String[] values = urlLink.split("#");
-                final StringBuilder buf = new StringBuilder(urlLink.length());
+            }
+
+            // decode
+            if (!isSmbOrFtpUrl) {
+                // file
                 try {
-                    buf.append(URLDecoder.decode(values[0], urlLinkEncoding));
-                    for (int i = 1; i < values.length - 1; i++) {
-                        buf.append('#').append(URLDecoder.decode(values[i], urlLinkEncoding));
+                    url = URLDecoder.decode(url.replace("+", "%2B"), urlLinkEncoding);
+                } catch (Exception e) {
+                    if (logger.isDebugEnabled()) {
+                        logger.warn("Failed to decode " + url, e);
                     }
-                } catch (final Exception e) {
-                    throw new FessSystemException("Unsupported encoding: " + urlLinkEncoding, e);
                 }
-                if (values.length > 1) {
-                    buf.append('#').append(values[values.length - 1]);
-                }
-                return buf.toString();
             }
         }
+        // http, ftp
+        // nothing
 
         return appendQueryParameter(document, url);
+    }
+
+    protected String updateFileProtocol(String url) {
+        final int pos = url.indexOf(':', 5);
+        final boolean isLocalFile = pos > 0 && pos < 12;
+
+        final UserAgentType ua = userAgentHelper.getUserAgentType();
+        switch (ua) {
+        case IE:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.ie", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.ie", "file://"));
+            }
+            break;
+        case FIREFOX:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.firefox", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.firefox", "file://///"));
+            }
+            break;
+        case CHROME:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.chrome", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.chrome", "file://"));
+            }
+            break;
+        case SAFARI:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.safari", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.safari", "file:////"));
+            }
+            break;
+        case OPERA:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.opera", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.opera", "file://"));
+            }
+            break;
+        default:
+            if (isLocalFile) {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.winlocal.other", "file://"));
+            } else {
+                url = url.replaceFirst("file:/+", systemProperties.getProperty("file.protocol.other", "file://"));
+            }
+            break;
+        }
+        return url;
     }
 
     protected String appendQueryParameter(final Map<String, Object> document, final String url) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         if (fessConfig.isAppendQueryParameter()) {
+            if (url.indexOf('#') >= 0) {
+                return url;
+            }
+
             final String mimetype = DocumentUtil.getValue(document, fessConfig.getIndexFieldMimetype(), String.class);
             if (StringUtil.isNotBlank(mimetype)) {
                 if ("application/pdf".equals(mimetype)) {
@@ -466,7 +493,12 @@ public class ViewHelper {
             } else {
                 returnUrl = url.replaceFirst("^[a-zA-Z0-9]*:/+", "");
             }
-            return StringUtils.abbreviate(returnUrl, sitePathLength);
+            final int size = fessConfig.getResponseMaxSitePathLengthAsInteger();
+            if (size > -1) {
+                return StringUtils.abbreviate(returnUrl, size);
+            } else {
+                return returnUrl;
+            }
         }
         return null;
     }
@@ -484,21 +516,7 @@ public class ViewHelper {
         if (configId.length() < 2) {
             throw new FessSystemException("Invalid configId: " + configId);
         }
-        final ConfigType configType = crawlingConfigHelper.getConfigType(configId);
-        CrawlingConfig config = null;
-        if (logger.isDebugEnabled()) {
-            logger.debug("configType: " + configType + ", configId: " + configId);
-        }
-        if (ConfigType.WEB == configType) {
-            final WebConfigService webConfigService = ComponentUtil.getComponent(WebConfigService.class);
-            config = webConfigService.getWebConfig(crawlingConfigHelper.getId(configId)).get();
-        } else if (ConfigType.FILE == configType) {
-            final FileConfigService fileConfigService = ComponentUtil.getComponent(FileConfigService.class);
-            config = fileConfigService.getFileConfig(crawlingConfigHelper.getId(configId)).get();
-        } else if (ConfigType.DATA == configType) {
-            final DataConfigService dataConfigService = ComponentUtil.getComponent(DataConfigService.class);
-            config = dataConfigService.getDataConfig(crawlingConfigHelper.getId(configId)).get();
-        }
+        final CrawlingConfig config = crawlingConfigHelper.getCrawlingConfig(configId);
         if (config == null) {
             throw new FessSystemException("No crawlingConfig: " + configId);
         }
@@ -513,15 +531,16 @@ public class ViewHelper {
     }
 
     protected StreamResponse writeContent(final String configId, final String url, final CrawlerClient client) {
-        final ResponseData responseData = client.execute(RequestDataBuilder.newRequestData().get().url(url).build());
         final StreamResponse response = new StreamResponse(StringUtil.EMPTY);
+        final ResponseData responseData = client.execute(RequestDataBuilder.newRequestData().get().url(url).build());
+        if (responseData.getHttpStatusCode() == 404) {
+            response.httpStatus(responseData.getHttpStatusCode());
+            IOUtils.closeQuietly(responseData);
+            return response;
+        }
         writeFileName(response, responseData);
         writeContentType(response, responseData);
         writeNoCache(response, responseData);
-        if (responseData.getHttpStatusCode() == 404) {
-            response.httpStatus(responseData.getHttpStatusCode());
-            return response;
-        }
         response.stream(out -> {
             try (final InputStream is = new BufferedInputStream(responseData.getResponseBody())) {
                 out.write(is);
@@ -530,7 +549,7 @@ public class ViewHelper {
                     throw new FessSystemException("Failed to write a content. configId: " + configId + ", url: " + url, e);
                 }
             } finally {
-                responseData.close();
+                IOUtils.closeQuietly(responseData);
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("Finished to write " + url);
@@ -546,8 +565,6 @@ public class ViewHelper {
     }
 
     protected void writeFileName(final StreamResponse response, final ResponseData responseData) {
-        final UserAgentHelper userAgentHelper = ComponentUtil.getUserAgentHelper();
-        final UserAgentType userAgentType = userAgentHelper.getUserAgentType();
         String charset = responseData.getCharSet();
         if (charset == null) {
             charset = Constants.UTF_8;
@@ -562,28 +579,15 @@ public class ViewHelper {
                 name = URLDecoder.decode(url, charset);
             }
 
-            if (logger.isDebugEnabled()) {
-                logger.debug("userAgentType: " + userAgentType + ", charset: " + charset + ", name: " + name);
+            final String contentDispositionType;
+            if (inlineMimeTypeSet.contains(responseData.getMimeType())) {
+                contentDispositionType = "inline";
+            } else {
+                contentDispositionType = "attachment";
             }
 
-            switch (userAgentType) {
-            case IE:
-                response.header("Content-Disposition", "attachment; filename=\"" + URLEncoder.encode(name, Constants.UTF_8) + "\"");
-                break;
-            case OPERA:
-                response.header("Content-Disposition", "attachment; filename*=utf-8'ja'" + URLEncoder.encode(name, Constants.UTF_8));
-                break;
-            case SAFARI:
-                response.header("Content-Disposition", "attachment; filename=\"" + name + "\"");
-                break;
-            case CHROME:
-            case FIREFOX:
-            case OTHER:
-            default:
-                response.header("Content-Disposition",
-                        "attachment; filename=\"=?utf-8?B?" + Base64Util.encode(name.getBytes(Constants.UTF_8)) + "?=\"");
-                break;
-            }
+            response.header(CONTENT_DISPOSITION,
+                    contentDispositionType + "; filename=\"" + name + "\"; filename*=utf-8''" + URLEncoder.encode(name, Constants.UTF_8));
         } catch (final Exception e) {
             logger.warn("Failed to write a filename: " + responseData, e);
         }
@@ -606,6 +610,15 @@ public class ViewHelper {
             }
         }
         response.contentType(mimeType);
+    }
+
+    public String getClientIp(final HttpServletRequest request) {
+        final String value = request.getHeader("x-forwarded-for");
+        if (StringUtil.isNotBlank(value)) {
+            return value;
+        } else {
+            return request.getRemoteAddr();
+        }
     }
 
     public boolean isUseSession() {
@@ -640,4 +653,38 @@ public class ViewHelper {
         return facetQueryViewList;
     }
 
+    public void addInlineMimeType(final String mimeType) {
+        inlineMimeTypeSet.add(mimeType);
+    }
+
+    public ActionHook getActionHook() {
+        return actionHook;
+    }
+
+    public void setActionHook(final ActionHook actionHook) {
+        this.actionHook = actionHook;
+    }
+
+    public static class ActionHook {
+
+        public ActionResponse godHandPrologue(final ActionRuntime runtime, final Function<ActionRuntime, ActionResponse> func) {
+            return func.apply(runtime);
+        }
+
+        public ActionResponse godHandMonologue(final ActionRuntime runtime, final Function<ActionRuntime, ActionResponse> func) {
+            return func.apply(runtime);
+        }
+
+        public void godHandEpilogue(final ActionRuntime runtime, final Consumer<ActionRuntime> consumer) {
+            consumer.accept(runtime);
+        }
+
+        public ActionResponse hookBefore(final ActionRuntime runtime, final Function<ActionRuntime, ActionResponse> func) {
+            return func.apply(runtime);
+        }
+
+        public void hookFinally(final ActionRuntime runtime, final Consumer<ActionRuntime> consumer) {
+            consumer.accept(runtime);
+        }
+    }
 }

@@ -18,6 +18,7 @@ package org.codelibs.fess.api.json;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +44,8 @@ import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.exception.WebApiException;
 import org.codelibs.fess.helper.LabelTypeHelper;
 import org.codelibs.fess.helper.PopularWordHelper;
+import org.codelibs.fess.helper.RelatedContentHelper;
+import org.codelibs.fess.helper.RelatedQueryHelper;
 import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.helper.UserInfoHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
@@ -126,6 +129,8 @@ public class JsonApiManager extends BaseJsonApiManager {
     protected void processSearchRequest(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) {
         final SearchService searchService = ComponentUtil.getComponent(SearchService.class);
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        final RelatedQueryHelper relatedQueryHelper = ComponentUtil.getRelatedQueryHelper();
+        final RelatedContentHelper relatedContentHelper = ComponentUtil.getRelatedContentHelper();
 
         int status = 0;
         Exception err = null;
@@ -136,7 +141,6 @@ public class JsonApiManager extends BaseJsonApiManager {
             final SearchRenderData data = new SearchRenderData();
             final JsonRequestParams params = new JsonRequestParams(request, fessConfig);
             query = params.getQuery();
-            request.setAttribute(Constants.REQUEST_QUERIES, query);
             searchService.search(params, data, OptionalThing.empty());
             final String execTime = data.getExecTime();
             final String queryTime = Long.toString(data.getQueryTime());
@@ -146,8 +150,16 @@ public class JsonApiManager extends BaseJsonApiManager {
             final String allPageCount = Integer.toString(data.getAllPageCount());
             final List<Map<String, Object>> documentItems = data.getDocumentItems();
             final FacetResponse facetResponse = data.getFacetResponse();
-            final GeoInfo geoInfo = params.getGeoInfo();
             final String queryId = data.getQueryId();
+            final String highlightParams = data.getAppendHighlightParams();
+            final boolean nextPage = data.isExistNextPage();
+            final boolean prevPage = data.isExistPrevPage();
+            final long startRecordNumber = data.getCurrentStartRecordNumber();
+            final long endRecordNumber = data.getCurrentEndRecordNumber();
+            final List<String> pageNumbers = data.getPageNumberList();
+            final boolean partial = data.isPartialResults();
+            final String searchQuery = data.getSearchQuery();
+            final long requestedTime = data.getRequestedTime();
 
             buf.append("\"q\":");
             buf.append(escapeJson(query));
@@ -169,6 +181,32 @@ public class JsonApiManager extends BaseJsonApiManager {
             buf.append(',');
             buf.append("\"page_count\":");
             buf.append(allPageCount);
+            buf.append(",\"highlight_params\":");
+            buf.append(escapeJson(highlightParams));
+            buf.append(",\"next_page\":");
+            buf.append(escapeJson(nextPage));
+            buf.append(",\"prev_page\":");
+            buf.append(escapeJson(prevPage));
+            buf.append(",\"start_record_number\":");
+            buf.append(startRecordNumber);
+            buf.append(",\"end_record_number\":");
+            buf.append(escapeJson(endRecordNumber));
+            buf.append(",\"page_numbers\":");
+            buf.append(escapeJson(pageNumbers));
+            buf.append(",\"partial\":");
+            buf.append(escapeJson(partial));
+            buf.append(",\"search_query\":");
+            buf.append(escapeJson(searchQuery));
+            buf.append(",\"requested_time\":");
+            buf.append(requestedTime);
+            final String[] relatedQueries = relatedQueryHelper.getRelatedQueries(params.getQuery());
+            if (relatedQueries.length > 0) {
+                buf.append(",\"related_query\":");
+                buf.append(escapeJson(relatedQueries));
+            }
+            final String[] relatedContents = relatedContentHelper.getRelatedContents(params.getQuery());
+            buf.append(",\"related_contents\":");
+            buf.append(escapeJson(relatedContents));
             if (!documentItems.isEmpty()) {
                 buf.append(',');
                 buf.append("\"result\":[");
@@ -251,11 +289,6 @@ public class JsonApiManager extends BaseJsonApiManager {
                     }
                     buf.append(']');
                 }
-                if (geoInfo != null && geoInfo.toQueryBuilder() != null) {
-                    buf.append(',');
-                    buf.append("\"geo\":");
-                    buf.append(toGeoRequestString(geoInfo));
-                }
             }
         } catch (final Exception e) {
             status = 1;
@@ -278,28 +311,29 @@ public class JsonApiManager extends BaseJsonApiManager {
         }
     }
 
-    protected String detailedMessage(Throwable t) {
+    protected String detailedMessage(final Throwable t) {
         if (t == null) {
             return "Unknown";
         }
-        if (t.getCause() != null) {
+        Throwable target = t;
+        if (target.getCause() != null) {
             final StringBuilder sb = new StringBuilder();
-            while (t != null) {
-                sb.append(t.getClass().getSimpleName());
-                if (t.getMessage() != null) {
+            while (target != null) {
+                sb.append(target.getClass().getSimpleName());
+                if (target.getMessage() != null) {
                     sb.append("[");
-                    sb.append(t.getMessage());
+                    sb.append(target.getMessage());
                     sb.append("]");
                 }
                 sb.append("; ");
-                t = t.getCause();
-                if (t != null) {
+                target = target.getCause();
+                if (target != null) {
                     sb.append("nested: ");
                 }
             }
             return sb.toString();
         } else {
-            return t.getClass().getSimpleName() + "[" + t.getMessage() + "]";
+            return target.getClass().getSimpleName() + "[" + target.getMessage() + "]";
         }
     }
 
@@ -350,7 +384,15 @@ public class JsonApiManager extends BaseJsonApiManager {
         }
 
         final String seed = request.getParameter("seed");
+        final List<String> tagList = new ArrayList<>();
         final String[] tags = request.getParameterValues("labels");
+        if (tags != null) {
+            tagList.addAll(Arrays.asList(tags));
+        }
+        final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+        if (StringUtil.isNotBlank(key)) {
+            tagList.add(key);
+        }
         final String[] fields = request.getParameterValues("fields");
         final String[] excludes = StringUtil.EMPTY_STRINGS;// TODO
 
@@ -360,7 +402,9 @@ public class JsonApiManager extends BaseJsonApiManager {
         Exception err = null;
         final StringBuilder buf = new StringBuilder(255); // TODO replace response stream
         try {
-            final List<String> popularWordList = popularWordHelper.getWordList(SearchRequestType.JSON, seed, tags, null, fields, excludes);
+            final List<String> popularWordList =
+                    popularWordHelper.getWordList(SearchRequestType.JSON, seed, tagList.toArray(new String[tagList.size()]), null, fields,
+                            excludes);
 
             buf.append("\"result\":[");
             boolean first1 = true;
@@ -503,7 +547,7 @@ public class JsonApiManager extends BaseJsonApiManager {
                     searchService.getDocumentListByDocIds(
                             docIds,
                             new String[] { fessConfig.getIndexFieldUrl(), fessConfig.getIndexFieldDocId(),
-                                    fessConfig.getIndexFieldFavoriteCount() }, OptionalThing.empty());
+                                    fessConfig.getIndexFieldFavoriteCount() }, OptionalThing.empty(), SearchRequestType.JSON);
             List<String> urlList = new ArrayList<>(docList.size());
             for (final Map<String, Object> doc : docList) {
                 final String urlObj = DocumentUtil.getValue(doc, fessConfig.getIndexFieldUrl(), String.class);
@@ -665,6 +709,11 @@ public class JsonApiManager extends BaseJsonApiManager {
         @Override
         public SearchRequestType getType() {
             return SearchRequestType.JSON;
+        }
+
+        @Override
+        public String getSimilarDocHash() {
+            return request.getParameter("sdh");
         }
 
     }

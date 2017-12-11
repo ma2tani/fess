@@ -73,9 +73,6 @@ public class BsFileConfig extends EsAbstractEntity {
     /** intervalTime */
     protected Integer intervalTime;
 
-    /** timeToLive */
-    protected Integer timeToLive;
-
     /** maxAccessCount */
     protected Long maxAccessCount;
 
@@ -94,11 +91,17 @@ public class BsFileConfig extends EsAbstractEntity {
     /** sortOrder */
     protected Integer sortOrder;
 
+    /** timeToLive */
+    protected Integer timeToLive;
+
     /** updatedBy */
     protected String updatedBy;
 
     /** updatedTime */
     protected Long updatedTime;
+
+    /** virtualHosts */
+    protected String[] virtualHosts;
 
     // [Referrers] *comment only
 
@@ -122,69 +125,76 @@ public class BsFileConfig extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (available != null) {
-            sourceMap.put("available", available);
+            addFieldToSource(sourceMap, "available", available);
         }
         if (boost != null) {
-            sourceMap.put("boost", boost);
+            addFieldToSource(sourceMap, "boost", boost);
         }
         if (configParameter != null) {
-            sourceMap.put("configParameter", configParameter);
+            addFieldToSource(sourceMap, "configParameter", configParameter);
         }
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (depth != null) {
-            sourceMap.put("depth", depth);
+            addFieldToSource(sourceMap, "depth", depth);
         }
         if (description != null) {
-            sourceMap.put("description", description);
+            addFieldToSource(sourceMap, "description", description);
         }
         if (excludedDocPaths != null) {
-            sourceMap.put("excludedDocPaths", excludedDocPaths);
+            addFieldToSource(sourceMap, "excludedDocPaths", excludedDocPaths);
         }
         if (excludedPaths != null) {
-            sourceMap.put("excludedPaths", excludedPaths);
+            addFieldToSource(sourceMap, "excludedPaths", excludedPaths);
         }
         if (includedDocPaths != null) {
-            sourceMap.put("includedDocPaths", includedDocPaths);
+            addFieldToSource(sourceMap, "includedDocPaths", includedDocPaths);
         }
         if (includedPaths != null) {
-            sourceMap.put("includedPaths", includedPaths);
+            addFieldToSource(sourceMap, "includedPaths", includedPaths);
         }
         if (intervalTime != null) {
-            sourceMap.put("intervalTime", intervalTime);
-        }
-        if (timeToLive != null) {
-            sourceMap.put("timeToLive", timeToLive);
+            addFieldToSource(sourceMap, "intervalTime", intervalTime);
         }
         if (maxAccessCount != null) {
-            sourceMap.put("maxAccessCount", maxAccessCount);
+            addFieldToSource(sourceMap, "maxAccessCount", maxAccessCount);
         }
         if (name != null) {
-            sourceMap.put("name", name);
+            addFieldToSource(sourceMap, "name", name);
         }
         if (numOfThread != null) {
-            sourceMap.put("numOfThread", numOfThread);
+            addFieldToSource(sourceMap, "numOfThread", numOfThread);
         }
         if (paths != null) {
-            sourceMap.put("paths", paths);
+            addFieldToSource(sourceMap, "paths", paths);
         }
         if (permissions != null) {
-            sourceMap.put("permissions", permissions);
+            addFieldToSource(sourceMap, "permissions", permissions);
         }
         if (sortOrder != null) {
-            sourceMap.put("sortOrder", sortOrder);
+            addFieldToSource(sourceMap, "sortOrder", sortOrder);
+        }
+        if (timeToLive != null) {
+            addFieldToSource(sourceMap, "timeToLive", timeToLive);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
+        }
+        if (virtualHosts != null) {
+            addFieldToSource(sourceMap, "virtualHosts", virtualHosts);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -205,15 +215,16 @@ public class BsFileConfig extends EsAbstractEntity {
         sb.append(dm).append(includedDocPaths);
         sb.append(dm).append(includedPaths);
         sb.append(dm).append(intervalTime);
-        sb.append(dm).append(timeToLive);
         sb.append(dm).append(maxAccessCount);
         sb.append(dm).append(name);
         sb.append(dm).append(numOfThread);
         sb.append(dm).append(paths);
         sb.append(dm).append(permissions);
         sb.append(dm).append(sortOrder);
+        sb.append(dm).append(timeToLive);
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
+        sb.append(dm).append(virtualHosts);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -344,16 +355,6 @@ public class BsFileConfig extends EsAbstractEntity {
         this.intervalTime = value;
     }
 
-    public Integer getTimeToLive() {
-        checkSpecifiedProperty("timeToLive");
-        return timeToLive;
-    }
-
-    public void setTimeToLive(Integer value) {
-        registerModifiedProperty("timeToLive");
-        this.timeToLive = value;
-    }
-
     public Long getMaxAccessCount() {
         checkSpecifiedProperty("maxAccessCount");
         return maxAccessCount;
@@ -414,6 +415,16 @@ public class BsFileConfig extends EsAbstractEntity {
         this.sortOrder = value;
     }
 
+    public Integer getTimeToLive() {
+        checkSpecifiedProperty("timeToLive");
+        return timeToLive;
+    }
+
+    public void setTimeToLive(Integer value) {
+        registerModifiedProperty("timeToLive");
+        this.timeToLive = value;
+    }
+
     public String getUpdatedBy() {
         checkSpecifiedProperty("updatedBy");
         return convertEmptyToNull(updatedBy);
@@ -432,5 +443,15 @@ public class BsFileConfig extends EsAbstractEntity {
     public void setUpdatedTime(Long value) {
         registerModifiedProperty("updatedTime");
         this.updatedTime = value;
+    }
+
+    public String[] getVirtualHosts() {
+        checkSpecifiedProperty("virtualHosts");
+        return virtualHosts;
+    }
+
+    public void setVirtualHosts(String[] value) {
+        registerModifiedProperty("virtualHosts");
+        this.virtualHosts = value;
     }
 }

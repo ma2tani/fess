@@ -25,18 +25,22 @@
 	</component>
 	<component name="keyMatchHelper" class="org.codelibs.fess.helper.KeyMatchHelper">
 	</component>
+	<component name="relatedContentHelper" class="org.codelibs.fess.helper.RelatedContentHelper">
+	</component>
+	<component name="relatedQueryHelper" class="org.codelibs.fess.helper.RelatedQueryHelper">
+	</component>
 	<component name="queryParser" class="org.apache.lucene.queryparser.ext.ExtendableQueryParser" instance="prototype">
 		<arg>org.codelibs.fess.Constants.DEFAULT_FIELD</arg>
 		<arg>
 			<component class="org.apache.lucene.analysis.core.WhitespaceAnalyzer"></component>
 		</arg>
-		<property name="lowercaseExpandedTerms">false</property>
 		<property name="allowLeadingWildcard">true</property>
 		<property name="defaultOperator">org.apache.lucene.queryparser.classic.QueryParser$Operator.AND</property>
 	</component>
 	<component name="queryHelper" class="org.codelibs.fess.helper.QueryHelper">
 		<property name="defaultFacetInfo">
 			<component class="org.codelibs.fess.entity.FacetInfo">
+				<property name="size">100</property>
 				<property name="minDocCount">1</property>
 				<property name="field">["label"]</property>
 				<property name="query">[
@@ -321,9 +325,11 @@
 						<arg>"labels.facet_filetype_others"</arg>
 						<arg>"filetype:others"</arg>
 					</postConstruct>
-
 				</component>
 			</arg>
+		</postConstruct>
+		<postConstruct name="addInlineMimeType">
+			<arg>"application/pdf"</arg>
 		</postConstruct>
 	</component>
 	<component name="userAgentHelper" class="org.codelibs.fess.helper.UserAgentHelper">
@@ -331,6 +337,38 @@
 	<component name="popularWordHelper" class="org.codelibs.fess.helper.PopularWordHelper">
 	</component>
 	<component name="userInfoHelper" class="org.codelibs.fess.helper.UserInfoHelper">
+	</component>
+	<component name="authenticationManager" class="org.codelibs.fess.auth.AuthenticationManager">
+		<!--
+		<postConstruct name="addChain">
+			<arg>
+				<component class="org.codelibs.fess.auth.chain.CommandChain">
+					<property name="updateCommand">[
+					"/usr/sbin/htpasswd",
+					"-b",
+					"/tmp/test.txt",
+					"$USERNAME",
+					"$PASSWORD"
+					]</property>
+					<property name="deleteCommand">[
+					"/usr/sbin/htpasswd",
+					"-D",
+					"/tmp/test.txt",
+					"$USERNAME"
+					]</property>
+					<property name="targetUsers">[
+					"admin"
+					]</property>
+				</component>
+			</arg>
+		</postConstruct>
+		 -->
+		<postConstruct name="addChain">
+			<arg>
+				<component class="org.codelibs.fess.auth.chain.LdapChain">
+				</component>
+			</arg>
+		</postConstruct>
 	</component>
 	<component name="openSearchHelper" class="org.codelibs.fess.helper.OpenSearchHelper">
 		<property name="osddPath">"/WEB-INF/orig/open-search/osdd.xml"</property>

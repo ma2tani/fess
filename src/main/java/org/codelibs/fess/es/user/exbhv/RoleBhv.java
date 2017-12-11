@@ -15,11 +15,44 @@
  */
 package org.codelibs.fess.es.user.exbhv;
 
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.es.user.bsbhv.BsRoleBhv;
+import org.codelibs.fess.es.user.exentity.Role;
+import org.codelibs.fess.util.ComponentUtil;
+import org.dbflute.exception.IllegalBehaviorStateException;
+import org.dbflute.util.DfTypeUtil;
 
 /**
  * @author FreeGen
  */
 public class RoleBhv extends BsRoleBhv {
+    private String indexName = null;
 
+    @Override
+    protected String asEsIndex() {
+        if (indexName == null) {
+            final String name = ComponentUtil.getFessConfig().getIndexUserIndex();
+            indexName = super.asEsIndex().replaceFirst(Pattern.quote(".fess_user"), name);
+        }
+        return indexName;
+    }
+
+    @Override
+    protected <RESULT extends Role> RESULT createEntity(final Map<String, Object> source, final Class<? extends RESULT> entityType) {
+        try {
+            final RESULT result = entityType.newInstance();
+            result.setName(DfTypeUtil.toString(source.get("name")));
+            result.setAttributes(source.entrySet().stream().filter(e -> !"name".equals(e.getKey()))
+                    .map(e -> new Pair<>(e.getKey(), (String) e.getValue()))
+                    .collect(Collectors.toMap(t -> t.getFirst(), t -> t.getSecond())));
+            return result;
+        } catch (InstantiationException | IllegalAccessException e) {
+            final String msg = "Cannot create a new instance: " + entityType.getName();
+            throw new IllegalBehaviorStateException(msg, e);
+        }
+    }
 }

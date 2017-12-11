@@ -264,6 +264,25 @@ public interface FessHtmlPath {
     /** The path of the HTML: /admin/pathmap/admin_pathmap_edit.jsp */
     HtmlNext path_AdminPathmap_AdminPathmapEditJsp = new HtmlNext("/admin/pathmap/admin_pathmap_edit.jsp");
 
+    /** The path of the HTML: /admin/relatedcontent/admin_relatedcontent.jsp */
+    HtmlNext path_AdminRelatedcontent_AdminRelatedcontentJsp = new HtmlNext("/admin/relatedcontent/admin_relatedcontent.jsp");
+
+    /** The path of the HTML: /admin/relatedcontent/admin_relatedcontent_details.jsp */
+    HtmlNext path_AdminRelatedcontent_AdminRelatedcontentDetailsJsp =
+            new HtmlNext("/admin/relatedcontent/admin_relatedcontent_details.jsp");
+
+    /** The path of the HTML: /admin/relatedcontent/admin_relatedcontent_edit.jsp */
+    HtmlNext path_AdminRelatedcontent_AdminRelatedcontentEditJsp = new HtmlNext("/admin/relatedcontent/admin_relatedcontent_edit.jsp");
+
+    /** The path of the HTML: /admin/relatedquery/admin_relatedquery.jsp */
+    HtmlNext path_AdminRelatedquery_AdminRelatedqueryJsp = new HtmlNext("/admin/relatedquery/admin_relatedquery.jsp");
+
+    /** The path of the HTML: /admin/relatedquery/admin_relatedquery_details.jsp */
+    HtmlNext path_AdminRelatedquery_AdminRelatedqueryDetailsJsp = new HtmlNext("/admin/relatedquery/admin_relatedquery_details.jsp");
+
+    /** The path of the HTML: /admin/relatedquery/admin_relatedquery_edit.jsp */
+    HtmlNext path_AdminRelatedquery_AdminRelatedqueryEditJsp = new HtmlNext("/admin/relatedquery/admin_relatedquery_edit.jsp");
+
     /** The path of the HTML: /admin/reqheader/admin_reqheader.jsp */
     HtmlNext path_AdminReqheader_AdminReqheaderJsp = new HtmlNext("/admin/reqheader/admin_reqheader.jsp");
 
@@ -348,12 +367,6 @@ public interface FessHtmlPath {
     /** The path of the HTML: /error/error.jsp */
     HtmlNext path_Error_ErrorJsp = new HtmlNext("/error/error.jsp");
 
-    /** The path of the HTML: /error/footer.jsp */
-    HtmlNext path_Error_FooterJsp = new HtmlNext("/error/footer.jsp");
-
-    /** The path of the HTML: /error/header.jsp */
-    HtmlNext path_Error_HeaderJsp = new HtmlNext("/error/header.jsp");
-
     /** The path of the HTML: /error/notFound.jsp */
     HtmlNext path_Error_NotFoundJsp = new HtmlNext("/error/notFound.jsp");
 
@@ -375,6 +388,51 @@ public interface FessHtmlPath {
     /** The path of the HTML: /index.jsp */
     HtmlNext path_IndexJsp = new HtmlNext("/index.jsp");
 
+    /** The path of the HTML: /local/error/badRequest.jsp */
+    HtmlNext path_LocalError_BadRequestJsp = new HtmlNext("/local/error/badRequest.jsp");
+
+    /** The path of the HTML: /local/error/error.jsp */
+    HtmlNext path_LocalError_ErrorJsp = new HtmlNext("/local/error/error.jsp");
+
+    /** The path of the HTML: /local/error/notFound.jsp */
+    HtmlNext path_LocalError_NotFoundJsp = new HtmlNext("/local/error/notFound.jsp");
+
+    /** The path of the HTML: /local/error/redirect.jsp */
+    HtmlNext path_LocalError_RedirectJsp = new HtmlNext("/local/error/redirect.jsp");
+
+    /** The path of the HTML: /local/error/system.jsp */
+    HtmlNext path_LocalError_SystemJsp = new HtmlNext("/local/error/system.jsp");
+
+    /** The path of the HTML: /local/footer.jsp */
+    HtmlNext path_Local_FooterJsp = new HtmlNext("/local/footer.jsp");
+
+    /** The path of the HTML: /local/header.jsp */
+    HtmlNext path_Local_HeaderJsp = new HtmlNext("/local/header.jsp");
+
+    /** The path of the HTML: /local/help.jsp */
+    HtmlNext path_Local_HelpJsp = new HtmlNext("/local/help.jsp");
+
+    /** The path of the HTML: /local/index.jsp */
+    HtmlNext path_Local_IndexJsp = new HtmlNext("/local/index.jsp");
+
+    /** The path of the HTML: /local/login/index.jsp */
+    HtmlNext path_LocalLogin_IndexJsp = new HtmlNext("/local/login/index.jsp");
+
+    /** The path of the HTML: /local/profile/index.jsp */
+    HtmlNext path_LocalProfile_IndexJsp = new HtmlNext("/local/profile/index.jsp");
+
+    /** The path of the HTML: /local/search.jsp */
+    HtmlNext path_Local_SearchJsp = new HtmlNext("/local/search.jsp");
+
+    /** The path of the HTML: /local/searchNoResult.jsp */
+    HtmlNext path_Local_SearchNoResultJsp = new HtmlNext("/local/searchNoResult.jsp");
+
+    /** The path of the HTML: /local/searchOptions.jsp */
+    HtmlNext path_Local_SearchOptionsJsp = new HtmlNext("/local/searchOptions.jsp");
+
+    /** The path of the HTML: /local/searchResults.jsp */
+    HtmlNext path_Local_SearchResultsJsp = new HtmlNext("/local/searchResults.jsp");
+
     /** The path of the HTML: /login/index.jsp */
     HtmlNext path_Login_IndexJsp = new HtmlNext("/login/index.jsp");
 
@@ -386,6 +444,9 @@ public interface FessHtmlPath {
 
     /** The path of the HTML: /searchNoResult.jsp */
     HtmlNext path_SearchNoResultJsp = new HtmlNext("/searchNoResult.jsp");
+
+    /** The path of the HTML: /searchOptions.jsp */
+    HtmlNext path_SearchOptionsJsp = new HtmlNext("/searchOptions.jsp");
 
     /** The path of the HTML: /searchResults.jsp */
     HtmlNext path_SearchResultsJsp = new HtmlNext("/searchResults.jsp");

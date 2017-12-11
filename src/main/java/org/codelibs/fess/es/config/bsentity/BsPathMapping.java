@@ -55,14 +55,14 @@ public class BsPathMapping extends EsAbstractEntity {
     /** sortOrder */
     protected Integer sortOrder;
 
-    /** userAgent */
-    protected String userAgent;
-
     /** updatedBy */
     protected String updatedBy;
 
     /** updatedTime */
     protected Long updatedTime;
+
+    /** userAgent */
+    protected String userAgent;
 
     // [Referrers] *comment only
 
@@ -86,33 +86,37 @@ public class BsPathMapping extends EsAbstractEntity {
     public Map<String, Object> toSource() {
         Map<String, Object> sourceMap = new HashMap<>();
         if (createdBy != null) {
-            sourceMap.put("createdBy", createdBy);
+            addFieldToSource(sourceMap, "createdBy", createdBy);
         }
         if (createdTime != null) {
-            sourceMap.put("createdTime", createdTime);
+            addFieldToSource(sourceMap, "createdTime", createdTime);
         }
         if (processType != null) {
-            sourceMap.put("processType", processType);
+            addFieldToSource(sourceMap, "processType", processType);
         }
         if (regex != null) {
-            sourceMap.put("regex", regex);
+            addFieldToSource(sourceMap, "regex", regex);
         }
         if (replacement != null) {
-            sourceMap.put("replacement", replacement);
+            addFieldToSource(sourceMap, "replacement", replacement);
         }
         if (sortOrder != null) {
-            sourceMap.put("sortOrder", sortOrder);
-        }
-        if (userAgent != null) {
-            sourceMap.put("userAgent", userAgent);
+            addFieldToSource(sourceMap, "sortOrder", sortOrder);
         }
         if (updatedBy != null) {
-            sourceMap.put("updatedBy", updatedBy);
+            addFieldToSource(sourceMap, "updatedBy", updatedBy);
         }
         if (updatedTime != null) {
-            sourceMap.put("updatedTime", updatedTime);
+            addFieldToSource(sourceMap, "updatedTime", updatedTime);
+        }
+        if (userAgent != null) {
+            addFieldToSource(sourceMap, "userAgent", userAgent);
         }
         return sourceMap;
+    }
+
+    protected void addFieldToSource(Map<String, Object> sourceMap, String field, Object value) {
+        sourceMap.put(field, value);
     }
 
     // ===================================================================================
@@ -127,9 +131,9 @@ public class BsPathMapping extends EsAbstractEntity {
         sb.append(dm).append(regex);
         sb.append(dm).append(replacement);
         sb.append(dm).append(sortOrder);
-        sb.append(dm).append(userAgent);
         sb.append(dm).append(updatedBy);
         sb.append(dm).append(updatedTime);
+        sb.append(dm).append(userAgent);
         if (sb.length() > dm.length()) {
             sb.delete(0, dm.length());
         }
@@ -200,16 +204,6 @@ public class BsPathMapping extends EsAbstractEntity {
         this.sortOrder = value;
     }
 
-    public String getUserAgent() {
-        checkSpecifiedProperty("userAgent");
-        return convertEmptyToNull(userAgent);
-    }
-
-    public void setUserAgent(String value) {
-        registerModifiedProperty("userAgent");
-        this.userAgent = value;
-    }
-
     public String getUpdatedBy() {
         checkSpecifiedProperty("updatedBy");
         return convertEmptyToNull(updatedBy);
@@ -228,5 +222,15 @@ public class BsPathMapping extends EsAbstractEntity {
     public void setUpdatedTime(Long value) {
         registerModifiedProperty("updatedTime");
         this.updatedTime = value;
+    }
+
+    public String getUserAgent() {
+        checkSpecifiedProperty("userAgent");
+        return convertEmptyToNull(userAgent);
+    }
+
+    public void setUserAgent(String value) {
+        registerModifiedProperty("userAgent");
+        this.userAgent = value;
     }
 }
