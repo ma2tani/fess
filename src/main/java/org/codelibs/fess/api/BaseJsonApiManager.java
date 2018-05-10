@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,13 @@ import org.codelibs.core.CoreLibConstants;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.exception.InvalidAccessTokenException;
+import org.codelibs.fess.util.ComponentUtil;
 import org.lastaflute.web.util.LaRequestUtil;
 import org.lastaflute.web.util.LaResponseUtil;
 
 public abstract class BaseJsonApiManager extends BaseApiManager {
+
+    protected String mimeType = "application/json";
 
     protected void writeJsonResponse(final int status, final String body, final Throwable t) {
         if (t == null) {
@@ -87,7 +90,7 @@ public abstract class BaseJsonApiManager extends BaseApiManager {
         }
         buf.append("{\"response\":");
         buf.append("{\"version\":");
-        buf.append(Constants.WEB_API_VERSION);
+        buf.append(ComponentUtil.getSystemHelper().getProductVersion());
         buf.append(',');
         buf.append("\"status\":");
         buf.append(status);
@@ -100,7 +103,7 @@ public abstract class BaseJsonApiManager extends BaseApiManager {
         if (isJsonp) {
             buf.append(')');
         }
-        write(buf.toString(), "text/javascript+json", Constants.UTF_8);
+        write(buf.toString(), mimeType, Constants.UTF_8);
 
     }
 
@@ -167,6 +170,10 @@ public abstract class BaseJsonApiManager extends BaseApiManager {
             buf.append('\"').append(StringEscapeUtils.escapeJson(obj.toString())).append('\"');
         }
         return buf.toString();
+    }
+
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
     }
 
 }

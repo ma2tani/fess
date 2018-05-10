@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.codelibs.core.exception.IORuntimeException;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.api.BaseJsonApiManager;
@@ -71,8 +72,16 @@ public class JsonApiManager extends BaseJsonApiManager {
 
     @Override
     public boolean matches(final HttpServletRequest request) {
-        if (!ComponentUtil.getFessConfig().isWebApiJson()) {
-            return false;
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+        if (!fessConfig.isWebApiJson()) {
+            switch (getFormatType(request)) {
+            case SEARCH:
+            case LABEL:
+            case POPULARWORD:
+                return false;
+            default:
+                break;
+            }
         }
 
         final String servletPath = request.getServletPath();
@@ -82,8 +91,7 @@ public class JsonApiManager extends BaseJsonApiManager {
     @Override
     public void process(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) throws IOException,
             ServletException {
-        final String formatType = request.getParameter("type");
-        switch (getFormatType(formatType)) {
+        switch (getFormatType(request)) {
         case SEARCH:
             processSearchRequest(request, response, chain);
             break;
@@ -102,10 +110,72 @@ public class JsonApiManager extends BaseJsonApiManager {
         case PING:
             processPingRequest(request, response, chain);
             break;
+        case SCROLL:
+            processScrollSearchRequest(request, response, chain);
+            break;
         default:
             writeJsonResponse(99, StringUtil.EMPTY, "Not found.");
             break;
         }
+    }
+
+    protected void processScrollSearchRequest(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) {
+        final SearchService searchService = ComponentUtil.getComponent(SearchService.class);
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
+
+        if (!fessConfig.isAcceptedSearchReferer(request.getHeader("referer"))) {
+            writeJsonResponse(99, StringUtil.EMPTY, "Referer is invalid.");
+            return;
+        }
+
+        if (!fessConfig.isApiSearchScroll()) {
+            writeJsonResponse(99, StringUtil.EMPTY, "Scroll Search is not available.");
+            return;
+        }
+
+        final StringBuilder buf = new StringBuilder(1000);
+        request.setAttribute(Constants.SEARCH_LOG_ACCESS_TYPE, Constants.SEARCH_LOG_ACCESS_TYPE_JSON);
+        final JsonRequestParams params = new JsonRequestParams(request, fessConfig);
+        try {
+            response.setContentType("application/x-ndjson; charset=UTF-8");
+            final long count = searchService.scrollSearch(params, doc -> {
+                buf.setLength(0);
+                buf.append('{');
+                boolean first2 = true;
+                for (final Map.Entry<String, Object> entry : doc.entrySet()) {
+                    final String name = entry.getKey();
+                    if (StringUtil.isNotBlank(name) && entry.getValue() != null) {
+                        if (!first2) {
+                            buf.append(',');
+                        } else {
+                            first2 = false;
+                        }
+                        buf.append(escapeJson(name));
+                        buf.append(':');
+                        buf.append(escapeJson(entry.getValue()));
+                    }
+                }
+                buf.append('}');
+                buf.append('\n');
+                try {
+                    response.getWriter().print(buf.toString());
+                } catch (final IOException e) {
+                    throw new IORuntimeException(e);
+                }
+                return true;
+            }, OptionalThing.empty());
+            response.flushBuffer();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Loaded " + count + " docs");
+            }
+        } catch (final Exception e) {
+            final int status = 9;
+            if (logger.isDebugEnabled()) {
+                logger.debug("Failed to process a ping request.", e);
+            }
+            writeJsonResponse(status, null, e);
+        }
+
     }
 
     protected void processPingRequest(final HttpServletRequest request, final HttpServletResponse response, final FilterChain chain) {
@@ -389,7 +459,7 @@ public class JsonApiManager extends BaseJsonApiManager {
         if (tags != null) {
             tagList.addAll(Arrays.asList(tags));
         }
-        final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+        final String key = ComponentUtil.getVirtualHostHelper().getVirtualHostKey();
         if (StringUtil.isNotBlank(key)) {
             tagList.add(key);
         }
@@ -633,6 +703,19 @@ public class JsonApiManager extends BaseJsonApiManager {
                 }
             }
             return fields;
+        }
+
+        @Override
+        public Map<String, String[]> getConditions() {
+            final Map<String, String[]> conditions = new HashMap<>();
+            for (final Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+                final String key = entry.getKey();
+                if (key.startsWith("as.")) {
+                    final String[] value = simplifyArray(entry.getValue());
+                    conditions.put(key.substring("as.".length()), value);
+                }
+            }
+            return conditions;
         }
 
         @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 
 import org.apache.commons.io.IOUtils;
+import org.codelibs.core.io.CloseableUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.exception.JobNotFoundException;
 import org.codelibs.fess.exception.JobProcessingException;
@@ -79,8 +80,8 @@ public class ProcessHelper {
         return !runningProcessMap.isEmpty();
     }
 
-    public boolean isProcessRunning(String sessionId) {
-        JobProcess jobProcess = runningProcessMap.get(sessionId);
+    public boolean isProcessRunning(final String sessionId) {
+        final JobProcess jobProcess = runningProcessMap.get(sessionId);
         return jobProcess != null && jobProcess.getProcess().isAlive();
     }
 
@@ -97,7 +98,7 @@ public class ProcessHelper {
             final Process process = jobProcess.getProcess();
             new Thread(() -> {
                 try {
-                    IOUtils.closeQuietly(process.getInputStream());
+                    CloseableUtil.closeQuietly(process.getInputStream());
                 } catch (final Exception e) {
                     logger.warn("Could not close a process input stream.", e);
                 } finally {
@@ -106,7 +107,7 @@ public class ProcessHelper {
             }, "ProcessCloser-input-" + sessionId).start();
             new Thread(() -> {
                 try {
-                    IOUtils.closeQuietly(process.getErrorStream());
+                    CloseableUtil.closeQuietly(process.getErrorStream());
                 } catch (final Exception e) {
                     logger.warn("Could not close a process error stream.", e);
                 } finally {
@@ -115,7 +116,7 @@ public class ProcessHelper {
             }, "ProcessCloser-error-" + sessionId).start();
             new Thread(() -> {
                 try {
-                    IOUtils.closeQuietly(process.getOutputStream());
+                    CloseableUtil.closeQuietly(process.getOutputStream());
                 } catch (final Exception e) {
                     logger.warn("Could not close a process output stream.", e);
                 } finally {
@@ -146,14 +147,14 @@ public class ProcessHelper {
         this.processDestroyTimeout = processDestroyTimeout;
     }
 
-    public void sendCommand(String sessionId, String command) {
-        JobProcess jobProcess = runningProcessMap.get(sessionId);
+    public void sendCommand(final String sessionId, final String command) {
+        final JobProcess jobProcess = runningProcessMap.get(sessionId);
         if (jobProcess != null) {
             try {
                 final OutputStream out = jobProcess.getProcess().getOutputStream();
                 IOUtils.write(command + "\n", out, Constants.CHARSET_UTF_8);
                 out.flush();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new JobProcessingException(e);
             }
         } else {

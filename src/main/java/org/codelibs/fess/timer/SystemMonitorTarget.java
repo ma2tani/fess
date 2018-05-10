@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,7 +68,7 @@ public class SystemMonitorTarget implements TimeoutTarget {
 
     @Override
     public void expired() {
-        StringBuilder buf = new StringBuilder(1000);
+        final StringBuilder buf = new StringBuilder(1000);
 
         buf.append("[SYSTEM MONITOR] ");
         buf.append('{');
@@ -84,49 +84,49 @@ public class SystemMonitorTarget implements TimeoutTarget {
         logger.info(buf.toString());
     }
 
-    private void appendJvmStats(StringBuilder buf) {
+    private void appendJvmStats(final StringBuilder buf) {
         buf.append("\"jvm\":{");
         final JvmStats jvmStats = JvmStats.jvmStats();
-        Mem mem = jvmStats.getMem();
+        final Mem mem = jvmStats.getMem();
         buf.append("\"memory\":{");
         buf.append("\"heap\":{");
-        append(buf, "used", () -> mem.getHeapUsed().bytesAsInt()).append(',');
-        append(buf, "committed", () -> mem.getHeapCommitted().bytesAsInt()).append(',');
-        append(buf, "max", () -> mem.getHeapMax().bytesAsInt()).append(',');
+        append(buf, "used", () -> mem.getHeapUsed().getBytes()).append(',');
+        append(buf, "committed", () -> mem.getHeapCommitted().getBytes()).append(',');
+        append(buf, "max", () -> mem.getHeapMax().getBytes()).append(',');
         append(buf, "percent", () -> mem.getHeapUsedPercent());
         buf.append("},");
         buf.append("\"non_heap\":{");
-        append(buf, "used", () -> mem.getNonHeapUsed().bytesAsInt()).append(',');
-        append(buf, "committed", () -> mem.getNonHeapCommitted().bytesAsInt());
+        append(buf, "used", () -> mem.getNonHeapUsed().getBytes()).append(',');
+        append(buf, "committed", () -> mem.getNonHeapCommitted().getBytes());
         buf.append('}');
         buf.append("},");
-        List<BufferPool> bufferPools = jvmStats.getBufferPools();
+        final List<BufferPool> bufferPools = jvmStats.getBufferPools();
         buf.append("\"pools\":{");
         buf.append(bufferPools.stream().map(p -> {
-            StringBuilder b = new StringBuilder();
+            final StringBuilder b = new StringBuilder();
             b.append('"').append(StringEscapeUtils.escapeJson(p.getName())).append("\":{");
             append(b, "count", () -> p.getCount()).append(',');
-            append(b, "used", () -> p.getUsed().bytesAsInt()).append(',');
-            append(b, "capacity", () -> p.getTotalCapacity().bytesAsInt()).append('}');
+            append(b, "used", () -> p.getUsed().getBytes()).append(',');
+            append(b, "capacity", () -> p.getTotalCapacity().getBytes()).append('}');
             return b.toString();
         }).collect(Collectors.joining(",")));
         buf.append("},");
-        GarbageCollectors gc = jvmStats.getGc();
+        final GarbageCollectors gc = jvmStats.getGc();
         buf.append("\"gc\":{");
         buf.append(Arrays.stream(gc.getCollectors()).map(c -> {
-            StringBuilder b = new StringBuilder();
+            final StringBuilder b = new StringBuilder();
             b.append('"').append(StringEscapeUtils.escapeJson(c.getName())).append("\":{");
             append(b, "count", () -> c.getCollectionCount()).append(',');
             append(b, "time", () -> c.getCollectionTime().getMillis()).append('}');
             return b.toString();
         }).collect(Collectors.joining(",")));
         buf.append("},");
-        Threads threads = jvmStats.getThreads();
+        final Threads threads = jvmStats.getThreads();
         buf.append("\"threads\":{");
         append(buf, "count", () -> threads.getCount()).append(',');
         append(buf, "peak", () -> threads.getPeakCount());
         buf.append("},");
-        Classes classes = jvmStats.getClasses();
+        final Classes classes = jvmStats.getClasses();
         buf.append("\"classes\":{");
         append(buf, "loaded", () -> classes.getLoadedClassCount()).append(',');
         append(buf, "total_loaded", () -> classes.getTotalLoadedClassCount()).append(',');
@@ -136,7 +136,7 @@ public class SystemMonitorTarget implements TimeoutTarget {
         buf.append("},");
     }
 
-    private void appendProcessStats(StringBuilder buf) {
+    private void appendProcessStats(final StringBuilder buf) {
         buf.append("\"process\":{");
         final ProcessProbe processProbe = ProcessProbe.getInstance();
         buf.append("\"file_descriptor\":{");
@@ -153,7 +153,7 @@ public class SystemMonitorTarget implements TimeoutTarget {
         buf.append("},");
     }
 
-    private void appendOsStats(StringBuilder buf) {
+    private void appendOsStats(final StringBuilder buf) {
         buf.append("\"os\":{");
         final OsProbe osProbe = OsProbe.getInstance();
         buf.append("\"memory\":{");
@@ -168,26 +168,26 @@ public class SystemMonitorTarget implements TimeoutTarget {
         buf.append("},");
         buf.append("\"cpu\":{");
         append(buf, "percent", () -> osProbe.getSystemCpuPercent());
-        OsStats osStats = osProbe.osStats();
+        final OsStats osStats = osProbe.osStats();
         buf.append("},");
         append(buf, "load_averages", () -> osStats.getCpu().getLoadAverage());
         buf.append("},");
     }
 
-    private void appendElasticsearchStats(StringBuilder buf) {
+    private void appendElasticsearchStats(final StringBuilder buf) {
         String stats = null;
         try {
-            FessEsClient esClient = ComponentUtil.getFessEsClient();
-            NodesStatsResponse response =
+            final FessEsClient esClient = ComponentUtil.getFessEsClient();
+            final NodesStatsResponse response =
                     esClient.admin().cluster().prepareNodesStats().ingest(false).setBreaker(false).setDiscovery(false).setFs(true)
                             .setHttp(false).setIndices(true).setJvm(true).setOs(true).setProcess(true).setScript(false).setThreadPool(true)
                             .setTransport(true).execute().actionGet(10000L);
-            XContentBuilder builder = XContentFactory.jsonBuilder();
+            final XContentBuilder builder = XContentFactory.jsonBuilder();
             builder.startObject();
             response.toXContent(builder, ToXContent.EMPTY_PARAMS);
             builder.endObject();
             stats = builder.string();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             logger.debug("Failed to access Elasticsearch stats.", e);
         }
         buf.append("\"elasticsearch\":").append(stats).append(',');

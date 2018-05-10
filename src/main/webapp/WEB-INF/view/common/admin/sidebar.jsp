@@ -22,11 +22,11 @@
 		</form>
 
 		<!-- Sidebar Menu -->
-		<ul class="sidebar-menu">
+		<ul class="sidebar-menu" data-widget="tree">
 			<li class="header"><la:message key="labels.sidebar.menu" /></li>
 
 			<li
-				class="treeview <c:if test="${param.menuCategoryType=='dashboard'}">active</c:if>"><la:link
+				class="<c:if test="${param.menuCategoryType=='dashboard'}">active</c:if>"><la:link
 					href="/admin/dashboard/">
 					<i class="fa fa-dashboard"></i>
 					<span><la:message key="labels.menu_dashboard_config" /></span>

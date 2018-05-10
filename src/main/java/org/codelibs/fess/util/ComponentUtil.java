@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,11 @@ import org.codelibs.fess.dict.DictionaryManager;
 import org.codelibs.fess.ds.DataStoreFactory;
 import org.codelibs.fess.es.client.FessEsClient;
 import org.codelibs.fess.exception.ContainerNotAvailableException;
+import org.codelibs.fess.helper.AccessTokenHelper;
 import org.codelibs.fess.helper.ActivityHelper;
 import org.codelibs.fess.helper.CrawlingConfigHelper;
 import org.codelibs.fess.helper.CrawlingInfoHelper;
+import org.codelibs.fess.helper.CurlHelper;
 import org.codelibs.fess.helper.DocumentHelper;
 import org.codelibs.fess.helper.DuplicateHostHelper;
 import org.codelibs.fess.helper.FileTypeHelper;
@@ -58,6 +60,7 @@ import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.helper.UserAgentHelper;
 import org.codelibs.fess.helper.UserInfoHelper;
 import org.codelibs.fess.helper.ViewHelper;
+import org.codelibs.fess.helper.VirtualHostHelper;
 import org.codelibs.fess.indexer.IndexUpdater;
 import org.codelibs.fess.job.JobExecutor;
 import org.codelibs.fess.ldap.LdapManager;
@@ -79,6 +82,12 @@ import org.slf4j.LoggerFactory;
 public final class ComponentUtil {
 
     private static final Logger logger = LoggerFactory.getLogger(ComponentUtil.class);
+
+    private static final String CURL_HELPER = "curlHelper";
+
+    private static final String QUERY_STRING_BUILDER = "queryStringBuilder";
+
+    private static final String ACCESS_TOKEN_HELPER = "accessTokenHelper";
 
     private static final String AUTHENTICATION_MANAGER = "authenticationManager";
 
@@ -107,8 +116,6 @@ public final class ComponentUtil {
     private static final String DATA_SERVICE = "dataService";
 
     private static final String MESSAGE_MANAGER = "messageManager";
-
-    private static final String USER_AGENT_NAME = "userAgentName";
 
     private static final String INDEX_UPDATER = "indexUpdater";
 
@@ -161,6 +168,12 @@ public final class ComponentUtil {
     private static final String KEY_MATCH_HELPER = "keyMatchHelper";
 
     private static final String INDEXING_HELPER = "indexingHelper";
+
+    private static final String VIRTUAL_HOST_HELPER = "virtualHostHelper";
+
+    private static final String RELATED_CONTENT_HELPER = "relatedContentHelper";
+
+    private static final String RELATED_QUERY_HELPER = "relatedQueryHelper";
 
     private static IndexingHelper indexingHelper;
 
@@ -293,10 +306,6 @@ public final class ComponentUtil {
         return getComponent(INDEX_UPDATER);
     }
 
-    public static String getUserAgentName() {
-        return getComponent(USER_AGENT_NAME);
-    }
-
     public static KeyMatchHelper getKeyMatchHelper() {
         return getComponent(KEY_MATCH_HELPER);
     }
@@ -396,11 +405,27 @@ public final class ComponentUtil {
     }
 
     public static RelatedQueryHelper getRelatedQueryHelper() {
-        return getComponent(RelatedQueryHelper.class);
+        return getComponent(RELATED_QUERY_HELPER);
     }
 
     public static RelatedContentHelper getRelatedContentHelper() {
-        return getComponent(RelatedContentHelper.class);
+        return getComponent(RELATED_CONTENT_HELPER);
+    }
+
+    public static VirtualHostHelper getVirtualHostHelper() {
+        return getComponent(VIRTUAL_HOST_HELPER);
+    }
+
+    public static AccessTokenHelper getAccessTokenHelper() {
+        return getComponent(ACCESS_TOKEN_HELPER);
+    }
+
+    public static QueryStringBuilder getQueryStringBuilder() {
+        return getComponent(QUERY_STRING_BUILDER);
+    }
+
+    public static CurlHelper getCurlHelper() {
+        return getComponent(CURL_HELPER);
     }
 
     public static <T> T getComponent(final Class<T> clazz) {
@@ -427,12 +452,20 @@ public final class ComponentUtil {
         }
     }
 
+    public static boolean hasViewHelper() {
+        return SingletonLaContainerFactory.getContainer().hasComponentDef(VIEW_HELPER);
+    }
+
     public static boolean hasQueryHelper() {
         return SingletonLaContainerFactory.getContainer().hasComponentDef(QUERY_HELPER);
     }
 
     public static boolean hasPopularWordHelper() {
         return SingletonLaContainerFactory.getContainer().hasComponentDef(POPULAR_WORD_HELPER);
+    }
+
+    public static boolean hasRelatedQueryHelper() {
+        return SingletonLaContainerFactory.getContainer().hasComponentDef(RELATED_QUERY_HELPER);
     }
 
     public static boolean available() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.codelibs.fess.Constants;
 import org.codelibs.fess.it.CrawlTestBase;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -168,9 +167,9 @@ public class CrawlerLogTests extends CrawlTestBase {
         requestBody.put("target", "all");
         requestBody.put("script_type", "groovy");
         requestBody.put("sort_order", 0);
-        requestBody.put("crawler", Constants.ON);
-        requestBody.put("job_logging", Constants.ON);
-        requestBody.put("available", Constants.ON);
+        requestBody.put("crawler", true);
+        requestBody.put("job_logging", true);
+        requestBody.put("available", true);
         requestBody.put("script_data", buildWebConfigJobScript(webConfigId));
         createJob(requestBody);
     }
@@ -237,7 +236,7 @@ public class CrawlerLogTests extends CrawlTestBase {
         assertTrue(results.size() >= 1);
         Map<String, Object> item = results.get(0);
         assertTrue(item.containsKey("content_title"));
-        assertEquals("Example Domain", item.get("content_title"));
+        assertEquals("<strong>Example</strong> <strong>Domain</strong>", item.get("content_title"));
     }
 
     private void testDeleteSearchList() {

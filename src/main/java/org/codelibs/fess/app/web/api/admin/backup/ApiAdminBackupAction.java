@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,11 @@
 package org.codelibs.fess.app.web.api.admin.backup;
 
 import static org.codelibs.core.stream.StreamUtil.stream;
-import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.CSV_EXTENTION;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.NDJSON_EXTENTION;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getBackupItems;
-import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getClickLogCsvWriteCall;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getClickLogNdjsonWriteCall;
-import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getFavoriteLogCsvWriteCall;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getFavoriteLogNdjsonWriteCall;
-import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getSearchLogCsvWriteCall;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getSearchLogNdjsonWriteCall;
-import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getUserInfoCsvWriteCall;
 import static org.codelibs.fess.app.web.admin.backup.AdminBackupAction.getUserInfoNdjsonWriteCall;
 
 import java.io.BufferedWriter;
@@ -38,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.codelibs.elasticsearch.runner.net.Curl;
 import org.codelibs.elasticsearch.runner.net.CurlResponse;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.web.api.ApiResult;
@@ -46,13 +40,9 @@ import org.codelibs.fess.app.web.api.ApiResult.ApiBackupFilesResponse;
 import org.codelibs.fess.app.web.api.admin.FessApiAdminAction;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
-import org.codelibs.fess.util.ResourceUtil;
 import org.lastaflute.web.Execute;
 import org.lastaflute.web.response.JsonResponse;
 import org.lastaflute.web.response.StreamResponse;
-
-import com.orangesignal.csv.CsvConfig;
-import com.orangesignal.csv.CsvWriter;
 
 /**
  * @author Keiichi Watanabe
@@ -91,17 +81,6 @@ public class ApiAdminBackupAction extends FessApiAdminAction {
                 } else if ("favorite_log".equals(name)) {
                     return writeNdjsonResponse(id, getFavoriteLogNdjsonWriteCall());
                 }
-            } else if (id.endsWith(CSV_EXTENTION)) {
-                final String name = id.substring(0, id.length() - CSV_EXTENTION.length());
-                if ("search_log".equals(name)) {
-                    return writeCsvResponse(id, getSearchLogCsvWriteCall());
-                } else if ("user_info".equals(name)) {
-                    return writeCsvResponse(id, getUserInfoCsvWriteCall());
-                } else if ("click_log".equals(name)) {
-                    return writeCsvResponse(id, getClickLogCsvWriteCall());
-                } else if ("favorite_log".equals(name)) {
-                    return writeCsvResponse(id, getFavoriteLogCsvWriteCall());
-                }
             } else {
                 final String index;
                 final String filename;
@@ -115,8 +94,7 @@ public class ApiAdminBackupAction extends FessApiAdminAction {
                 return asStream(filename).contentTypeOctetStream().stream(
                         out -> {
                             try (CurlResponse response =
-                                    Curl.get(ResourceUtil.getElasticsearchHttpUrl() + "/" + index + "/_data")
-                                            .header("Content-Type", "application/json").param("format", "json").execute()) {
+                                    ComponentUtil.getCurlHelper().get("/" + index + "/_data").param("format", "json").execute()) {
                                 out.write(response.getContentAsStream());
                             }
                         });
@@ -135,29 +113,6 @@ public class ApiAdminBackupAction extends FessApiAdminAction {
                 .header("Content-Type", "application/x-ndjson")//
                 .stream(out -> {
                     try (final Writer writer = new BufferedWriter(new OutputStreamWriter(out.stream(), Constants.CHARSET_UTF_8))) {
-                        writeCall.accept(writer);
-                        writer.flush();
-                    }
-                });
-    }
-
-    private StreamResponse writeCsvResponse(final String id, final Consumer<CsvWriter> writeCall) {
-        return asStream(id)
-                //
-                .contentTypeOctetStream()
-                //
-                .header("Pragma", "no-cache")
-                //
-                .header("Cache-Control", "no-cache")
-                //
-                .header("Expires", "Thu, 01 Dec 1994 16:00:00 GMT")
-                //
-                .stream(out -> {
-                    final CsvConfig cfg = new CsvConfig(',', '"', '"');
-                    cfg.setEscapeDisabled(false);
-                    cfg.setQuoteDisabled(false);
-                    try (final CsvWriter writer =
-                            new CsvWriter(new BufferedWriter(new OutputStreamWriter(out.stream(), fessConfig.getCsvFileEncoding())), cfg)) {
                         writeCall.accept(writer);
                         writer.flush();
                     }

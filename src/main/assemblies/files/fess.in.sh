@@ -18,6 +18,10 @@ fi
 #ES_TRANSPORT_URL=localhost:9300
 #FESS_DICTIONARY_PATH=/var/lib/elasticsearch/config/
 
+# SSL truststore for certificate validation over https
+#JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStore=/tech/elastic/config/truststore.jks"
+#JAVA_OPTS="$JAVA_OPTS -Djavax.net.ssl.trustStorePassword=changeit"
+
 # min and max heap sizes should be set to the same value to avoid
 # stop-the-world GC pauses during resize, and so that we can lock the
 # heap in memory on startup to prevent any of it from being swapped

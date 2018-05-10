@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ public class SuggestCreator {
         protected String propertiesPath;
 
         protected Options() {
-            // noghing
+            // nothing
         }
 
         @Override
@@ -89,7 +89,7 @@ public class SuggestCreator {
             parser.parseArgument(args);
         } catch (final CmdLineException e) {
             System.err.println(e.getMessage());
-            System.err.println("java " + Crawler.class.getCanonicalName() + " [options...] arguments...");
+            System.err.println("java " + SuggestCreator.class.getCanonicalName() + " [options...] arguments...");
             parser.printUsage(System.err);
             return;
         }
@@ -140,9 +140,9 @@ public class SuggestCreator {
             exitCode = process(options);
         } catch (final ContainerNotAvailableException e) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Crawler is stopped.", e);
+                logger.debug("SuggestCreator is stopped.", e);
             } else if (logger.isInfoEnabled()) {
-                logger.info("Crawler is stopped.");
+                logger.info("SuggestCreator is stopped.");
             }
             exitCode = Constants.EXIT_FAIL;
         } catch (final Throwable t) {
@@ -155,7 +155,7 @@ public class SuggestCreator {
             destroyContainer();
         }
 
-        logger.info("Finished suggestCreator.");
+        logger.info("Finished SuggestCreator.");
         System.exit(exitCode);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,13 +83,13 @@ public class EsDataStoreImpl extends AbstractDataStoreImpl {
 
         final Settings settings =
                 Settings.builder()
-                        .put(paramMap
-                                .entrySet()
-                                .stream()
-                                .filter(e -> e.getKey().startsWith(SETTINGS_PREFIX))
-                                .collect(
-                                        Collectors.toMap(e -> e.getKey().replaceFirst("^settings\\.", StringUtil.EMPTY), e -> e.getValue())))
-                        .build();
+                        .putProperties(
+                                paramMap.entrySet()
+                                        .stream()
+                                        .filter(e -> e.getKey().startsWith(SETTINGS_PREFIX))
+                                        .collect(
+                                                Collectors.toMap(e -> e.getKey().replaceFirst("^settings\\.", StringUtil.EMPTY),
+                                                        e -> e.getValue())), s -> s).build();
         logger.info("Connecting to " + hostsStr + " with [" + settings.toDelimitedString(',') + "]");
         final TransportAddress[] addresses = split(hostsStr, ",").get(stream -> stream.map(h -> {
             final String[] values = h.trim().split(":");
@@ -134,7 +134,7 @@ public class EsDataStoreImpl extends AbstractDataStoreImpl {
         }
         builder.setQuery(QueryBuilders.wrapperQuery(paramMap.containsKey(QUERY) ? paramMap.get(QUERY).trim() : "{\"match_all\":{}}"));
         builder.setScroll(scroll);
-        builder.setPreference(paramMap.containsKey(PREFERENCE) ? paramMap.get(PREFERENCE).trim() : Constants.SEARCH_PREFERENCE_PRIMARY);
+        builder.setPreference(paramMap.containsKey(PREFERENCE) ? paramMap.get(PREFERENCE).trim() : Constants.SEARCH_PREFERENCE_LOCAL);
         try {
             SearchResponse response = builder.execute().actionGet(timeout);
 

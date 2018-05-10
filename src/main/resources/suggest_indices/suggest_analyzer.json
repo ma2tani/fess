@@ -1,8 +1,9 @@
 {
   "index": {
     "refresh_interval": "1s",
-    "number_of_shards": 5,
-    "number_of_replicas": 0
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "auto_expand_replicas": "0-1"
   },
   "analysis" : {
     "tokenizer" : {
@@ -1377,7 +1378,7 @@
       },
       "limit_token_count_filter": {
         "type": "limit",
-        "max_token_count": 10000
+        "max_token_count": 2147483647
       },
       "stemmer_en_filter": {
         "type": "stemmer",

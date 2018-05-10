@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import javax.annotation.Resource;
 
 import org.codelibs.core.beans.util.BeanUtil;
 import org.codelibs.core.beans.util.CopyOptions;
+import org.codelibs.fess.Constants;
 import org.codelibs.fess.app.web.base.login.FessLoginAssist;
+import org.codelibs.fess.helper.AccessTokenHelper;
 import org.codelibs.fess.helper.ActivityHelper;
 import org.codelibs.fess.helper.SystemHelper;
 import org.codelibs.fess.helper.ViewHelper;
@@ -82,6 +84,9 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
 
     @Resource
     protected SystemHelper systemHelper;
+
+    @Resource
+    protected AccessTokenHelper accessTokenHelper;
 
     @Resource
     protected ViewHelper viewHelper;
@@ -201,5 +206,12 @@ public abstract class FessBaseAction extends TypicalAction // has several interf
             current = current.getCause();
         }
         return buf.toString();
+    }
+
+    public static boolean isCheckboxEnabled(final String value) {
+        if (value == null) {
+            return false;
+        }
+        return Constants.ON.equalsIgnoreCase(value) || Constants.TRUE.equalsIgnoreCase(value);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
+import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.entity.SearchRequestParams.SearchRequestType;
@@ -78,7 +79,10 @@ public class KeyMatchHelper {
                     });
 
                     if (boolQuery.hasClauses()) {
-                        final String virtualHost = keyMatch.getVirtualHost();
+                        String virtualHost = keyMatch.getVirtualHost();
+                        if (StringUtil.isBlank(virtualHost)) {
+                            virtualHost = StringUtil.EMPTY;
+                        }
                         Map<String, Pair<QueryBuilder, ScoreFunctionBuilder<?>>> queryMap = keyMatchQueryMap.get(virtualHost);
                         if (queryMap == null) {
                             queryMap = new HashMap<>();
@@ -106,7 +110,7 @@ public class KeyMatchHelper {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         return fessEsClient.getDocumentList(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(),
                 searchRequestBuilder -> {
-                    return SearchConditionBuilder.builder(searchRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_PRIMARY))
+                    return SearchConditionBuilder.builder(searchRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_LOCAL))
                             .searchRequestType(SearchRequestType.ADMIN_SEARCH).size(keyMatch.getMaxSize()).query(keyMatch.getQuery())
                             .responseFields(new String[] { fessConfig.getIndexFieldDocId() }).build();
                 });
@@ -121,7 +125,7 @@ public class KeyMatchHelper {
     }
 
     protected Map<String, Pair<QueryBuilder, ScoreFunctionBuilder<?>>> getQueryMap() {
-        final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+        final String key = ComponentUtil.getVirtualHostHelper().getVirtualHostKey();
         final Map<String, Pair<QueryBuilder, ScoreFunctionBuilder<?>>> map = keyMatchQueryMap.get(key);
         if (map != null) {
             return map;
@@ -147,7 +151,7 @@ public class KeyMatchHelper {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         return fessEsClient.getDocumentList(fessConfig.getIndexDocumentSearchIndex(), fessConfig.getIndexDocumentType(),
                 searchRequestBuilder -> {
-                    searchRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_PRIMARY).setQuery(pair.getFirst()).setSize(size);
+                    searchRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_LOCAL).setQuery(pair.getFirst()).setSize(size);
                     return true;
                 });
     }

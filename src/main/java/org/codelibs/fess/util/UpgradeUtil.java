@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 
 import org.codelibs.core.exception.ResourceNotFoundRuntimeException;
 import org.codelibs.core.io.FileUtil;
-import org.codelibs.elasticsearch.runner.net.Curl;
 import org.codelibs.elasticsearch.runner.net.CurlResponse;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.elasticsearch.action.ActionListener;
@@ -51,9 +50,7 @@ public final class UpgradeUtil {
         final String filePath = indexConfigPath + "/" + indexName + "/" + path;
         try {
             final String source = FileUtil.readUTF8(filePath);
-            try (CurlResponse response =
-                    Curl.post(org.codelibs.fess.util.ResourceUtil.getElasticsearchHttpUrl() + "/_configsync/file").param("path", path)
-                            .body(source).execute()) {
+            try (CurlResponse response = ComponentUtil.getCurlHelper().post("/_configsync/file").param("path", path).body(source).execute()) {
                 if (response.getHttpStatusCode() == 200) {
                     logger.info("Register " + path + " to " + indexName);
                     return true;

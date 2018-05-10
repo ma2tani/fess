@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,13 @@ import static org.codelibs.core.stream.StreamUtil.stream;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
-import java.security.SecureRandom;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -33,7 +34,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Random;
+import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -45,20 +46,21 @@ import javax.annotation.PreDestroy;
 import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.LocaleUtils;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.crawler.util.CharUtil;
+import org.codelibs.fess.exception.FessSystemException;
 import org.codelibs.fess.mylasta.action.FessMessages;
 import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
+import org.codelibs.fess.util.ResourceUtil;
 import org.codelibs.fess.validation.FessActionValidator;
 import org.lastaflute.core.message.supplier.UserMessagesCreator;
 import org.lastaflute.web.TypicalAction;
-import org.lastaflute.web.response.next.HtmlNext;
+import org.lastaflute.web.response.HtmlResponse;
 import org.lastaflute.web.ruts.process.ActionRuntime;
 import org.lastaflute.web.servlet.request.RequestManager;
 import org.lastaflute.web.util.LaServletContextUtil;
@@ -86,9 +88,15 @@ public class SystemHelper {
 
     protected List<Runnable> shutdownHookList = new ArrayList<>();
 
-    protected Random random = new SecureRandom();
-
     protected AtomicInteger previousClusterState = new AtomicInteger(0);
+
+    protected String version;
+
+    protected int majorVersion;
+
+    protected int minorVersion;
+
+    protected String productVersion;
 
     @PostConstruct
     public void init() {
@@ -122,6 +130,25 @@ public class SystemHelper {
                         });
 
         ComponentUtil.doInitProcesses(p -> p.run());
+
+        parseProjectProperties();
+    }
+
+    protected void parseProjectProperties() {
+        final Path propPath = ResourceUtil.getProjectPropertiesFile();
+        try (final InputStream in = Files.newInputStream(propPath)) {
+            Properties prop = new Properties();
+            prop.load(in);
+            version = prop.getProperty("fess.version", "0.0.0");
+            final String[] values = version.split("\\.");
+            majorVersion = Integer.parseInt(values[0]);
+            minorVersion = Integer.parseInt(values[1]);
+            productVersion = majorVersion + "." + minorVersion;
+            System.setProperty("fess.version", version);
+            System.setProperty("fess.product.version", productVersion);
+        } catch (Exception e) {
+            throw new FessSystemException("Failed to parse project.properties.", e);
+        }
     }
 
     @PreDestroy
@@ -196,15 +223,14 @@ public class SystemHelper {
         if (locale != null) {
             final String lang = locale.getLanguage();
             if (ComponentUtil.getFessConfig().isOnlineHelpSupportedLang(lang)) {
-                return url.replaceFirst("\\{lang\\}", lang).replaceFirst("\\{version\\}",
-                        Constants.MAJOR_VERSION + "." + Constants.MINOR_VERSION);
+                return url.replaceFirst("\\{lang\\}", lang).replaceFirst("\\{version\\}", majorVersion + "." + minorVersion);
             }
         }
         return getDefaultHelpLink(url);
     }
 
     protected String getDefaultHelpLink(final String url) {
-        return url.replaceFirst("/\\{lang\\}/", "/").replaceFirst("\\{version\\}", Constants.MAJOR_VERSION + "." + Constants.MINOR_VERSION);
+        return url.replaceFirst("/\\{lang\\}/", "/").replaceFirst("\\{version\\}", majorVersion + "." + minorVersion);
     }
 
     public void addDesignJspFileName(final String key, final String value) {
@@ -222,7 +248,7 @@ public class SystemHelper {
 
     public void refreshDesignJspFiles() {
         final ServletContext servletContext = LaServletContextUtil.getServletContext();
-        stream(ComponentUtil.getFessConfig().getVirtualHostPaths()).of(
+        stream(ComponentUtil.getVirtualHostHelper().getVirtualHostPaths()).of(
                 stream -> stream.filter(s -> s != null && !s.equals("/")).forEach(
                         key -> {
                             designJspFileNameMap
@@ -261,6 +287,15 @@ public class SystemHelper {
 
     public String abbreviateLongText(final String str) {
         return StringUtils.abbreviate(str, ComponentUtil.getFessConfig().getMaxLogOutputLengthAsInteger().intValue());
+    }
+
+    public String normalizeHtmlLang(final String value) {
+        final String defaultLang = ComponentUtil.getFessConfig().getCrawlerDocumentHtmlDefaultLang();
+        if (StringUtil.isNotBlank(defaultLang)) {
+            return defaultLang;
+        }
+
+        return normalizeLang(value);
     }
 
     public String normalizeLang(final String value) {
@@ -354,6 +389,7 @@ public class SystemHelper {
         ComponentUtil.getLdapManager().updateConfig();
         ComponentUtil.getRelatedContentHelper().update();
         ComponentUtil.getRelatedQueryHelper().update();
+        ComponentUtil.getKeyMatchHelper().update();
     }
 
     public String updateConfiguration() {
@@ -365,15 +401,6 @@ public class SystemHelper {
         return buf.toString();
     }
 
-    public String generateAccessToken() {
-        return RandomStringUtils.random(ComponentUtil.getFessConfig().getApiAccessTokenLengthAsInteger().intValue(), 0, 0, true, true,
-                null, random);
-    }
-
-    public void setRandom(final Random random) {
-        this.random = random;
-    }
-
     public boolean isChangedClusterState(final int status) {
         return previousClusterState.getAndSet(status) != status;
     }
@@ -383,8 +410,28 @@ public class SystemHelper {
         return new FessActionValidator<>(requestManager, messagesCreator, runtimeGroups);
     }
 
-    public String getVirtualHostBasePath(final String s, final HtmlNext page) {
-        return StringUtil.isBlank(s) ? StringUtil.EMPTY : "/" + s;
+    public HtmlResponse getRedirectResponseToLogin(final HtmlResponse response) {
+        return response;
+    }
+
+    public HtmlResponse getRedirectResponseToRoot(final HtmlResponse response) {
+        return response;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public int getMajorVersion() {
+        return majorVersion;
+    }
+
+    public int getMinorVersion() {
+        return minorVersion;
+    }
+
+    public String getProductVersion() {
+        return productVersion;
     }
 
 }

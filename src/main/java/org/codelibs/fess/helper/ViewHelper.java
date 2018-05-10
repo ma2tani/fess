@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,10 +41,10 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.catalina.connector.ClientAbortException;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.codelibs.core.CoreLibConstants;
+import org.codelibs.core.io.CloseableUtil;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.DynamicProperties;
 import org.codelibs.fess.Constants;
@@ -102,62 +102,68 @@ public class ViewHelper {
     @Resource
     protected UserAgentHelper userAgentHelper;
 
-    @Deprecated
-    public int titleLength = 50;
-
-    @Deprecated
-    public int sitePathLength = 50;
-
     public boolean encodeUrlLink = false;
 
     public String urlLinkEncoding = Constants.UTF_8;
 
-    public String[] highlightedFields = new String[] { "hl_content", "digest" };
+    protected String[] highlightedFields;
 
     public String originalHighlightTagPre = "<em>";
 
     public String originalHighlightTagPost = "</em>";
 
-    public String highlightTagPre = "<strong>";
+    protected String highlightTagPre;
 
-    public String highlightTagPost = "</strong>";
+    protected String highlightTagPost;
 
     protected boolean useSession = true;
 
-    private final Map<String, String> pageCacheMap = new ConcurrentHashMap<>();
+    protected final Map<String, String> pageCacheMap = new ConcurrentHashMap<>();
 
-    private final Map<String, String> initFacetParamMap = new HashMap<>();
+    protected final Map<String, String> initFacetParamMap = new HashMap<>();
 
-    private final Map<String, String> initGeoParamMap = new HashMap<>();
+    protected final Map<String, String> initGeoParamMap = new HashMap<>();
 
-    private final List<FacetQueryView> facetQueryViewList = new ArrayList<>();
+    protected final List<FacetQueryView> facetQueryViewList = new ArrayList<>();
 
     public String cacheTemplateName = "cache";
 
-    private String escapedHighlightPre = null;
+    protected String escapedHighlightPre = null;
 
-    private String escapedHighlightPost = null;
+    protected String escapedHighlightPost = null;
 
     protected ActionHook actionHook = new ActionHook();
 
-    private final Set<String> inlineMimeTypeSet = new HashSet<>();
+    protected final Set<String> inlineMimeTypeSet = new HashSet<>();
 
     @PostConstruct
     public void init() {
+        final FessConfig fessConfig = ComponentUtil.getFessConfig();
         escapedHighlightPre = LaFunctions.h(originalHighlightTagPre);
         escapedHighlightPost = LaFunctions.h(originalHighlightTagPost);
+        highlightTagPre = fessConfig.getQueryHighlightTagPre();
+        highlightTagPost = fessConfig.getQueryHighlightTagPost();
+        highlightedFields = fessConfig.getQueryHighlightContentDescriptionFieldsAsArray();
     }
 
     public String getContentTitle(final Map<String, Object> document) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
-        String title = DocumentUtil.getValue(document, fessConfig.getIndexFieldTitle(), String.class);
-        if (StringUtil.isBlank(title)) {
-            title = DocumentUtil.getValue(document, fessConfig.getIndexFieldFilename(), String.class);
-            if (StringUtil.isBlank(title)) {
-                title = DocumentUtil.getValue(document, fessConfig.getIndexFieldUrl(), String.class);
-            }
-        }
         final int size = fessConfig.getResponseMaxTitleLengthAsInteger();
+        String title =
+                DocumentUtil.getValue(document, ComponentUtil.getQueryHelper().getHighlightPrefix() + fessConfig.getIndexFieldTitle(),
+                        String.class);
+        if (StringUtil.isBlank(title) || title.length() > size - 3) {
+            title = DocumentUtil.getValue(document, fessConfig.getIndexFieldTitle(), String.class);
+            if (StringUtil.isBlank(title)) {
+                title = DocumentUtil.getValue(document, fessConfig.getIndexFieldFilename(), String.class);
+                if (StringUtil.isBlank(title)) {
+                    title = DocumentUtil.getValue(document, fessConfig.getIndexFieldUrl(), String.class);
+                }
+            }
+            title = LaFunctions.h(title);
+        } else {
+            title = escapeHighlight(title).replaceAll("\\.\\.\\.$", StringUtil.EMPTY);
+        }
         if (size > -1) {
             return StringUtils.abbreviate(title, size);
         } else {
@@ -236,7 +242,7 @@ public class ViewHelper {
                 // file
                 try {
                     url = URLDecoder.decode(url.replace("+", "%2B"), urlLinkEncoding);
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     if (logger.isDebugEnabled()) {
                         logger.warn("Failed to decode " + url, e);
                     }
@@ -535,7 +541,7 @@ public class ViewHelper {
         final ResponseData responseData = client.execute(RequestDataBuilder.newRequestData().get().url(url).build());
         if (responseData.getHttpStatusCode() == 404) {
             response.httpStatus(responseData.getHttpStatusCode());
-            IOUtils.closeQuietly(responseData);
+            CloseableUtil.closeQuietly(responseData);
             return response;
         }
         writeFileName(response, responseData);
@@ -549,7 +555,7 @@ public class ViewHelper {
                     throw new FessSystemException("Failed to write a content. configId: " + configId + ", url: " + url, e);
                 }
             } finally {
-                IOUtils.closeQuietly(responseData);
+                CloseableUtil.closeQuietly(responseData);
             }
             if (logger.isDebugEnabled()) {
                 logger.debug("Finished to write " + url);

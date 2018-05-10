@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,19 @@ public class DocumentHelper {
     private static final Logger logger = LoggerFactory.getLogger(DocumentHelper.class);
 
     private static final String SIMILAR_DOC_HASH_PREFIX = "$";
+
+    public String getTitle(final ResponseData responseData, final String title, final Map<String, Object> dataMap) {
+        if (title == null) {
+            return StringUtil.EMPTY; // empty
+        }
+
+        final int[] spaceChars = getSpaceChars();
+        try (final Reader reader = new StringReader(title)) {
+            return TextUtil.normalizeText(reader).initialCapacity(title.length()).spaceChars(spaceChars).execute();
+        } catch (final IOException e) {
+            return StringUtil.EMPTY; // empty
+        }
+    }
 
     public String getContent(final ResponseData responseData, final String content, final Map<String, Object> dataMap) {
         if (content == null) {
@@ -136,7 +149,7 @@ public class DocumentHelper {
             if (responseData.getRedirectLocation() != null) {
                 final Set<RequestData> childUrlList = new HashSet<>();
                 childUrlList.add(RequestDataBuilder.newRequestData().get().url(responseData.getRedirectLocation()).build());
-                throw new ChildUrlsException(childUrlList, "Redirected from " + url);
+                throw new ChildUrlsException(childUrlList, this.getClass().getName() + "#RedirectedFrom:" + url);
             }
             responseData.setExecutionTime(System.currentTimeMillis() - startTime);
             responseData.setSessionId(crawlingInfoId);

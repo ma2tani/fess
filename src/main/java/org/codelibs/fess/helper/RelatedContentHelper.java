@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.misc.Pair;
 import org.codelibs.fess.es.config.exbhv.RelatedContentBhv;
 import org.codelibs.fess.es.config.exentity.RelatedContent;
-import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,7 +72,7 @@ public class RelatedContentHelper {
                 relatedContentMap.put(key, pair);
             }
             if (entity.getTerm().startsWith(regexPrefix)) {
-                String regex = entity.getTerm().substring(regexPrefix.length());
+                final String regex = entity.getTerm().substring(regexPrefix.length());
                 if (StringUtil.isBlank(regex)) {
                     logger.warn("Unknown regex pattern: " + entity.getTerm());
                 } else {
@@ -93,8 +92,7 @@ public class RelatedContentHelper {
     }
 
     public String[] getRelatedContents(final String query) {
-        final FessConfig fessConfig = ComponentUtil.getFessConfig();
-        final String key = fessConfig.getVirtualHostKey();
+        final String key = ComponentUtil.getVirtualHostHelper().getVirtualHostKey();
         final Pair<Map<String, String>, List<Pair<Pattern, String>>> pair = relatedContentMap.get(key);
         if (pair != null) {
             final List<String> contentList = new ArrayList<>();
@@ -116,11 +114,11 @@ public class RelatedContentHelper {
         return term != null ? term.toLowerCase(Locale.ROOT) : term;
     }
 
-    public void setRegexPrefix(String regexPrefix) {
+    public void setRegexPrefix(final String regexPrefix) {
         this.regexPrefix = regexPrefix;
     }
 
-    public void setQueryPlaceHolder(String queryPlaceHolder) {
+    public void setQueryPlaceHolder(final String queryPlaceHolder) {
         this.queryPlaceHolder = queryPlaceHolder;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Set;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.text.StringEscapeUtils;
 import org.codelibs.core.lang.StringUtil;
@@ -95,7 +96,7 @@ public abstract class FessSearchAction extends FessBaseAction {
         runtime.registerData("thumbnailSupport", thumbnailSupport);
         if (fessConfig.isWebApiPopularWord()) {
             final List<String> tagList = new ArrayList<>();
-            final String key = ComponentUtil.getFessConfig().getVirtualHostKey();
+            final String key = ComponentUtil.getVirtualHostHelper().getVirtualHostKey();
             if (StringUtil.isNotBlank(key)) {
                 tagList.add(key);
             }
@@ -143,6 +144,14 @@ public abstract class FessSearchAction extends FessBaseAction {
     }
 
     protected void buildFormParams(final SearchForm form) {
+
+        final HttpSession session = request.getSession(false);
+        if (session != null) {
+            final Object resultsPerPage = session.getAttribute(Constants.RESULTS_PER_PAGE);
+            if (resultsPerPage instanceof Integer) {
+                form.num = (Integer) resultsPerPage;
+            }
+        }
 
         // label
         final List<Map<String, String>> labelTypeItems = labelTypeHelper.getLabelTypeItemList(SearchRequestType.SEARCH);
@@ -213,15 +222,14 @@ public abstract class FessSearchAction extends FessBaseAction {
     }
 
     protected HtmlResponse redirectToLogin() {
-        return redirect(SsoAction.class);
+        return systemHelper.getRedirectResponseToLogin(redirect(SsoAction.class));
     }
 
     protected HtmlResponse redirectToRoot() {
-        final String contextPath = request.getServletContext().getContextPath();
-        return newHtmlResponseAsRediect(StringUtil.isBlank(contextPath) ? "/" : contextPath);
+        return systemHelper.getRedirectResponseToRoot(newHtmlResponseAsRedirect("/"));
     }
 
     protected HtmlNext virtualHost(final HtmlNext path) {
-        return fessConfig.getVirtualHostPath(path);
+        return ComponentUtil.getVirtualHostHelper().getVirtualHostPath(path);
     }
 }

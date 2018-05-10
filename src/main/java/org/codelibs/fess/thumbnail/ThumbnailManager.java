@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -53,10 +54,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 public class ThumbnailManager {
-    private static final String FESS_THUMBNAIL_PATH = "fess.thumbnail.path";
-
-    private static final String FESS_VAR_PATH = "fess.var.path";
-
     private static final String NOIMAGE_FILE_SUFFIX = ".txt";
 
     protected static final String THUMBNAILS_DIR_NAME = "thumbnails";
@@ -77,7 +74,7 @@ public class ThumbnailManager {
 
     protected String imageExtention = "png";
 
-    protected int splitSize = 5;
+    protected int splitSize = 2;
 
     protected int thumbnailTaskQueueSize = 10000;
 
@@ -89,11 +86,11 @@ public class ThumbnailManager {
 
     @PostConstruct
     public void init() {
-        final String thumbnailPath = System.getProperty(FESS_THUMBNAIL_PATH);
+        final String thumbnailPath = System.getProperty(Constants.FESS_THUMBNAIL_PATH);
         if (thumbnailPath != null) {
             baseDir = new File(thumbnailPath);
         } else {
-            final String varPath = System.getProperty(FESS_VAR_PATH);
+            final String varPath = System.getProperty(Constants.FESS_VAR_PATH);
             if (varPath != null) {
                 baseDir = new File(varPath, THUMBNAILS_DIR_NAME);
             } else {
@@ -112,7 +109,7 @@ public class ThumbnailManager {
         }
 
         thumbnailTaskQueue = new LinkedBlockingQueue<>(thumbnailTaskQueueSize);
-        generating = true;
+        generating = !Constants.TRUE.equalsIgnoreCase(System.getProperty("fess.thumbnail.process"));
         thumbnailQueueThread = new Thread((Runnable) () -> {
             final List<Tuple3<String, String, String>> taskList = new ArrayList<>();
             while (generating) {
@@ -164,7 +161,7 @@ public class ThumbnailManager {
     }
 
     public String getThumbnailPathOption() {
-        return "-D" + FESS_THUMBNAIL_PATH + "=" + baseDir.getAbsolutePath();
+        return "-D" + Constants.FESS_THUMBNAIL_PATH + "=" + baseDir.getAbsolutePath();
     }
 
     protected void storeQueue(final List<Tuple3<String, String, String>> taskList) {
@@ -192,11 +189,11 @@ public class ThumbnailManager {
         thumbnailQueueBhv.batchInsert(list);
     }
 
-    public int generate() {
+    public int generate(final ForkJoinPool pool, final boolean cleanup) {
         final FessConfig fessConfig = ComponentUtil.getFessConfig();
         final List<String> idList = new ArrayList<>();
         final ThumbnailQueueBhv thumbnailQueueBhv = ComponentUtil.getComponent(ThumbnailQueueBhv.class);
-        thumbnailQueueBhv.selectList(cb -> {
+        pool.submit(() -> thumbnailQueueBhv.selectList(cb -> {
             if (StringUtil.isBlank(fessConfig.getSchedulerTargetName())) {
                 cb.query().setTarget_Equal(Constants.DEFAULT_JOB_TARGET);
             } else {
@@ -204,39 +201,16 @@ public class ThumbnailManager {
             }
             cb.query().addOrderBy_CreatedTime_Asc();
             cb.fetchFirst(fessConfig.getPageThumbnailQueueMaxFetchSizeAsInteger());
-        }).forEach(entity -> {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Generating thumbnail: " + entity);
-            }
+        }).parallelStream().forEach(entity -> {
             idList.add(entity.getId());
-            final String generatorName = entity.getGenerator();
-            try {
-                final File outputFile = new File(baseDir, entity.getPath());
-                final File noImageFile = new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX);
-                if (!noImageFile.isFile() || System.currentTimeMillis() - noImageFile.lastModified() > noImageExpired) {
-                    if (noImageFile.isFile() && !noImageFile.delete()) {
-                        logger.warn("Failed to delete " + noImageFile.getAbsolutePath());
-                    }
-                    final ThumbnailGenerator generator = ComponentUtil.getComponent(generatorName);
-                    if (generator.isAvailable()) {
-                        if (!generator.generate(entity.getThumbnailId(), outputFile)) {
-                            new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX).setLastModified(System.currentTimeMillis());
-                        } else {
-                            final long interval = fessConfig.getThumbnailGeneratorIntervalAsInteger().longValue();
-                            if (interval > 0) {
-                                Thread.sleep(interval);
-                            }
-                        }
-                    } else {
-                        logger.warn(generatorName + " is not available.");
-                    }
-                } else if (logger.isDebugEnabled()) {
-                    logger.debug("No image file exists: " + noImageFile.getAbsolutePath());
+            if (cleanup) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Removing thumbnail queue: " + entity);
                 }
-            } catch (final Exception e) {
-                logger.warn("Failed to create thumbnail for " + entity, e);
+            } else {
+                process(fessConfig, entity);
             }
-        });
+        })).join();
         if (!idList.isEmpty()) {
             thumbnailQueueBhv.queryDelete(cb -> {
                 cb.query().setId_InScope(idList);
@@ -244,6 +218,39 @@ public class ThumbnailManager {
             thumbnailQueueBhv.refresh();
         }
         return idList.size();
+    }
+
+    protected void process(final FessConfig fessConfig, ThumbnailQueue entity) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Processing thumbnail: " + entity);
+        }
+        final String generatorName = entity.getGenerator();
+        try {
+            final File outputFile = new File(baseDir, entity.getPath());
+            final File noImageFile = new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX);
+            if (!noImageFile.isFile() || System.currentTimeMillis() - noImageFile.lastModified() > noImageExpired) {
+                if (noImageFile.isFile() && !noImageFile.delete()) {
+                    logger.warn("Failed to delete " + noImageFile.getAbsolutePath());
+                }
+                final ThumbnailGenerator generator = ComponentUtil.getComponent(generatorName);
+                if (generator.isAvailable()) {
+                    if (!generator.generate(entity.getThumbnailId(), outputFile)) {
+                        new File(outputFile.getAbsolutePath() + NOIMAGE_FILE_SUFFIX).setLastModified(System.currentTimeMillis());
+                    } else {
+                        final long interval = fessConfig.getThumbnailGeneratorIntervalAsInteger().longValue();
+                        if (interval > 0) {
+                            Thread.sleep(interval);
+                        }
+                    }
+                } else {
+                    logger.warn(generatorName + " is not available.");
+                }
+            } else if (logger.isDebugEnabled()) {
+                logger.debug("No image file exists: " + noImageFile.getAbsolutePath());
+            }
+        } catch (final Exception e) {
+            logger.warn("Failed to create thumbnail for " + entity, e);
+        }
     }
 
     public boolean offer(final Map<String, Object> docMap) {
@@ -295,7 +302,9 @@ public class ThumbnailManager {
     }
 
     public void add(final ThumbnailGenerator generator) {
-        logger.info(generator.getName() + " is available.");
+        if (logger.isDebugEnabled()) {
+            logger.debug(generator.getName() + " is available.");
+        }
         if (generator.isAvailable()) {
             generatorList.add(generator);
         }
@@ -372,7 +381,7 @@ public class ThumbnailManager {
                         }
                     }
                 });
-                ;
+
                 deleteFileMap.values().forEach(v -> deleteFile(v));
                 count += deleteFileMap.size();
             }
@@ -383,6 +392,11 @@ public class ThumbnailManager {
                 Files.delete(path);
                 if (logger.isDebugEnabled()) {
                     logger.debug("Delete " + path);
+                }
+
+                Path parent = path.getParent();
+                while (deleteEmptyDirectory(parent)) {
+                    parent = parent.getParent();
                 }
             } catch (final IOException e) {
                 logger.warn("Failed to delete " + path, e);
@@ -435,10 +449,23 @@ public class ThumbnailManager {
             if (e != null) {
                 logger.warn("I/O exception on " + dir, e);
             }
-            if (dir.toFile().list().length == 0 && !dir.toFile().getName().equals(THUMBNAILS_DIR_NAME)) {
-                Files.delete(dir);
-            }
+            deleteEmptyDirectory(dir);
             return FileVisitResult.CONTINUE;
+        }
+
+        private boolean deleteEmptyDirectory(final Path dir) throws IOException {
+            if (dir == null) {
+                return false;
+            }
+            final File directory = dir.toFile();
+            if (directory.list() != null && directory.list().length == 0 && !THUMBNAILS_DIR_NAME.equals(directory.getName())) {
+                Files.delete(dir);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Delete " + dir);
+                }
+                return true;
+            }
+            return false;
         }
 
     }

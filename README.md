@@ -26,13 +26,13 @@ Please check filed [questions](https://github.com/codelibs/fess/issues?q=label%3
 
 ### Download
 
-Fess 11.4 is available.
+Fess 12.1 is available.
 The release page is [HERE](https://github.com/codelibs/fess/releases "download").
 
 ### Install/Run Fess
 
-    $ unzip fess-11.4.x.zip
-    $ cd fess-11.4.x
+    $ unzip fess-12.1.x.zip
+    $ cd fess-12.1.x
     $ ./bin/fess
 
 For the details, see [Installation Guide](http://fess.codelibs.org/11.3/install/index.html).
@@ -57,6 +57,10 @@ For more details, see [Public Repository](https://hub.docker.com/r/codelibs/fess
 ## Migration from Other Systems
 
 Please see [MIGRATION.md](https://github.com/codelibs/fess/blob/master/MIGRATION.md).
+
+## X-Pack Support
+
+Please see [fess-xpack](https://github.com/codelibs/fess-xpack).
 
 ## Localization
 

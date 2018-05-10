@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,7 +156,8 @@ public class AdminDataconfigAction extends FessAdminAction {
                                                     .collect(Collectors.joining("\n")));
                             form.virtualHosts =
                                     stream(entity.getVirtualHosts()).get(
-                                            stream -> stream.filter(StringUtil::isNotBlank).collect(Collectors.joining("\n")));
+                                            stream -> stream.filter(StringUtil::isNotBlank).map(String::trim)
+                                                    .collect(Collectors.joining("\n")));
                         }).orElse(() -> {
                     throwValidationError(messages -> messages.addErrorsCrudCouldNotFindCrudTable(GLOBAL, id), () -> asListHtml());
                 });
@@ -198,8 +199,8 @@ public class AdminDataconfigAction extends FessAdminAction {
                                                                     .collect(Collectors.joining("\n")));
                                             form.virtualHosts =
                                                     stream(entity.getVirtualHosts()).get(
-                                                            stream -> stream.filter(StringUtil::isNotBlank).collect(
-                                                                    Collectors.joining("\n")));
+                                                            stream -> stream.filter(StringUtil::isNotBlank).map(String::trim)
+                                                                    .collect(Collectors.joining("\n")));
                                             form.crudMode = crudMode;
                                         })
                                 .orElse(() -> throwValidationError(messages -> messages.addErrorsCrudCouldNotFindCrudTable(GLOBAL, id),
@@ -315,7 +316,7 @@ public class AdminDataconfigAction extends FessAdminAction {
                             stream -> stream.map(s -> permissionHelper.encode(s)).filter(StringUtil::isNotBlank).distinct()
                                     .toArray(n -> new String[n])));
                     entity.setVirtualHosts(split(form.virtualHosts, "\n").get(
-                            stream -> stream.filter(StringUtil::isNotBlank).distinct().toArray(n -> new String[n])));
+                            stream -> stream.filter(StringUtil::isNotBlank).distinct().map(String::trim).toArray(n -> new String[n])));
                     return entity;
                 });
     }

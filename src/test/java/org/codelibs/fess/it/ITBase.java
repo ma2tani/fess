@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public class ITBase {
         given().contentType("application/json")
                 .body("{\"index\":{\"_index\":\".fess_config.access_token\",\"_type\":\"access_token\",\"_id\":\""
                         + DEFAULT_TEST_TOKEN_ID
-                        + "\"}}\n{\"updatedTime\":1490250145200,\"updatedBy\":\"admin\",\"createdBy\":\"admin\",\"permissions\":[\"Radmin-api\"],\"name\":\"Admin API\",\"createdTime\":1490250145200,\"token\":\""
+                        + "\"}}\n{\"updatedTime\":1490250145200,\"updatedBy\":\"admin\",\"createdBy\":\"admin\",\"permissions\":[\"Radmin-api\",\"Rguest\"],\"name\":\"Admin API\",\"createdTime\":1490250145200,\"token\":\""
                         + DEFAULT_TEST_TOKEN + "\"}\n").when().post(getEsUrl() + "/_bulk");
         given().contentType("application/json").when().post(getEsUrl() + "/_refresh");
         return DEFAULT_TEST_TOKEN;

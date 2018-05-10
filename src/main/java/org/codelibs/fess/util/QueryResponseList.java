@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,9 @@ import java.util.ListIterator;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.codelibs.core.lang.StringUtil;
 import org.codelibs.core.stream.StreamUtil;
+import org.codelibs.fess.Constants;
 import org.codelibs.fess.helper.QueryHelper;
 import org.codelibs.fess.helper.ViewHelper;
 import org.codelibs.fess.mylasta.direction.FessConfig;
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
 
 public class QueryResponseList implements List<Map<String, Object>> {
 
-    private static final String SCORE = "score";
+    private static final String ELLIPSIS = "...";
 
     private static final Logger logger = LoggerFactory.getLogger(QueryResponseList.class);
 
@@ -160,7 +162,10 @@ public class QueryResponseList implements List<Map<String, Object>> {
                         for (int i = 0; i < fragments.length; i++) {
                             texts[i] = fragments[i].string();
                         }
-                        final String value = StringUtils.join(texts, "...");
+                        String value = StringUtils.join(texts, ELLIPSIS);
+                        if (StringUtil.isNotBlank(value) && !fessConfig.endsWithFullstop(value)) {
+                            value = value + ELLIPSIS;
+                        }
                         docMap.put(hlPrefix + highlightField.getName(), value);
                     }
                 }
@@ -180,8 +185,8 @@ public class QueryResponseList implements List<Map<String, Object>> {
             docMap.put(fessConfig.getResponseFieldSitePath(), viewHelper.getSitePath(docMap));
         }
 
-        if (!docMap.containsKey(SCORE)) {
-            docMap.put(SCORE, searchHit.getScore());
+        if (!docMap.containsKey(Constants.SCORE)) {
+            docMap.put(Constants.SCORE, searchHit.getScore());
         }
         return docMap;
     }
@@ -197,8 +202,8 @@ public class QueryResponseList implements List<Map<String, Object>> {
             existNextPage = false;
             allPageCount = currentPageNumber;
         }
-        currentStartRecordNumber = allRecordCount != 0 ? (currentPageNumber - 1) * pageSize + 1 : 0;
-        currentEndRecordNumber = (long) currentPageNumber * pageSize;
+        currentStartRecordNumber = allRecordCount != 0 ? start + 1 : 0;
+        currentEndRecordNumber = currentStartRecordNumber + (long) pageSize - 1;
         currentEndRecordNumber = allRecordCount < currentEndRecordNumber ? allRecordCount : currentEndRecordNumber;
 
         final int pageRangeSize = 5;

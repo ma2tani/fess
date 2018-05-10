@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,8 @@ import org.lastaflute.web.validation.theme.conversion.ValidateTypeFailure;
 public class SearchForm implements SearchRequestParams {
 
     public Map<String, String[]> fields = new HashMap<>();
+
+    public Map<String, String[]> as = new HashMap<>();
 
     @Size(max = 1000)
     public String q;
@@ -143,5 +145,10 @@ public class SearchForm implements SearchRequestParams {
     @Override
     public String getSimilarDocHash() {
         return sdh;
+    }
+
+    @Override
+    public Map<String, String[]> getConditions() {
+        return as;
     }
 }

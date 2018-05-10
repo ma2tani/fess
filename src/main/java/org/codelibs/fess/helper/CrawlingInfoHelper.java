@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -174,7 +174,7 @@ public class CrawlingInfoHelper {
                             AggregationBuilders.terms(fessConfig.getIndexFieldSegment()).field(fessConfig.getIndexFieldSegment())
                                     .size(maxSessionIdsInList).order(BucketOrder.key(false));
                     queryRequestBuilder.addAggregation(termsBuilder);
-                    queryRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_PRIMARY);
+                    queryRequestBuilder.setPreference(Constants.SEARCH_PREFERENCE_LOCAL);
                     return true;
                 }, (queryRequestBuilder, execTime, searchResponse) -> {
                     final List<Map<String, String>> sessionIdList = new ArrayList<>();

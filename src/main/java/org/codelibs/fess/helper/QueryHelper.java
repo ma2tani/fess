@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.codelibs.fess.helper;
 
+import static org.codelibs.core.stream.StreamUtil.split;
 import static org.codelibs.core.stream.StreamUtil.stream;
 
 import java.lang.Character.UnicodeBlock;
@@ -31,6 +32,7 @@ import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpSession;
 
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -54,9 +56,11 @@ import org.codelibs.fess.entity.GeoInfo;
 import org.codelibs.fess.entity.QueryContext;
 import org.codelibs.fess.entity.SearchRequestParams.SearchRequestType;
 import org.codelibs.fess.exception.InvalidQueryException;
+import org.codelibs.fess.mylasta.action.FessUserBean;
 import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.codelibs.fess.util.ComponentUtil;
 import org.dbflute.optional.OptionalThing;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -81,6 +85,8 @@ public class QueryHelper {
 
     protected static final String INURL_FIELD = "inurl";
 
+    protected static final String SITE_FIELD = "site";
+
     @Resource
     protected FessConfig fessConfig;
 
@@ -93,6 +99,9 @@ public class QueryHelper {
     @Resource
     protected KeyMatchHelper keyMatchHelper;
 
+    @Resource
+    protected VirtualHostHelper virtualHostHelper;
+
     protected Set<String> apiResponseFieldSet;
 
     protected Set<String> highlightFieldSet = new HashSet<>();
@@ -100,6 +109,8 @@ public class QueryHelper {
     protected Set<String> notAnalyzedFieldSet;
 
     protected String[] responseFields;
+
+    protected String[] scrollResponseFields;
 
     protected String[] cacheResponseFields;
 
@@ -156,6 +167,31 @@ public class QueryHelper {
                     fessConfig.getIndexFieldLang(), //
                     fessConfig.getIndexFieldHasCache());
         }
+        if (scrollResponseFields == null) {
+            scrollResponseFields = fessConfig.getQueryAdditionalScrollResponseFields(//
+                    SCORE_FIELD, //
+                    fessConfig.getIndexFieldId(), //
+                    fessConfig.getIndexFieldDocId(), //
+                    fessConfig.getIndexFieldBoost(), //
+                    fessConfig.getIndexFieldContentLength(), //
+                    fessConfig.getIndexFieldHost(), //
+                    fessConfig.getIndexFieldSite(), //
+                    fessConfig.getIndexFieldLastModified(), //
+                    fessConfig.getIndexFieldTimestamp(), //
+                    fessConfig.getIndexFieldMimetype(), //
+                    fessConfig.getIndexFieldFiletype(), //
+                    fessConfig.getIndexFieldFilename(), //
+                    fessConfig.getIndexFieldCreated(), //
+                    fessConfig.getIndexFieldTitle(), //
+                    fessConfig.getIndexFieldDigest(), //
+                    fessConfig.getIndexFieldUrl(), //
+                    fessConfig.getIndexFieldThumbnail(), //
+                    fessConfig.getIndexFieldClickCount(), //
+                    fessConfig.getIndexFieldFavoriteCount(), //
+                    fessConfig.getIndexFieldConfigId(), //
+                    fessConfig.getIndexFieldLang(), //
+                    fessConfig.getIndexFieldHasCache());
+        }
         if (cacheResponseFields == null) {
             cacheResponseFields = fessConfig.getQueryAdditionalCacheResponseFields(//
                     SCORE_FIELD, //
@@ -181,7 +217,9 @@ public class QueryHelper {
                     fessConfig.getIndexFieldCache());
         }
         if (highlightedFields == null) {
-            highlightedFields = fessConfig.getQueryAdditionalHighlightedFields(fessConfig.getIndexFieldContent());
+            highlightedFields = fessConfig.getQueryAdditionalHighlightedFields( //
+                    fessConfig.getIndexFieldTitle(), //
+                    fessConfig.getIndexFieldContent());
         }
         if (searchFields == null) {
             searchFields = fessConfig.getQueryAdditionalSearchFields(//
@@ -189,6 +227,7 @@ public class QueryHelper {
                     fessConfig.getIndexFieldUrl(), //
                     fessConfig.getIndexFieldDocId(), //
                     fessConfig.getIndexFieldHost(), //
+                    fessConfig.getIndexFieldSite(), //
                     fessConfig.getIndexFieldTitle(), //
                     fessConfig.getIndexFieldContent(), //
                     fessConfig.getIndexFieldContentLength(), //
@@ -279,6 +318,8 @@ public class QueryHelper {
                     fessConfig.getIndexFieldUrl(), //
                     fessConfig.getIndexFieldVersion()));
         }
+        split(fessConfig.getQueryAdditionalAnalyzedFields(), ",").of(
+                stream -> stream.map(s -> s.trim()).filter(StringUtil::isNotBlank).forEach(s -> notAnalyzedFieldSet.remove(s)));
     }
 
     public QueryContext build(final SearchRequestType searchRequestType, final String query, final Consumer<QueryContext> context) {
@@ -307,7 +348,7 @@ public class QueryHelper {
             // nothing to do
             break;
         default:
-            final String key = fessConfig.getVirtualHostKey();
+            final String key = virtualHostHelper.getVirtualHostKey();
             if (StringUtil.isNotBlank(key)) {
                 queryContext.addQuery(boolQuery -> {
                     boolQuery.filter(QueryBuilders.termQuery(fessConfig.getIndexFieldVirtualHost(), key));
@@ -409,7 +450,10 @@ public class QueryHelper {
                 }
             }
         }
-        return boolQuery;
+        if (boolQuery.hasClauses()) {
+            return boolQuery;
+        }
+        return null;
     }
 
     protected String toLowercaseWildcard(final String value) {
@@ -419,8 +463,15 @@ public class QueryHelper {
         return value;
     }
 
+    protected String getSearchField(final QueryContext context, final String field) {
+        if (Constants.DEFAULT_FIELD.equals(field) && context.getDefaultField() != null) {
+            return context.getDefaultField();
+        }
+        return field;
+    }
+
     protected QueryBuilder convertWildcardQuery(final QueryContext context, final WildcardQuery wildcardQuery, final float boost) {
-        final String field = wildcardQuery.getField();
+        final String field = getSearchField(context, wildcardQuery.getField());
         if (Constants.DEFAULT_FIELD.equals(field)) {
             context.addFieldLog(field, wildcardQuery.getTerm().text());
             return buildDefaultQueryBuilder((f, b) -> QueryBuilders.wildcardQuery(f, toLowercaseWildcard(wildcardQuery.getTerm().text()))
@@ -438,7 +489,7 @@ public class QueryHelper {
     }
 
     protected QueryBuilder convertPrefixQuery(final QueryContext context, final PrefixQuery prefixQuery, final float boost) {
-        final String field = prefixQuery.getField();
+        final String field = getSearchField(context, prefixQuery.getField());
         if (Constants.DEFAULT_FIELD.equals(field)) {
             context.addFieldLog(field, prefixQuery.getPrefix().text());
             return buildDefaultQueryBuilder((f, b) -> QueryBuilders.prefixQuery(f, toLowercaseWildcard(prefixQuery.getPrefix().text()))
@@ -457,7 +508,7 @@ public class QueryHelper {
 
     protected QueryBuilder convertFuzzyQuery(final QueryContext context, final FuzzyQuery fuzzyQuery, final float boost) {
         final Term term = fuzzyQuery.getTerm();
-        final String field = term.field();
+        final String field = getSearchField(context, term.field());
         // TODO fuzzy value
         if (Constants.DEFAULT_FIELD.equals(field)) {
             context.addFieldLog(field, term.text());
@@ -476,7 +527,7 @@ public class QueryHelper {
     }
 
     protected QueryBuilder convertTermRangeQuery(final QueryContext context, final TermRangeQuery termRangeQuery, final float boost) {
-        final String field = termRangeQuery.getField();
+        final String field = getSearchField(context, termRangeQuery.getField());
         if (isSearchField(field)) {
             context.addFieldLog(field, termRangeQuery.toString(field));
             final RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery(field);
@@ -512,7 +563,7 @@ public class QueryHelper {
             return QueryBuilders.matchPhraseQuery(f, text);
         }
 
-        UnicodeBlock block = UnicodeBlock.of(text.codePointAt(0));
+        final UnicodeBlock block = UnicodeBlock.of(text.codePointAt(0));
         if (block == UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS //
                 || block == UnicodeBlock.HIRAGANA //
                 || block == UnicodeBlock.KATAKANA //
@@ -524,7 +575,7 @@ public class QueryHelper {
     }
 
     protected QueryBuilder convertTermQuery(final QueryContext context, final TermQuery termQuery, final float boost) {
-        final String field = termQuery.getTerm().field();
+        final String field = getSearchField(context, termQuery.getTerm().field());
         final String text = termQuery.getTerm().text();
         if (fessConfig.getQueryReplaceTermWithPrefixQueryAsBoolean() && text.length() > 1 && text.endsWith("*")) {
             return convertPrefixQuery(context, new PrefixQuery(new Term(field, text.substring(0, text.length() - 1))), boost);
@@ -533,31 +584,36 @@ public class QueryHelper {
             context.addHighlightedQuery(text);
             return buildDefaultQueryBuilder((f, b) -> buildMatchPhraseQuery(f, text).boost(b * boost));
         } else if ("sort".equals(field)) {
-            final String[] values = text.split("\\.");
-            if (values.length > 2) {
-                throw new InvalidQueryException(
-                        messages -> messages.addErrorsInvalidQuerySortValue(UserMessages.GLOBAL_PROPERTY_KEY, text), "Invalid sort field: "
-                                + termQuery);
-            }
-            final String sortField = values[0];
-            if (!isSortField(sortField)) {
-                throw new InvalidQueryException(messages -> messages.addErrorsInvalidQueryUnsupportedSortField(
-                        UserMessages.GLOBAL_PROPERTY_KEY, sortField), "Unsupported sort field: " + termQuery);
-            }
-            SortOrder sortOrder;
-            if (values.length == 2) {
-                sortOrder = SortOrder.DESC.toString().equalsIgnoreCase(values[1]) ? SortOrder.DESC : SortOrder.ASC;
-                if (sortOrder == null) {
-                    throw new InvalidQueryException(messages -> messages.addErrorsInvalidQueryUnsupportedSortOrder(
-                            UserMessages.GLOBAL_PROPERTY_KEY, values[1]), "Invalid sort order: " + termQuery);
-                }
-            } else {
-                sortOrder = SortOrder.ASC;
-            }
-            context.addSorts(createFieldSortBuilder(sortField, sortOrder));
+            split(text, ",").of(
+                    stream -> stream.filter(StringUtil::isNotBlank).forEach(
+                            t -> {
+                                final String[] values = t.split("\\.");
+                                if (values.length > 2) {
+                                    throw new InvalidQueryException(messages -> messages.addErrorsInvalidQuerySortValue(
+                                            UserMessages.GLOBAL_PROPERTY_KEY, text), "Invalid sort field: " + termQuery);
+                                }
+                                final String sortField = values[0];
+                                if (!isSortField(sortField)) {
+                                    throw new InvalidQueryException(messages -> messages.addErrorsInvalidQueryUnsupportedSortField(
+                                            UserMessages.GLOBAL_PROPERTY_KEY, sortField), "Unsupported sort field: " + termQuery);
+                                }
+                                SortOrder sortOrder;
+                                if (values.length == 2) {
+                                    sortOrder = SortOrder.DESC.toString().equalsIgnoreCase(values[1]) ? SortOrder.DESC : SortOrder.ASC;
+                                    if (sortOrder == null) {
+                                        throw new InvalidQueryException(messages -> messages.addErrorsInvalidQueryUnsupportedSortOrder(
+                                                UserMessages.GLOBAL_PROPERTY_KEY, values[1]), "Invalid sort order: " + termQuery);
+                                    }
+                                } else {
+                                    sortOrder = SortOrder.ASC;
+                                }
+                                context.addSorts(createFieldSortBuilder(sortField, sortOrder));
+                            }));
             return null;
-        } else if (INURL_FIELD.equals(field)) {
+        } else if (INURL_FIELD.equals(field) || fessConfig.getIndexFieldUrl().equals(context.getDefaultField())) {
             return QueryBuilders.wildcardQuery(fessConfig.getIndexFieldUrl(), "*" + text + "*").boost(boost);
+        } else if (SITE_FIELD.equals(field)) {
+            return convertSiteQuery(context, text, boost);
         } else if (isSearchField(field)) {
             context.addFieldLog(field, text);
             context.addHighlightedQuery(text);
@@ -572,6 +628,10 @@ public class QueryHelper {
             context.addHighlightedQuery(origQuery);
             return buildDefaultQueryBuilder((f, b) -> buildMatchPhraseQuery(f, origQuery).boost(b * boost));
         }
+    }
+
+    protected QueryBuilder convertSiteQuery(final QueryContext context, final String text, final float boost) {
+        return QueryBuilders.prefixQuery(fessConfig.getIndexFieldSite(), text).boost(boost);
     }
 
     private QueryBuilder convertPhraseQuery(final QueryContext context, final PhraseQuery query, final float boost) {
@@ -674,6 +734,37 @@ public class QueryHelper {
         return apiResponseFieldSet.contains(field);
     }
 
+    public void processSearchPreference(final SearchRequestBuilder searchRequestBuilder, final OptionalThing<FessUserBean> userBean) {
+        userBean.map(user -> {
+            if (user.hasRoles(fessConfig.getAuthenticationAdminRolesAsArray())) {
+                return Constants.SEARCH_PREFERENCE_LOCAL;
+            }
+            return user.getUserId();
+        }).ifPresent(p -> searchRequestBuilder.setPreference(p)).orElse(() -> LaRequestUtil.getOptionalRequest().map(r -> {
+            final HttpSession session = r.getSession(false);
+            if (session != null) {
+                return session.getId();
+            }
+            final String preference = r.getParameter("preference");
+            if (preference != null) {
+                return Integer.toString(preference.hashCode());
+            }
+            final Object accessType = r.getAttribute(Constants.SEARCH_LOG_ACCESS_TYPE);
+            if (Constants.SEARCH_LOG_ACCESS_TYPE_JSON.equals(accessType)) {
+                final String pref = fessConfig.getQueryJsonDefaultPreference();
+                if (StringUtil.isNotBlank(pref)) {
+                    return pref;
+                }
+            } else if (Constants.SEARCH_LOG_ACCESS_TYPE_GSA.equals(accessType)) {
+                final String pref = fessConfig.getQueryGsaDefaultPreference();
+                if (StringUtil.isNotBlank(pref)) {
+                    return pref;
+                }
+            }
+            return null;
+        }).ifPresent(p -> searchRequestBuilder.setPreference(p)));
+    }
+
     /**
      * @return the responseFields
      */
@@ -686,6 +777,14 @@ public class QueryHelper {
      */
     public void setResponseFields(final String[] responseFields) {
         this.responseFields = responseFields;
+    }
+
+    public String[] getScrollResponseFields() {
+        return scrollResponseFields;
+    }
+
+    public void setScrollResponseFields(String[] scrollResponseFields) {
+        this.scrollResponseFields = scrollResponseFields;
     }
 
     public String[] getCacheResponseFields() {

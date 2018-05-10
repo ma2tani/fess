@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ import org.codelibs.fess.suggest.entity.SuggestItem;
 import org.codelibs.fess.suggest.index.SuggestDeleteResponse;
 import org.codelibs.fess.suggest.index.contents.document.ESSourceReader;
 import org.codelibs.fess.suggest.settings.SuggestSettings;
+import org.codelibs.fess.suggest.settings.SuggestSettingsBuilder;
 import org.codelibs.fess.suggest.util.SuggestUtil;
 import org.codelibs.fess.util.ComponentUtil;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
@@ -97,7 +98,13 @@ public class SuggestHelper {
 
         fessEsClient.admin().cluster().prepareHealth().setWaitForYellowStatus().execute().actionGet(fessConfig.getIndexHealthTimeout());
 
-        suggester = Suggester.builder().build(fessEsClient, fessConfig.getIndexDocumentSuggestIndex());
+        final SuggestSettingsBuilder settingsBuilder = SuggestSettings.builder();
+        settingsBuilder.bulkTimeout(fessConfig.getIndexBulkTimeout());
+        settingsBuilder.clusterTimeout(fessConfig.getIndexHealthTimeout());
+        settingsBuilder.indexTimeout(fessConfig.getIndexIndexTimeout());
+        settingsBuilder.indicesTimeout(fessConfig.getIndexIndicesTimeout());
+        settingsBuilder.searchTimeout(fessConfig.getIndexSearchTimeout());
+        suggester = Suggester.builder().settings(settingsBuilder).build(fessEsClient, fessConfig.getIndexDocumentSuggestIndex());
         suggester.settings().array().delete(SuggestSettings.DefaultKeys.SUPPORTED_FIELDS);
         split(fessConfig.getSuggestFieldIndexContents(), ",").of(
                 stream -> stream.filter(StringUtil::isNotBlank).forEach(
@@ -192,10 +199,11 @@ public class SuggestHelper {
                             reader.setScrollSize(fessConfig.getSuggestSourceReaderScrollSizeAsInteger());
                             reader.setLimitDocNumPercentage(fessConfig.getSuggestUpdateContentsLimitNumPercentage());
                             reader.setLimitNumber(fessConfig.getSuggestUpdateContentsLimitNumAsInteger());
+                            reader.setLimitOfDocumentSize(fessConfig.getSuggestUpdateContentsLimitDocSizeAsInteger());
 
                             final List<FunctionScoreQueryBuilder.FilterFunctionBuilder> flist = new ArrayList<>();
-                            flist.add(new FunctionScoreQueryBuilder.FilterFunctionBuilder(ScoreFunctionBuilders.randomFunction().seed(
-                                    System.currentTimeMillis())));
+                            flist.add(new FunctionScoreQueryBuilder.FilterFunctionBuilder(ScoreFunctionBuilders.randomFunction()
+                                    .seed(System.currentTimeMillis()).setField(fessConfig.getIndexFieldId())));
                             reader.setQuery(QueryBuilders.functionScoreQuery(QueryBuilders.matchAllQuery(),
                                     flist.toArray(new FunctionScoreQueryBuilder.FilterFunctionBuilder[flist.size()])).boostMode(
                                     CombineFunction.MULTIPLY));
@@ -217,7 +225,7 @@ public class SuggestHelper {
         boolQueryBuilder.mustNot(QueryBuilders.termQuery(FieldNames.KINDS, SuggestItem.Kind.QUERY.toString()));
         boolQueryBuilder.mustNot(QueryBuilders.termQuery(FieldNames.KINDS, SuggestItem.Kind.USER.toString()));
 
-        SuggestUtil.deleteByQuery(fessEsClient, suggester.getIndex(), suggester.getType(), boolQueryBuilder);
+        SuggestUtil.deleteByQuery(fessEsClient, suggester.settings(), suggester.getIndex(), suggester.getType(), boolQueryBuilder);
     }
 
     public void purgeSearchlogSuggest(final LocalDateTime time) {
@@ -229,7 +237,7 @@ public class SuggestHelper {
         boolQueryBuilder.must(QueryBuilders.termQuery(FieldNames.KINDS, SuggestItem.Kind.QUERY.toString()));
         boolQueryBuilder.mustNot(QueryBuilders.termQuery(FieldNames.KINDS, SuggestItem.Kind.USER.toString()));
 
-        SuggestUtil.deleteByQuery(fessEsClient, suggester.getIndex(), suggester.getType(), boolQueryBuilder);
+        SuggestUtil.deleteByQuery(fessEsClient, suggester.settings(), suggester.getIndex(), suggester.getType(), boolQueryBuilder);
     }
 
     public long getAllWordsNum() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.servlet.ServletContext;
 
-import org.apache.commons.io.IOUtils;
+import org.codelibs.core.io.CloseableUtil;
 import org.codelibs.core.io.CopyUtil;
 import org.codelibs.core.lang.StringUtil;
 import org.slf4j.Logger;
@@ -37,12 +36,11 @@ import org.slf4j.LoggerFactory;
 public class CommandGenerator extends BaseThumbnailGenerator {
     private static final Logger logger = LoggerFactory.getLogger(CommandGenerator.class);
 
-    @Resource
-    protected ServletContext application;
-
     protected List<String> commandList;
 
     protected long commandTimeout = 30 * 1000L;// 30sec
+
+    protected long commandDestroyTimeout = 5 * 1000L;// 5sec
 
     protected File baseDir;
 
@@ -51,7 +49,7 @@ public class CommandGenerator extends BaseThumbnailGenerator {
     @PostConstruct
     public void init() {
         if (baseDir == null) {
-            baseDir = new File(application.getRealPath("/"));
+            baseDir = new File(System.getProperty("java.io.tmpdir"));
         }
         destoryTimer = new Timer("CommandGeneratorDestoryTimer-" + System.currentTimeMillis(), true);
     }
@@ -141,7 +139,7 @@ public class CommandGenerator extends BaseThumbnailGenerator {
 
             p = pb.start();
 
-            task = new ProcessDestroyer(p, cmdList);
+            task = new ProcessDestroyer(p, cmdList, commandTimeout);
             try {
                 destoryTimer.schedule(task, commandTimeout);
 
@@ -155,7 +153,7 @@ public class CommandGenerator extends BaseThumbnailGenerator {
                         }
                     }
                 } finally {
-                    IOUtils.closeQuietly(br);
+                    CloseableUtil.closeQuietly(br);
                 }
 
                 p.waitFor();
@@ -177,16 +175,19 @@ public class CommandGenerator extends BaseThumbnailGenerator {
 
         private final List<String> commandList;
 
-        protected ProcessDestroyer(final Process p, final List<String> commandList) {
+        private final long timeout;
+
+        protected ProcessDestroyer(final Process p, final List<String> commandList, final long timeout) {
             this.p = p;
             this.commandList = commandList;
+            this.timeout = timeout;
         }
 
         @Override
         public void run() {
             logger.warn("CommandGenerator is timed out: " + commandList);
             try {
-                p.destroy();
+                p.destroyForcibly().waitFor(timeout, TimeUnit.MILLISECONDS);
             } catch (final Exception e) {
                 logger.warn("Failed to stop destroyer.", e);
             }
@@ -203,6 +204,10 @@ public class CommandGenerator extends BaseThumbnailGenerator {
 
     public void setBaseDir(final File baseDir) {
         this.baseDir = baseDir;
+    }
+
+    public void setCommandDestroyTimeout(final long commandDestroyTimeout) {
+        this.commandDestroyTimeout = commandDestroyTimeout;
     }
 
 }

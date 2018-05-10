@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -587,7 +587,7 @@ public class FessLabels extends UserMessages {
     /** The key of the message: MENU */
     public static final String LABELS_SIDEBAR_MENU = "{labels.sidebar.menu}";
 
-    /** The key of the message: &copy;2017 &lt;a href="https://github.com/codelibs"&gt;CodeLibs Project&lt;/a&gt;. */
+    /** The key of the message: &copy;2018 &lt;a href="https://github.com/codelibs"&gt;CodeLibs Project&lt;/a&gt;. */
     public static final String LABELS_FOOTER_COPYRIGHT = "{labels.footer.copyright}";
 
     /** The key of the message: Search */
@@ -2678,6 +2678,78 @@ public class FessLabels extends UserMessages {
 
     /** The key of the message: Running as Development mode. For production use, please install a standalone elasticsearch server. */
     public static final String LABELS_development_mode_warning = "{labels.development_mode_warning}";
+
+    /** The key of the message: Advance */
+    public static final String LABELS_ADVANCE = "{labels.advance}";
+
+    /** The key of the message: Advanced Search */
+    public static final String LABELS_advance_search_title = "{labels.advance_search_title}";
+
+    /** The key of the message: All these words */
+    public static final String LABELS_advance_search_must_queries = "{labels.advance_search_must_queries}";
+
+    /** The key of the message: This exact word or phrase */
+    public static final String LABELS_advance_search_phrase_query = "{labels.advance_search_phrase_query}";
+
+    /** The key of the message: Any of these words */
+    public static final String LABELS_advance_search_should_queries = "{labels.advance_search_should_queries}";
+
+    /** The key of the message: None of these words */
+    public static final String LABELS_advance_search_not_queries = "{labels.advance_search_not_queries}";
+
+    /** The key of the message: File Type */
+    public static final String LABELS_advance_search_filetype = "{labels.advance_search_filetype}";
+
+    /** The key of the message: All Type */
+    public static final String LABELS_advance_search_filetype_default = "{labels.advance_search_filetype_default}";
+
+    /** The key of the message: HTML */
+    public static final String LABELS_advance_search_filetype_html = "{labels.advance_search_filetype_html}";
+
+    /** The key of the message: PDF */
+    public static final String LABELS_advance_search_filetype_pdf = "{labels.advance_search_filetype_pdf}";
+
+    /** The key of the message: MS Word */
+    public static final String LABELS_advance_search_filetype_word = "{labels.advance_search_filetype_word}";
+
+    /** The key of the message: MS Excel */
+    public static final String LABELS_advance_search_filetype_excel = "{labels.advance_search_filetype_excel}";
+
+    /** The key of the message: MS PowerPoint */
+    public static final String LABELS_advance_search_filetype_powerpoint = "{labels.advance_search_filetype_powerpoint}";
+
+    /** The key of the message: Terms appearing */
+    public static final String LABELS_advance_search_occt = "{labels.advance_search_occt}";
+
+    /** The key of the message: anywhere in the page */
+    public static final String LABELS_advance_search_occt_default = "{labels.advance_search_occt_default}";
+
+    /** The key of the message: in the title of the page */
+    public static final String LABELS_advance_search_occt_allintitle = "{labels.advance_search_occt_allintitle}";
+
+    /** The key of the message: in the url of the page */
+    public static final String LABELS_advance_search_occt_allinurl = "{labels.advance_search_occt_allinurl}";
+
+    /** The key of the message: Site or domain */
+    public static final String LABELS_advance_search_sitesearch = "{labels.advance_search_sitesearch}";
+
+    /** The key of the message: Last update */
+    public static final String LABELS_advance_search_timestamp = "{labels.advance_search_timestamp}";
+
+    /** The key of the message: anytime */
+    public static final String LABELS_advance_search_timestamp_default = "{labels.advance_search_timestamp_default}";
+
+    /** The key of the message: past 24 hours */
+    public static final String LABELS_advance_search_timestamp_pastday = "{labels.advance_search_timestamp_pastday}";
+
+    /** The key of the message: past week */
+    public static final String LABELS_advance_search_timestamp_pastweek = "{labels.advance_search_timestamp_pastweek}";
+
+    /** The key of the message: past month */
+    public static final String LABELS_advance_search_timestamp_pastmonth = "{labels.advance_search_timestamp_pastmonth}";
+
+    /** The key of the message: past year */
+    public static final String LABELS_advance_search_timestamp_pastyear = "{labels.advance_search_timestamp_pastyear}";
 
     /**
      * Assert the property is not null.

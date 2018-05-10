@@ -8,6 +8,8 @@
 	<include path="esflute_user.xml"/>
 	<include path="esflute_log.xml"/>
 
+	<component name="curlHelper" class="org.codelibs.fess.helper.CurlHelper">
+	</component>
 	<component name="searchLogHelper" class="org.codelibs.fess.helper.SearchLogHelper">
 		<!-- 
 		<property name="userCheckInterval">5 * 60 * 1000</property>
@@ -27,6 +29,8 @@
 	<component name="permissionHelper" class="org.codelibs.fess.helper.PermissionHelper">
 	</component>
 	<component name="sambaHelper" class="org.codelibs.fess.helper.SambaHelper">
+	</component>
+	<component name="virtualHostHelper" class="org.codelibs.fess.helper.VirtualHostHelper">
 	</component>
 	<component name="systemHelper" class="org.codelibs.fess.helper.SystemHelper">
 		<postConstruct name="addDesignJspFileName">
@@ -56,6 +60,10 @@
 		<postConstruct name="addDesignJspFileName">
 			<arg>"searchOptions"</arg>
 			<arg>"searchOptions.jsp"</arg>
+		</postConstruct>
+		<postConstruct name="addDesignJspFileName">
+			<arg>"advance"</arg>
+			<arg>"advance.jsp"</arg>
 		</postConstruct>
 		<postConstruct name="addDesignJspFileName">
 			<arg>"help"</arg>
@@ -113,7 +121,5 @@
 		<property name="valueSeparator">"\\n"</property>
 		<property name="roleSeparator">","</property>
 		 -->
-	</component>
-	<component name="suggestHelper" class="org.codelibs.fess.helper.SuggestHelper">
 	</component>
 </components>

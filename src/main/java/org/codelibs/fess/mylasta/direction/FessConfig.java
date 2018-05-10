@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,6 +103,35 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     */
     String JVM_SUGGEST_OPTIONS = "jvm.suggest.options";
 
+    /** The key of the configuration. e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
+    -server
+    -Xmx128m
+    -XX:MaxMetaspaceSize=128m
+    -XX:CompressedClassSpaceSize=32m
+    -XX:-UseGCOverheadLimit
+    -XX:+UseConcMarkSweepGC
+    -XX:CMSInitiatingOccupancyFraction=75
+    -XX:+UseCMSInitiatingOccupancyOnly
+    -XX:+UseTLAB
+    -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:-OmitStackTraceInFastThrow
+    -Djcifs.smb.client.connTimeout=60000
+    -Djcifs.smb.client.soTimeout=35000
+    -Djcifs.smb.client.responseTimeout=30000
+    -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
+    */
+    String JVM_THUMBNAIL_OPTIONS = "jvm.thumbnail.options";
+
     /** The key of the configuration. e.g. default_crawler */
     String JOB_SYSTEM_JOB_IDS = "job.system.job.ids";
 
@@ -151,8 +180,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. false */
     String API_ACCESS_TOKEN_REQUIRED = "api.access.token.required";
 
+    /** The key of the configuration. e.g.  */
+    String API_ACCESS_TOKEN_REQUEST_PARAMETER = "api.access.token.request.parameter";
+
     /** The key of the configuration. e.g. Radmin-api */
     String API_ADMIN_ACCESS_PERMISSIONS = "api.admin.access.permissions";
+
+    /** The key of the configuration. e.g.  */
+    String API_SEARCH_ACCEPT_REFERERS = "api.search.accept.referers";
+
+    /** The key of the configuration. e.g. false */
+    String API_SEARCH_SCROLL = "api.search.scroll";
 
     /** The key of the configuration. e.g.  */
     String VIRTUAL_HOST_HEADERS = "virtual.host.headers";
@@ -196,6 +234,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu200Cu202Fu205Fu3000uFEFFuFFFDu00B6 */
     String CRAWLER_DOCUMENT_SPACE_CHARS = "crawler.document.space.chars";
 
+    /** The key of the configuration. e.g. u002eu06d4u2e3cu3002 */
+    String CRAWLER_DOCUMENT_FULLSTOP_CHARS = "crawler.document.fullstop.chars";
+
     /** The key of the configuration. e.g. UTF-8 */
     String CRAWLER_CRAWLING_DATA_ENCODING = "crawler.crawling.data.encoding";
 
@@ -209,7 +250,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String CRAWLER_IGNORE_ROBOTS_TXT = "crawler.ignore.robots.txt";
 
     /** The key of the configuration. e.g. false */
-    String CRAWLER_IGNORE_META_ROBOTS = "crawler.ignore.meta.robots";
+    String CRAWLER_IGNORE_ROBOTS_TAGS = "crawler.ignore.robots.tags";
 
     /** The key of the configuration. e.g. true */
     String CRAWLER_IGNORE_CONTENT_EXCEPTION = "crawler.ignore.content.exception";
@@ -237,14 +278,17 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. //META[@name='description']/@content */
     String CRAWLER_DOCUMENT_HTML_DIGEST_XPATH = "crawler.document.html.digest.xpath";
 
-    /** The key of the configuration. e.g. //LINK[@rel='canonical']/@href */
+    /** The key of the configuration. e.g. //LINK[@rel='canonical'][1]/@href */
     String CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH = "crawler.document.html.canonical.xpath";
 
     /** The key of the configuration. e.g. noscript,script,style,header,footer,nav,a[rel=nofollow] */
     String CRAWLER_DOCUMENT_HTML_PRUNED_TAGS = "crawler.document.html.pruned.tags";
 
-    /** The key of the configuration. e.g. 200 */
+    /** The key of the configuration. e.g. 120 */
     String CRAWLER_DOCUMENT_HTML_MAX_DIGEST_LENGTH = "crawler.document.html.max.digest.length";
+
+    /** The key of the configuration. e.g.  */
+    String CRAWLER_DOCUMENT_HTML_DEFAULT_LANG = "crawler.document.html.default.lang";
 
     /** The key of the configuration. e.g.  */
     String CRAWLER_DOCUMENT_FILE_NAME_ENCODING = "crawler.document.file.name.encoding";
@@ -314,6 +358,15 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. 10485760 */
     String INDEXER_DATA_MAX_DOCUMENT_REQUEST_SIZE = "indexer.data.max.document.request.size";
+
+    /** The key of the configuration. e.g. default */
+    String INDEX_CODEC = "index.codec";
+
+    /** The key of the configuration. e.g. 5 */
+    String INDEX_number_of_shards = "index.number_of_shards";
+
+    /** The key of the configuration. e.g. 0-1 */
+    String INDEX_auto_expand_replicas = "index.auto_expand_replicas";
 
     /** The key of the configuration. e.g. favorite_count */
     String INDEX_FIELD_favorite_count = "index.field.favorite_count";
@@ -459,7 +512,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. fess_log */
     String INDEX_LOG_INDEX = "index.log.index";
 
-    /** The key of the configuration. e.g. lang,role,label,anchor */
+    /** The key of the configuration. e.g. lang,role,label,anchor,virtual_host */
     String INDEX_ADMIN_ARRAY_FIELDS = "index.admin.array.fields";
 
     /** The key of the configuration. e.g. expires,created,timestamp,last_modified */
@@ -484,7 +537,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String INDEX_SEARCH_TIMEOUT = "index.search.timeout";
 
     /** The key of the configuration. e.g. 3m */
-    String INDEX_SCROLL_SEARCH_TIMEOUT_TIMEOUT = "index.scroll.search.timeout.timeout";
+    String INDEX_SCROLL_SEARCH_TIMEOUT = "index.scroll.search.timeout";
 
     /** The key of the configuration. e.g. 3m */
     String INDEX_INDEX_TIMEOUT = "index.index.timeout";
@@ -516,14 +569,23 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. true */
     String QUERY_REPLACE_TERM_WITH_PREFIX_QUERY = "query.replace.term.with.prefix.query";
 
-    /** The key of the configuration. e.g. 50 */
+    /** The key of the configuration. e.g. 40 */
     String QUERY_HIGHLIGHT_FRAGMENT_SIZE = "query.highlight.fragment.size";
 
-    /** The key of the configuration. e.g. 5 */
+    /** The key of the configuration. e.g. 3 */
     String QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS = "query.highlight.number.of.fragments";
 
     /** The key of the configuration. e.g. fvh */
     String QUERY_HIGHLIGHT_TYPE = "query.highlight.type";
+
+    /** The key of the configuration. e.g. &lt;strong&gt; */
+    String QUERY_HIGHLIGHT_TAG_PRE = "query.highlight.tag.pre";
+
+    /** The key of the configuration. e.g. &lt;/strong&gt; */
+    String QUERY_HIGHLIGHT_TAG_POST = "query.highlight.tag.post";
+
+    /** The key of the configuration. e.g. hl_content,digest */
+    String QUERY_HIGHLIGHT_CONTENT_DESCRIPTION_FIELDS = "query.highlight.content.description.fields";
 
     /** The key of the configuration. e.g. 100000 */
     String QUERY_MAX_SEARCH_RESULT_OFFSET = "query.max.search.result.offset";
@@ -533,6 +595,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g.  */
     String QUERY_ADDITIONAL_API_RESPONSE_FIELDS = "query.additional.api.response.fields";
+
+    /** The key of the configuration. e.g.  */
+    String QUERY_ADDITIONAL_SCROLL_RESPONSE_FIELDS = "query.additional.scroll.response.fields";
 
     /** The key of the configuration. e.g.  */
     String QUERY_ADDITIONAL_CACHE_RESPONSE_FIELDS = "query.additional.cache.response.fields";
@@ -550,10 +615,19 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String QUERY_ADDITIONAL_SORT_FIELDS = "query.additional.sort.fields";
 
     /** The key of the configuration. e.g.  */
+    String QUERY_ADDITIONAL_ANALYZED_FIELDS = "query.additional.analyzed.fields";
+
+    /** The key of the configuration. e.g.  */
     String QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS = "query.additional.not.analyzed.fields";
 
     /** The key of the configuration. e.g. UE,U,T,RK,S,LANG */
     String QUERY_GSA_RESPONSE_FIELDS = "query.gsa.response.fields";
+
+    /** The key of the configuration. e.g. en */
+    String QUERY_GSA_DEFAULT_LANG = "query.gsa.default.lang";
+
+    /** The key of the configuration. e.g.  */
+    String QUERY_GSA_DEFAULT_SORT = "query.gsa.default.sort";
 
     /** The key of the configuration. e.g. 4 */
     String QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS = "query.collapse.max.concurrent.group.results";
@@ -569,6 +643,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g.  */
     String QUERY_DEFAULT_LANGUAGES = "query.default.languages";
+
+    /** The key of the configuration. e.g. _local */
+    String QUERY_JSON_DEFAULT_PREFERENCE = "query.json.default.preference";
+
+    /** The key of the configuration. e.g. _local */
+    String QUERY_GSA_DEFAULT_PREFERENCE = "query.gsa.default.preference";
 
     /** The key of the configuration. e.g. ar=ar
     bg=bg
@@ -794,10 +874,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 100 */
     String PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE = "page.thumbnail.purge.max.fetch.size";
 
+    /** The key of the configuration. e.g. 1000 */
+    String PAGE_SCORE_BOOSTER_MAX_FETCH_SIZE = "page.score.booster.max.fetch.size";
+
     /** The key of the configuration. e.g. 0 */
     String PAGING_SEARCH_PAGE_START = "paging.search.page.start";
 
-    /** The key of the configuration. e.g. 20 */
+    /** The key of the configuration. e.g. 10 */
     String PAGING_SEARCH_PAGE_SIZE = "paging.search.page.size";
 
     /** The key of the configuration. e.g. 100 */
@@ -1043,6 +1126,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     /** The key of the configuration. e.g. 30 */
     String SUGGEST_POPULAR_WORD_WINDOW_SIZE = "suggest.popular.word.window.size";
 
+    /** The key of the configuration. e.g. 10 */
+    String SUGGEST_POPULAR_WORD_QUERY_FREQ = "suggest.popular.word.query.freq";
+
     /** The key of the configuration. e.g. 1 */
     String SUGGEST_MIN_HIT_COUNT = "suggest.min.hit.count";
 
@@ -1066,6 +1152,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /** The key of the configuration. e.g. 10000 */
     String SUGGEST_UPDATE_CONTENTS_LIMIT_NUM = "suggest.update.contents.limit.num";
+
+    /** The key of the configuration. e.g. 50000 */
+    String SUGGEST_UPDATE_CONTENTS_LIMIT_DOC_SIZE = "suggest.update.contents.limit.doc.size";
 
     /** The key of the configuration. e.g. 1 */
     String SUGGEST_SOURCE_READER_SCROLL_SIZE = "suggest.source.reader.scroll.size";
@@ -1451,6 +1540,39 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getJvmSuggestOptions();
 
     /**
+     * Get the value for the key 'jvm.thumbnail.options'. <br>
+     * The value is, e.g. -Djava.awt.headless=true
+    -Dfile.encoding=UTF-8
+    -Djna.nosys=true
+    -Djdk.io.permissionsUseCanonicalPath=true
+    -server
+    -Xmx128m
+    -XX:MaxMetaspaceSize=128m
+    -XX:CompressedClassSpaceSize=32m
+    -XX:-UseGCOverheadLimit
+    -XX:+UseConcMarkSweepGC
+    -XX:CMSInitiatingOccupancyFraction=75
+    -XX:+UseCMSInitiatingOccupancyOnly
+    -XX:+UseTLAB
+    -XX:+DisableExplicitGC
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:-OmitStackTraceInFastThrow
+    -Djcifs.smb.client.connTimeout=60000
+    -Djcifs.smb.client.soTimeout=35000
+    -Djcifs.smb.client.responseTimeout=30000
+    -Dgroovy.use.classvalue=true
+    -Dio.netty.noUnsafe=true
+    -Dio.netty.noKeySetOptimization=true
+    -Dio.netty.recycler.maxCapacityPerThread=0
+    -Dlog4j.shutdownHookEnabled=false
+    -Dlog4j2.disable.jmx=true
+    -Dlog4j.skipJansi=true
+    <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getJvmThumbnailOptions();
+
+    /**
      * Get the value for the key 'job.system.job.ids'. <br>
      * The value is, e.g. default_crawler <br>
      * comment: job
@@ -1594,11 +1716,55 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     boolean isApiAccessTokenRequired();
 
     /**
+     * Get the value for the key 'api.access.token.request.parameter'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getApiAccessTokenRequestParameter();
+
+    /**
+     * Get the value for the key 'api.access.token.request.parameter' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getApiAccessTokenRequestParameterAsInteger();
+
+    /**
      * Get the value for the key 'api.admin.access.permissions'. <br>
      * The value is, e.g. Radmin-api <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getApiAdminAccessPermissions();
+
+    /**
+     * Get the value for the key 'api.search.accept.referers'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getApiSearchAcceptReferers();
+
+    /**
+     * Get the value for the key 'api.search.accept.referers' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getApiSearchAcceptReferersAsInteger();
+
+    /**
+     * Get the value for the key 'api.search.scroll'. <br>
+     * The value is, e.g. false <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getApiSearchScroll();
+
+    /**
+     * Is the property for the key 'api.search.scroll' true? <br>
+     * The value is, e.g. false <br>
+     * @return The determination, true or false. (if not found, exception but basically no way)
+     */
+    boolean isApiSearchScroll();
 
     /**
      * Get the value for the key 'virtual.host.headers'. <br>
@@ -1786,6 +1952,13 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getCrawlerDocumentSpaceChars();
 
     /**
+     * Get the value for the key 'crawler.document.fullstop.chars'. <br>
+     * The value is, e.g. u002eu06d4u2e3cu3002 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerDocumentFullstopChars();
+
+    /**
      * Get the value for the key 'crawler.crawling.data.encoding'. <br>
      * The value is, e.g. UTF-8 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -1821,18 +1994,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     boolean isCrawlerIgnoreRobotsTxt();
 
     /**
-     * Get the value for the key 'crawler.ignore.meta.robots'. <br>
+     * Get the value for the key 'crawler.ignore.robots.tags'. <br>
      * The value is, e.g. false <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
-    String getCrawlerIgnoreMetaRobots();
+    String getCrawlerIgnoreRobotsTags();
 
     /**
-     * Is the property for the key 'crawler.ignore.meta.robots' true? <br>
+     * Is the property for the key 'crawler.ignore.robots.tags' true? <br>
      * The value is, e.g. false <br>
      * @return The determination, true or false. (if not found, exception but basically no way)
      */
-    boolean isCrawlerIgnoreMetaRobots();
+    boolean isCrawlerIgnoreRobotsTags();
 
     /**
      * Get the value for the key 'crawler.ignore.content.exception'. <br>
@@ -1918,7 +2091,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'crawler.document.html.canonical.xpath'. <br>
-     * The value is, e.g. //LINK[@rel='canonical']/@href <br>
+     * The value is, e.g. //LINK[@rel='canonical'][1]/@href <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getCrawlerDocumentHtmlCanonicalXpath();
@@ -1932,18 +2105,33 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'crawler.document.html.max.digest.length'. <br>
-     * The value is, e.g. 200 <br>
+     * The value is, e.g. 120 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getCrawlerDocumentHtmlMaxDigestLength();
 
     /**
      * Get the value for the key 'crawler.document.html.max.digest.length' as {@link Integer}. <br>
-     * The value is, e.g. 200 <br>
+     * The value is, e.g. 120 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getCrawlerDocumentHtmlMaxDigestLengthAsInteger();
+
+    /**
+     * Get the value for the key 'crawler.document.html.default.lang'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getCrawlerDocumentHtmlDefaultLang();
+
+    /**
+     * Get the value for the key 'crawler.document.html.default.lang' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getCrawlerDocumentHtmlDefaultLangAsInteger();
 
     /**
      * Get the value for the key 'crawler.document.file.name.encoding'. <br>
@@ -2265,6 +2453,36 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getIndexerDataMaxDocumentRequestSizeAsInteger();
+
+    /**
+     * Get the value for the key 'index.codec'. <br>
+     * The value is, e.g. default <br>
+     * comment: index setting
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexCodec();
+
+    /**
+     * Get the value for the key 'index.number_of_shards'. <br>
+     * The value is, e.g. 5 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexNumberOfShards();
+
+    /**
+     * Get the value for the key 'index.number_of_shards' as {@link Integer}. <br>
+     * The value is, e.g. 5 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getIndexNumberOfShardsAsInteger();
+
+    /**
+     * Get the value for the key 'index.auto_expand_replicas'. <br>
+     * The value is, e.g. 0-1 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getIndexAutoExpandReplicas();
 
     /**
      * Get the value for the key 'index.field.favorite_count'. <br>
@@ -2622,7 +2840,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'index.admin.array.fields'. <br>
-     * The value is, e.g. lang,role,label,anchor <br>
+     * The value is, e.g. lang,role,label,anchor,virtual_host <br>
      * comment: doc management
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
@@ -2695,11 +2913,11 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     String getIndexSearchTimeout();
 
     /**
-     * Get the value for the key 'index.scroll.search.timeout.timeout'. <br>
+     * Get the value for the key 'index.scroll.search.timeout'. <br>
      * The value is, e.g. 3m <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
-    String getIndexScrollSearchTimeoutTimeout();
+    String getIndexScrollSearchTimeout();
 
     /**
      * Get the value for the key 'index.index.timeout'. <br>
@@ -2798,14 +3016,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'query.highlight.fragment.size'. <br>
-     * The value is, e.g. 50 <br>
+     * The value is, e.g. 40 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getQueryHighlightFragmentSize();
 
     /**
      * Get the value for the key 'query.highlight.fragment.size' as {@link Integer}. <br>
-     * The value is, e.g. 50 <br>
+     * The value is, e.g. 40 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
@@ -2813,14 +3031,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'query.highlight.number.of.fragments'. <br>
-     * The value is, e.g. 5 <br>
+     * The value is, e.g. 3 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getQueryHighlightNumberOfFragments();
 
     /**
      * Get the value for the key 'query.highlight.number.of.fragments' as {@link Integer}. <br>
-     * The value is, e.g. 5 <br>
+     * The value is, e.g. 3 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
@@ -2832,6 +3050,27 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getQueryHighlightType();
+
+    /**
+     * Get the value for the key 'query.highlight.tag.pre'. <br>
+     * The value is, e.g. &lt;strong&gt; <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightTagPre();
+
+    /**
+     * Get the value for the key 'query.highlight.tag.post'. <br>
+     * The value is, e.g. &lt;/strong&gt; <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightTagPost();
+
+    /**
+     * Get the value for the key 'query.highlight.content.description.fields'. <br>
+     * The value is, e.g. hl_content,digest <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryHighlightContentDescriptionFields();
 
     /**
      * Get the value for the key 'query.max.search.result.offset'. <br>
@@ -2877,6 +3116,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getQueryAdditionalApiResponseFieldsAsInteger();
+
+    /**
+     * Get the value for the key 'query.additional.scroll.response.fields'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryAdditionalScrollResponseFields();
+
+    /**
+     * Get the value for the key 'query.additional.scroll.response.fields' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryAdditionalScrollResponseFieldsAsInteger();
 
     /**
      * Get the value for the key 'query.additional.cache.response.fields'. <br>
@@ -2954,6 +3208,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getQueryAdditionalSortFieldsAsInteger();
 
     /**
+     * Get the value for the key 'query.additional.analyzed.fields'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryAdditionalAnalyzedFields();
+
+    /**
+     * Get the value for the key 'query.additional.analyzed.fields' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryAdditionalAnalyzedFieldsAsInteger();
+
+    /**
      * Get the value for the key 'query.additional.not.analyzed.fields'. <br>
      * The value is, e.g.  <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -2974,6 +3243,28 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getQueryGsaResponseFields();
+
+    /**
+     * Get the value for the key 'query.gsa.default.lang'. <br>
+     * The value is, e.g. en <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryGsaDefaultLang();
+
+    /**
+     * Get the value for the key 'query.gsa.default.sort'. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryGsaDefaultSort();
+
+    /**
+     * Get the value for the key 'query.gsa.default.sort' as {@link Integer}. <br>
+     * The value is, e.g.  <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getQueryGsaDefaultSortAsInteger();
 
     /**
      * Get the value for the key 'query.collapse.max.concurrent.group.results'. <br>
@@ -3041,6 +3332,20 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getQueryDefaultLanguagesAsInteger();
+
+    /**
+     * Get the value for the key 'query.json.default.preference'. <br>
+     * The value is, e.g. _local <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryJsonDefaultPreference();
+
+    /**
+     * Get the value for the key 'query.gsa.default.preference'. <br>
+     * The value is, e.g. _local <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getQueryGsaDefaultPreference();
 
     /**
      * Get the value for the key 'query.language.mapping'. <br>
@@ -3863,6 +4168,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getPageThumbnailPurgeMaxFetchSizeAsInteger();
 
     /**
+     * Get the value for the key 'page.score.booster.max.fetch.size'. <br>
+     * The value is, e.g. 1000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getPageScoreBoosterMaxFetchSize();
+
+    /**
+     * Get the value for the key 'page.score.booster.max.fetch.size' as {@link Integer}. <br>
+     * The value is, e.g. 1000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getPageScoreBoosterMaxFetchSizeAsInteger();
+
+    /**
      * Get the value for the key 'paging.search.page.start'. <br>
      * The value is, e.g. 0 <br>
      * comment: search page
@@ -3881,14 +4201,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
     /**
      * Get the value for the key 'paging.search.page.size'. <br>
-     * The value is, e.g. 20 <br>
+     * The value is, e.g. 10 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      */
     String getPagingSearchPageSize();
 
     /**
      * Get the value for the key 'paging.search.page.size' as {@link Integer}. <br>
-     * The value is, e.g. 20 <br>
+     * The value is, e.g. 10 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
      * @throws NumberFormatException When the property is not integer.
      */
@@ -4683,6 +5003,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
     Integer getSuggestPopularWordWindowSizeAsInteger();
 
     /**
+     * Get the value for the key 'suggest.popular.word.query.freq'. <br>
+     * The value is, e.g. 10 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getSuggestPopularWordQueryFreq();
+
+    /**
+     * Get the value for the key 'suggest.popular.word.query.freq' as {@link Integer}. <br>
+     * The value is, e.g. 10 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getSuggestPopularWordQueryFreqAsInteger();
+
+    /**
      * Get the value for the key 'suggest.min.hit.count'. <br>
      * The value is, e.g. 1 <br>
      * @return The value of found property. (NotNull: if not found, exception but basically no way)
@@ -4761,6 +5096,21 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
      * @throws NumberFormatException When the property is not integer.
      */
     Integer getSuggestUpdateContentsLimitNumAsInteger();
+
+    /**
+     * Get the value for the key 'suggest.update.contents.limit.doc.size'. <br>
+     * The value is, e.g. 50000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     */
+    String getSuggestUpdateContentsLimitDocSize();
+
+    /**
+     * Get the value for the key 'suggest.update.contents.limit.doc.size' as {@link Integer}. <br>
+     * The value is, e.g. 50000 <br>
+     * @return The value of found property. (NotNull: if not found, exception but basically no way)
+     * @throws NumberFormatException When the property is not integer.
+     */
+    Integer getSuggestUpdateContentsLimitDocSizeAsInteger();
 
     /**
      * Get the value for the key 'suggest.source.reader.scroll.size'. <br>
@@ -5487,6 +5837,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.JVM_SUGGEST_OPTIONS);
         }
 
+        public String getJvmThumbnailOptions() {
+            return get(FessConfig.JVM_THUMBNAIL_OPTIONS);
+        }
+
         public String getJobSystemJobIds() {
             return get(FessConfig.JOB_SYSTEM_JOB_IDS);
         }
@@ -5567,8 +5921,32 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.API_ACCESS_TOKEN_REQUIRED);
         }
 
+        public String getApiAccessTokenRequestParameter() {
+            return get(FessConfig.API_ACCESS_TOKEN_REQUEST_PARAMETER);
+        }
+
+        public Integer getApiAccessTokenRequestParameterAsInteger() {
+            return getAsInteger(FessConfig.API_ACCESS_TOKEN_REQUEST_PARAMETER);
+        }
+
         public String getApiAdminAccessPermissions() {
             return get(FessConfig.API_ADMIN_ACCESS_PERMISSIONS);
+        }
+
+        public String getApiSearchAcceptReferers() {
+            return get(FessConfig.API_SEARCH_ACCEPT_REFERERS);
+        }
+
+        public Integer getApiSearchAcceptReferersAsInteger() {
+            return getAsInteger(FessConfig.API_SEARCH_ACCEPT_REFERERS);
+        }
+
+        public String getApiSearchScroll() {
+            return get(FessConfig.API_SEARCH_SCROLL);
+        }
+
+        public boolean isApiSearchScroll() {
+            return is(FessConfig.API_SEARCH_SCROLL);
         }
 
         public String getVirtualHostHeaders() {
@@ -5671,6 +6049,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.CRAWLER_DOCUMENT_SPACE_CHARS);
         }
 
+        public String getCrawlerDocumentFullstopChars() {
+            return get(FessConfig.CRAWLER_DOCUMENT_FULLSTOP_CHARS);
+        }
+
         public String getCrawlerCrawlingDataEncoding() {
             return get(FessConfig.CRAWLER_CRAWLING_DATA_ENCODING);
         }
@@ -5691,12 +6073,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return is(FessConfig.CRAWLER_IGNORE_ROBOTS_TXT);
         }
 
-        public String getCrawlerIgnoreMetaRobots() {
-            return get(FessConfig.CRAWLER_IGNORE_META_ROBOTS);
+        public String getCrawlerIgnoreRobotsTags() {
+            return get(FessConfig.CRAWLER_IGNORE_ROBOTS_TAGS);
         }
 
-        public boolean isCrawlerIgnoreMetaRobots() {
-            return is(FessConfig.CRAWLER_IGNORE_META_ROBOTS);
+        public boolean isCrawlerIgnoreRobotsTags() {
+            return is(FessConfig.CRAWLER_IGNORE_ROBOTS_TAGS);
         }
 
         public String getCrawlerIgnoreContentException() {
@@ -5757,6 +6139,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getCrawlerDocumentHtmlMaxDigestLengthAsInteger() {
             return getAsInteger(FessConfig.CRAWLER_DOCUMENT_HTML_MAX_DIGEST_LENGTH);
+        }
+
+        public String getCrawlerDocumentHtmlDefaultLang() {
+            return get(FessConfig.CRAWLER_DOCUMENT_HTML_DEFAULT_LANG);
+        }
+
+        public Integer getCrawlerDocumentHtmlDefaultLangAsInteger() {
+            return getAsInteger(FessConfig.CRAWLER_DOCUMENT_HTML_DEFAULT_LANG);
         }
 
         public String getCrawlerDocumentFileNameEncoding() {
@@ -5929,6 +6319,22 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getIndexerDataMaxDocumentRequestSizeAsInteger() {
             return getAsInteger(FessConfig.INDEXER_DATA_MAX_DOCUMENT_REQUEST_SIZE);
+        }
+
+        public String getIndexCodec() {
+            return get(FessConfig.INDEX_CODEC);
+        }
+
+        public String getIndexNumberOfShards() {
+            return get(FessConfig.INDEX_number_of_shards);
+        }
+
+        public Integer getIndexNumberOfShardsAsInteger() {
+            return getAsInteger(FessConfig.INDEX_number_of_shards);
+        }
+
+        public String getIndexAutoExpandReplicas() {
+            return get(FessConfig.INDEX_auto_expand_replicas);
         }
 
         public String getIndexFieldFavoriteCount() {
@@ -6171,8 +6577,8 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.INDEX_SEARCH_TIMEOUT);
         }
 
-        public String getIndexScrollSearchTimeoutTimeout() {
-            return get(FessConfig.INDEX_SCROLL_SEARCH_TIMEOUT_TIMEOUT);
+        public String getIndexScrollSearchTimeout() {
+            return get(FessConfig.INDEX_SCROLL_SEARCH_TIMEOUT);
         }
 
         public String getIndexIndexTimeout() {
@@ -6247,6 +6653,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return get(FessConfig.QUERY_HIGHLIGHT_TYPE);
         }
 
+        public String getQueryHighlightTagPre() {
+            return get(FessConfig.QUERY_HIGHLIGHT_TAG_PRE);
+        }
+
+        public String getQueryHighlightTagPost() {
+            return get(FessConfig.QUERY_HIGHLIGHT_TAG_POST);
+        }
+
+        public String getQueryHighlightContentDescriptionFields() {
+            return get(FessConfig.QUERY_HIGHLIGHT_CONTENT_DESCRIPTION_FIELDS);
+        }
+
         public String getQueryMaxSearchResultOffset() {
             return get(FessConfig.QUERY_MAX_SEARCH_RESULT_OFFSET);
         }
@@ -6269,6 +6687,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getQueryAdditionalApiResponseFieldsAsInteger() {
             return getAsInteger(FessConfig.QUERY_ADDITIONAL_API_RESPONSE_FIELDS);
+        }
+
+        public String getQueryAdditionalScrollResponseFields() {
+            return get(FessConfig.QUERY_ADDITIONAL_SCROLL_RESPONSE_FIELDS);
+        }
+
+        public Integer getQueryAdditionalScrollResponseFieldsAsInteger() {
+            return getAsInteger(FessConfig.QUERY_ADDITIONAL_SCROLL_RESPONSE_FIELDS);
         }
 
         public String getQueryAdditionalCacheResponseFields() {
@@ -6311,6 +6737,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.QUERY_ADDITIONAL_SORT_FIELDS);
         }
 
+        public String getQueryAdditionalAnalyzedFields() {
+            return get(FessConfig.QUERY_ADDITIONAL_ANALYZED_FIELDS);
+        }
+
+        public Integer getQueryAdditionalAnalyzedFieldsAsInteger() {
+            return getAsInteger(FessConfig.QUERY_ADDITIONAL_ANALYZED_FIELDS);
+        }
+
         public String getQueryAdditionalNotAnalyzedFields() {
             return get(FessConfig.QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS);
         }
@@ -6321,6 +6755,18 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public String getQueryGsaResponseFields() {
             return get(FessConfig.QUERY_GSA_RESPONSE_FIELDS);
+        }
+
+        public String getQueryGsaDefaultLang() {
+            return get(FessConfig.QUERY_GSA_DEFAULT_LANG);
+        }
+
+        public String getQueryGsaDefaultSort() {
+            return get(FessConfig.QUERY_GSA_DEFAULT_SORT);
+        }
+
+        public Integer getQueryGsaDefaultSortAsInteger() {
+            return getAsInteger(FessConfig.QUERY_GSA_DEFAULT_SORT);
         }
 
         public String getQueryCollapseMaxConcurrentGroupResults() {
@@ -6357,6 +6803,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getQueryDefaultLanguagesAsInteger() {
             return getAsInteger(FessConfig.QUERY_DEFAULT_LANGUAGES);
+        }
+
+        public String getQueryJsonDefaultPreference() {
+            return get(FessConfig.QUERY_JSON_DEFAULT_PREFERENCE);
+        }
+
+        public String getQueryGsaDefaultPreference() {
+            return get(FessConfig.QUERY_GSA_DEFAULT_PREFERENCE);
         }
 
         public String getQueryLanguageMapping() {
@@ -6757,6 +7211,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getPageThumbnailPurgeMaxFetchSizeAsInteger() {
             return getAsInteger(FessConfig.PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE);
+        }
+
+        public String getPageScoreBoosterMaxFetchSize() {
+            return get(FessConfig.PAGE_SCORE_BOOSTER_MAX_FETCH_SIZE);
+        }
+
+        public Integer getPageScoreBoosterMaxFetchSizeAsInteger() {
+            return getAsInteger(FessConfig.PAGE_SCORE_BOOSTER_MAX_FETCH_SIZE);
         }
 
         public String getPagingSearchPageStart() {
@@ -7207,6 +7669,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             return getAsInteger(FessConfig.SUGGEST_POPULAR_WORD_WINDOW_SIZE);
         }
 
+        public String getSuggestPopularWordQueryFreq() {
+            return get(FessConfig.SUGGEST_POPULAR_WORD_QUERY_FREQ);
+        }
+
+        public Integer getSuggestPopularWordQueryFreqAsInteger() {
+            return getAsInteger(FessConfig.SUGGEST_POPULAR_WORD_QUERY_FREQ);
+        }
+
         public String getSuggestMinHitCount() {
             return get(FessConfig.SUGGEST_MIN_HIT_COUNT);
         }
@@ -7249,6 +7719,14 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
 
         public Integer getSuggestUpdateContentsLimitNumAsInteger() {
             return getAsInteger(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM);
+        }
+
+        public String getSuggestUpdateContentsLimitDocSize() {
+            return get(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_DOC_SIZE);
+        }
+
+        public Integer getSuggestUpdateContentsLimitDocSizeAsInteger() {
+            return getAsInteger(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_DOC_SIZE);
         }
 
         public String getSuggestSourceReaderScrollSize() {
@@ -7645,6 +8123,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap
                     .put(FessConfig.JVM_SUGGEST_OPTIONS,
                             "-Djava.awt.headless=true\n-Dfile.encoding=UTF-8\n-Djna.nosys=true\n-Djdk.io.permissionsUseCanonicalPath=true\n-server\n-Xmx256m\n-XX:MaxMetaspaceSize=128m\n-XX:CompressedClassSpaceSize=32m\n-XX:-UseGCOverheadLimit\n-XX:+UseConcMarkSweepGC\n-XX:CMSInitiatingOccupancyFraction=75\n-XX:+UseCMSInitiatingOccupancyOnly\n-XX:+UseTLAB\n-XX:+DisableExplicitGC\n-XX:+HeapDumpOnOutOfMemoryError\n-Dgroovy.use.classvalue=true\n-Dio.netty.noUnsafe=true\n-Dio.netty.noKeySetOptimization=true\n-Dio.netty.recycler.maxCapacityPerThread=0\n-Dlog4j.shutdownHookEnabled=false\n-Dlog4j2.disable.jmx=true\n-Dlog4j.skipJansi=true\n");
+            defaultMap
+                    .put(FessConfig.JVM_THUMBNAIL_OPTIONS,
+                            "-Djava.awt.headless=true\n-Dfile.encoding=UTF-8\n-Djna.nosys=true\n-Djdk.io.permissionsUseCanonicalPath=true\n-server\n-Xmx128m\n-XX:MaxMetaspaceSize=128m\n-XX:CompressedClassSpaceSize=32m\n-XX:-UseGCOverheadLimit\n-XX:+UseConcMarkSweepGC\n-XX:CMSInitiatingOccupancyFraction=75\n-XX:+UseCMSInitiatingOccupancyOnly\n-XX:+UseTLAB\n-XX:+DisableExplicitGC\n-XX:+HeapDumpOnOutOfMemoryError\n-XX:-OmitStackTraceInFastThrow\n-Djcifs.smb.client.connTimeout=60000\n-Djcifs.smb.client.soTimeout=35000\n-Djcifs.smb.client.responseTimeout=30000\n-Dgroovy.use.classvalue=true\n-Dio.netty.noUnsafe=true\n-Dio.netty.noKeySetOptimization=true\n-Dio.netty.recycler.maxCapacityPerThread=0\n-Dlog4j.shutdownHookEnabled=false\n-Dlog4j2.disable.jmx=true\n-Dlog4j.skipJansi=true\n");
             defaultMap.put(FessConfig.JOB_SYSTEM_JOB_IDS, "default_crawler");
             defaultMap.put(FessConfig.JOB_TEMPLATE_TITLE_WEB, "Web Crawler - {0}");
             defaultMap.put(FessConfig.JOB_TEMPLATE_TITLE_FILE, "File Crawler - {0}");
@@ -7665,7 +8146,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
                             "ar,bg,bn,ca,ckb_IQ,cs,da,de,el,en,en_IE,es,et,eu,fa,fi,fr,gl,gu,he,hi,hr,hu,hy,id,it,ja,ko,lt,lv,mk,ml,nl,no,pa,pl,pt,pt_BR,ro,ru,si,sq,sv,ta,te,th,tl,tr,uk,ur,vi,zh_CN,zh_TW,zh");
             defaultMap.put(FessConfig.API_ACCESS_TOKEN_LENGTH, "60");
             defaultMap.put(FessConfig.API_ACCESS_TOKEN_REQUIRED, "false");
+            defaultMap.put(FessConfig.API_ACCESS_TOKEN_REQUEST_PARAMETER, "");
             defaultMap.put(FessConfig.API_ADMIN_ACCESS_PERMISSIONS, "Radmin-api");
+            defaultMap.put(FessConfig.API_SEARCH_ACCEPT_REFERERS, "");
+            defaultMap.put(FessConfig.API_SEARCH_SCROLL, "false");
             defaultMap.put(FessConfig.VIRTUAL_HOST_HEADERS, "");
             defaultMap.put(FessConfig.HTTP_PROXY_HOST, "");
             defaultMap.put(FessConfig.HTTP_PROXY_PORT, "8080");
@@ -7682,11 +8166,12 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap
                     .put(FessConfig.CRAWLER_DOCUMENT_SPACE_CHARS,
                             "u0009u000Au000Bu000Cu000Du001Cu001Du001Eu001Fu0020u00A0u1680u180Eu2000u2001u2002u2003u2004u2005u2006u2007u2008u2009u200Au200Bu200Cu202Fu205Fu3000uFEFFuFFFDu00B6");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FULLSTOP_CHARS, "u002eu06d4u2e3cu3002");
             defaultMap.put(FessConfig.CRAWLER_CRAWLING_DATA_ENCODING, "UTF-8");
             defaultMap.put(FessConfig.CRAWLER_WEB_PROTOCOLS, "http,https");
             defaultMap.put(FessConfig.CRAWLER_FILE_PROTOCOLS, "file,smb,ftp");
             defaultMap.put(FessConfig.CRAWLER_IGNORE_ROBOTS_TXT, "false");
-            defaultMap.put(FessConfig.CRAWLER_IGNORE_META_ROBOTS, "false");
+            defaultMap.put(FessConfig.CRAWLER_IGNORE_ROBOTS_TAGS, "false");
             defaultMap.put(FessConfig.CRAWLER_IGNORE_CONTENT_EXCEPTION, "true");
             defaultMap.put(FessConfig.CRAWLER_FAILURE_URL_STATUS_CODES, "404");
             defaultMap.put(FessConfig.CRAWLER_SYSTEM_MONITOR_INTERVAL, "60");
@@ -7695,9 +8180,10 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_CONTENT_XPATH, "//BODY");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_LANG_XPATH, "//HTML/@lang");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_DIGEST_XPATH, "//META[@name='description']/@content");
-            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH, "//LINK[@rel='canonical']/@href");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_CANONICAL_XPATH, "//LINK[@rel='canonical'][1]/@href");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_PRUNED_TAGS, "noscript,script,style,header,footer,nav,a[rel=nofollow]");
-            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_MAX_DIGEST_LENGTH, "200");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_MAX_DIGEST_LENGTH, "120");
+            defaultMap.put(FessConfig.CRAWLER_DOCUMENT_HTML_DEFAULT_LANG, "");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_NAME_ENCODING, "");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_NO_TITLE_LABEL, "No title.");
             defaultMap.put(FessConfig.CRAWLER_DOCUMENT_FILE_IGNORE_EMPTY_CONTENT, "false");
@@ -7721,6 +8207,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.INDEXER_WEBFS_MAX_DOCUMENT_REQUEST_SIZE, "10485760");
             defaultMap.put(FessConfig.INDEXER_DATA_MAX_DOCUMENT_CACHE_SIZE, "5");
             defaultMap.put(FessConfig.INDEXER_DATA_MAX_DOCUMENT_REQUEST_SIZE, "10485760");
+            defaultMap.put(FessConfig.INDEX_CODEC, "default");
+            defaultMap.put(FessConfig.INDEX_number_of_shards, "5");
+            defaultMap.put(FessConfig.INDEX_auto_expand_replicas, "0-1");
             defaultMap.put(FessConfig.INDEX_FIELD_favorite_count, "favorite_count");
             defaultMap.put(FessConfig.INDEX_FIELD_click_count, "click_count");
             defaultMap.put(FessConfig.INDEX_FIELD_config_id, "config_id");
@@ -7769,7 +8258,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.INDEX_CONFIG_INDEX, ".fess_config");
             defaultMap.put(FessConfig.INDEX_USER_INDEX, ".fess_user");
             defaultMap.put(FessConfig.INDEX_LOG_INDEX, "fess_log");
-            defaultMap.put(FessConfig.INDEX_ADMIN_ARRAY_FIELDS, "lang,role,label,anchor");
+            defaultMap.put(FessConfig.INDEX_ADMIN_ARRAY_FIELDS, "lang,role,label,anchor,virtual_host");
             defaultMap.put(FessConfig.INDEX_ADMIN_DATE_FIELDS, "expires,created,timestamp,last_modified");
             defaultMap.put(FessConfig.INDEX_ADMIN_INTEGER_FIELDS, "");
             defaultMap.put(FessConfig.INDEX_ADMIN_LONG_FIELDS, "content_length,favorite_count,click_count");
@@ -7777,7 +8266,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.INDEX_ADMIN_DOUBLE_FIELDS, "");
             defaultMap.put(FessConfig.INDEX_ADMIN_REQUIRED_FIELDS, "url,title,role,boost");
             defaultMap.put(FessConfig.INDEX_SEARCH_TIMEOUT, "3m");
-            defaultMap.put(FessConfig.INDEX_SCROLL_SEARCH_TIMEOUT_TIMEOUT, "3m");
+            defaultMap.put(FessConfig.INDEX_SCROLL_SEARCH_TIMEOUT, "3m");
             defaultMap.put(FessConfig.INDEX_INDEX_TIMEOUT, "3m");
             defaultMap.put(FessConfig.INDEX_BULK_TIMEOUT, "3m");
             defaultMap.put(FessConfig.INDEX_DELETE_TIMEOUT, "3m");
@@ -7788,24 +8277,33 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.QUERY_GEO_FIELDS, "location");
             defaultMap.put(FessConfig.QUERY_BROWSER_LANG_PARAMETER_NAME, "browser_lang");
             defaultMap.put(FessConfig.QUERY_REPLACE_TERM_WITH_PREFIX_QUERY, "true");
-            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_FRAGMENT_SIZE, "50");
-            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS, "5");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_FRAGMENT_SIZE, "40");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_NUMBER_OF_FRAGMENTS, "3");
             defaultMap.put(FessConfig.QUERY_HIGHLIGHT_TYPE, "fvh");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_TAG_PRE, "<strong>");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_TAG_POST, "</strong>");
+            defaultMap.put(FessConfig.QUERY_HIGHLIGHT_CONTENT_DESCRIPTION_FIELDS, "hl_content,digest");
             defaultMap.put(FessConfig.QUERY_MAX_SEARCH_RESULT_OFFSET, "100000");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_RESPONSE_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_API_RESPONSE_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_SCROLL_RESPONSE_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_CACHE_RESPONSE_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_HIGHLIGHTED_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_SEARCH_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_FACET_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_SORT_FIELDS, "");
+            defaultMap.put(FessConfig.QUERY_ADDITIONAL_ANALYZED_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_ADDITIONAL_NOT_ANALYZED_FIELDS, "");
             defaultMap.put(FessConfig.QUERY_GSA_RESPONSE_FIELDS, "UE,U,T,RK,S,LANG");
+            defaultMap.put(FessConfig.QUERY_GSA_DEFAULT_LANG, "en");
+            defaultMap.put(FessConfig.QUERY_GSA_DEFAULT_SORT, "");
             defaultMap.put(FessConfig.QUERY_COLLAPSE_MAX_CONCURRENT_GROUP_RESULTS, "4");
             defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_NAME, "similar_docs");
             defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_SIZE, "0");
             defaultMap.put(FessConfig.QUERY_COLLAPSE_INNER_HITS_SORTS, "");
             defaultMap.put(FessConfig.QUERY_DEFAULT_LANGUAGES, "");
+            defaultMap.put(FessConfig.QUERY_JSON_DEFAULT_PREFERENCE, "_local");
+            defaultMap.put(FessConfig.QUERY_GSA_DEFAULT_PREFERENCE, "_local");
             defaultMap
                     .put(FessConfig.QUERY_LANGUAGE_MAPPING,
                             "ar=ar\nbg=bg\nbn=bn\nca=ca\nckb-iq=ckb-iq\nckb_IQ=ckb-iq\ncs=cs\nda=da\nde=de\nel=el\nen=en\nen-ie=en-ie\nen_IE=en-ie\nes=es\net=et\neu=eu\nfa=fa\nfi=fi\nfr=fr\ngl=gl\ngu=gu\nhe=he\nhi=hi\nhr=hr\nhu=hu\nhy=hy\nid=id\nit=it\nja=ja\nko=ko\nlt=lt\nlv=lv\nmk=mk\nml=ml\nnl=nl\nno=no\npa=pa\npl=pl\npt=pt\npt-br=pt-br\npt_BR=pt-br\nro=ro\nru=ru\nsi=si\nsq=sq\nsv=sv\nta=ta\nte=te\nth=th\ntl=tl\ntr=tr\nuk=uk\nur=ur\nvi=vi\nzh-cn=zh-cn\nzh_CN=zh-cn\nzh-tw=zh-tw\nzh_TW=zh-tw\nzh=zh\n");
@@ -7863,8 +8361,9 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.PAGE_RELATEDQUERY_MAX_FETCH_SIZE, "5000");
             defaultMap.put(FessConfig.PAGE_THUMBNAIL_QUEUE_MAX_FETCH_SIZE, "100");
             defaultMap.put(FessConfig.PAGE_THUMBNAIL_PURGE_MAX_FETCH_SIZE, "100");
+            defaultMap.put(FessConfig.PAGE_SCORE_BOOSTER_MAX_FETCH_SIZE, "1000");
             defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_START, "0");
-            defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_SIZE, "20");
+            defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_SIZE, "10");
             defaultMap.put(FessConfig.PAGING_SEARCH_PAGE_MAX_SIZE, "100");
             defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_ENABLED, "false");
             defaultMap.put(FessConfig.THUMBNAIL_HTML_PHANTOMJS_MAX_HEIGHT, "20000");
@@ -7946,6 +8445,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_EXCLUDES, "");
             defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_SIZE, "10");
             defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_WINDOW_SIZE, "30");
+            defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_QUERY_FREQ, "10");
             defaultMap.put(FessConfig.SUGGEST_MIN_HIT_COUNT, "1");
             defaultMap.put(FessConfig.SUGGEST_FIELD_CONTENTS, "_default");
             defaultMap.put(FessConfig.SUGGEST_FIELD_TAGS, "label");
@@ -7954,6 +8454,7 @@ public interface FessConfig extends FessEnv, org.codelibs.fess.mylasta.direction
             defaultMap.put(FessConfig.SUGGEST_UPDATE_REQUEST_INTERVAL, "1");
             defaultMap.put(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM_PERCENTAGE, "50%");
             defaultMap.put(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_NUM, "10000");
+            defaultMap.put(FessConfig.SUGGEST_UPDATE_CONTENTS_LIMIT_DOC_SIZE, "50000");
             defaultMap.put(FessConfig.SUGGEST_SOURCE_READER_SCROLL_SIZE, "1");
             defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_CACHE_SIZE, "1000");
             defaultMap.put(FessConfig.SUGGEST_POPULAR_WORD_CACHE_EXPIRE, "60");

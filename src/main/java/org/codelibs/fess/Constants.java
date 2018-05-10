@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,10 @@ import org.codelibs.core.CoreLibConstants;
 import org.codelibs.core.lang.StringUtil;
 
 public class Constants extends CoreLibConstants {
-    public static final int MAJOR_VERSION = 12;
-
-    public static final int MINOR_VERSION = 0;
-
-    public static final String FESS_VERSION = String.valueOf(MAJOR_VERSION) + "." + String.valueOf(MINOR_VERSION);
 
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     public static final int DEFAULT_ADMIN_PAGE_NUMBER = 1;
-
-    public static final String WEB_API_VERSION = FESS_VERSION;
 
     public static final String TRUE = "true";
 
@@ -41,6 +34,8 @@ public class Constants extends CoreLibConstants {
     public static final Boolean T = true;
 
     public static final Boolean F = false;
+
+    public static final String SCORE = "score";
 
     public static final String ON = "on";
 
@@ -94,6 +89,8 @@ public class Constants extends CoreLibConstants {
     public static final String INCREMENTAL_CRAWLING_PROPERTY = "crawling.incremental";
 
     public static final String CRAWLING_THREAD_COUNT_PROPERTY = "crawling.thread.count";
+
+    public static final String CRAWLING_USER_AGENT_PROPERTY = "crawling.user.agent";
 
     public static final String DAY_FOR_CLEANUP_PROPERTY = "day.for.cleanup";
 
@@ -254,7 +251,7 @@ public class Constants extends CoreLibConstants {
 
     public static final String SEARCH_LOG_ACCESS_TYPE_JSON = "json";
 
-    public static final String SEARCH_LOG_ACCESS_TYPE_XML = "xml";
+    public static final String SEARCH_LOG_ACCESS_TYPE_GSA = "gsa";
 
     public static final String SEARCH_LOG_ACCESS_TYPE_WEB = "web";
 
@@ -385,6 +382,8 @@ public class Constants extends CoreLibConstants {
 
     public static final String NOTIFICATION_SEARCH_TOP = "notification.search.top";
 
+    public static final String NOTIFICATION_ADVANCE_SEARCH = "notification.advance.search";
+
     public static final String MAPPING_TYPE_ARRAY = "array";
 
     public static final String MAPPING_TYPE_STRING = "string";
@@ -397,7 +396,7 @@ public class Constants extends CoreLibConstants {
 
     public static final String REQUEST_LANGUAGES = "requestLanguages";
 
-    public static final String SEARCH_PREFERENCE_PRIMARY = "_primary";
+    public static final String SEARCH_PREFERENCE_LOCAL = "_local";
 
     public static final String CONFIG_CLEANUP_FILTERS = "cleanup.urlFilters";
 
@@ -418,4 +417,8 @@ public class Constants extends CoreLibConstants {
     public static final String EMPTY_USER_ID = "<empty>";
 
     public static final String CRAWLER_PROCESS_COMMAND_THREAD_DUMP = "thread_dump";
+
+    public static final String FESS_THUMBNAIL_PATH = "fess.thumbnail.path";
+
+    public static final String FESS_VAR_PATH = "fess.var.path";
 }

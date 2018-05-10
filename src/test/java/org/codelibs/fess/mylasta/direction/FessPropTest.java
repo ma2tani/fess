@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.codelibs.fess.unit.UnitFessTestCase;
 import org.codelibs.fess.util.PrunedTag;
 import org.cyberneko.html.parsers.DOMParser;
 import org.lastaflute.di.core.factory.SingletonLaContainerFactory;
-import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
@@ -120,10 +119,25 @@ public class FessPropTest extends UnitFessTestCase {
             }
         };
 
-        int[] spaceChars = fessConfig.getCrawlerDocumentSpaceCharsAsArray();
-        assertEquals(2, spaceChars.length);
-        assertEquals(32, spaceChars[0]);
-        assertEquals(12288, spaceChars[1]);
+        int[] chars = fessConfig.getCrawlerDocumentSpaceCharsAsArray();
+        assertEquals(2, chars.length);
+        assertEquals(32, chars[0]);
+        assertEquals(12288, chars[1]);
+    }
+
+    public void test_getCrawlerDocumentFullstopCharsAsArray() {
+        FessProp.propMap.clear();
+        FessConfig fessConfig = new FessConfig.SimpleImpl() {
+            @Override
+            public String getCrawlerDocumentFullstopChars() {
+                return "u0020u3000";
+            }
+        };
+
+        int[] chars = fessConfig.getCrawlerDocumentFullstopCharsAsArray();
+        assertEquals(2, chars.length);
+        assertEquals(32, chars[0]);
+        assertEquals(12288, chars[1]);
     }
 
     public void test_getCrawlerDocumentHtmlPrunedTagsAsArray() throws Exception {
@@ -131,7 +145,7 @@ public class FessPropTest extends UnitFessTestCase {
         FessConfig fessConfig = new FessConfig.SimpleImpl() {
             @Override
             public String getCrawlerDocumentHtmlPrunedTags() {
-                return "script,div#main,p.image,a[rel=nofollow]";
+                return "script,div#main,p.image,a[rel=nofollow],div[x-y=a-.:_0]";
             }
         };
 
@@ -148,6 +162,9 @@ public class FessPropTest extends UnitFessTestCase {
 
         assertTrue(matchesTag(tags[3], "<a rel=\"nofollow\"></a>"));
         assertFalse(matchesTag(tags[3], "<a></a>"));
+
+        assertTrue(matchesTag(tags[4], "<div x-y=\"a-.:_0\"></div>"));
+        assertFalse(matchesTag(tags[4], "<div x-y=\"a 0\"></div>"));
     }
 
     private boolean matchesTag(final PrunedTag tag, final String text) throws Exception {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
+import org.codelibs.core.io.CloseableUtil;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
 import org.codelibs.fess.dict.DictionaryException;
@@ -310,7 +310,7 @@ public class SeunjeonFile extends DictionaryFile<SeunjeonItem> {
             } catch (final IOException e) {
                 // ignore
             }
-            IOUtils.closeQuietly(writer);
+            CloseableUtil.closeQuietly(writer);
 
             if (isCommit) {
                 try {

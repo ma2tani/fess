@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,10 @@ import org.codelibs.fess.mylasta.direction.FessConfig;
 import org.lastaflute.web.util.LaServletContextUtil;
 
 public class ResourceUtil {
+    private static final String FESS_APP_TYPE = "FESS_APP_TYPE";
+
+    private static final String FESS_APP_DOCKER = "docker";
+
     protected ResourceUtil() {
         // nothing
     }
@@ -45,6 +49,13 @@ public class ResourceUtil {
     }
 
     public static Path getConfPath(final String... names) {
+        final String fessAppType = System.getenv(FESS_APP_TYPE);
+        if (FESS_APP_DOCKER.equalsIgnoreCase(fessAppType)) {
+            final Path confPath = Paths.get("/opt/fess", names);
+            if (Files.exists(confPath)) {
+                return confPath;
+            }
+        }
         final String confPath = System.getProperty(Constants.FESS_CONF_PATH);
         if (StringUtil.isNotBlank(confPath)) {
             return Paths.get(confPath, names);
@@ -78,6 +89,10 @@ public class ResourceUtil {
 
     public static Path getSitePath(final String... names) {
         return getPath("site", names);
+    }
+
+    public static Path getProjectPropertiesFile() {
+        return getPath("", "project.properties");
     }
 
     protected static Path getPath(final String base, final String... names) {

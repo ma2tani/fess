@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -44,7 +43,6 @@ import java.util.stream.Stream;
 
 import javax.naming.directory.Attribute;
 import javax.naming.directory.BasicAttribute;
-import javax.servlet.http.HttpSession;
 
 import org.codelibs.core.exception.ClassNotFoundRuntimeException;
 import org.codelibs.core.lang.StringUtil;
@@ -58,14 +56,11 @@ import org.codelibs.fess.taglib.FessFunctions;
 import org.codelibs.fess.util.ComponentUtil;
 import org.codelibs.fess.util.PrunedTag;
 import org.dbflute.optional.OptionalThing;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.lastaflute.job.LaJob;
 import org.lastaflute.job.subsidiary.JobConcurrentExec;
-import org.lastaflute.web.response.next.HtmlNext;
-import org.lastaflute.web.util.LaRequestUtil;
 import org.lastaflute.web.validation.RequiredValidator;
 import org.lastaflute.web.validation.theme.typed.DoubleTypeValidator;
 import org.lastaflute.web.validation.theme.typed.FloatTypeValidator;
@@ -73,6 +68,8 @@ import org.lastaflute.web.validation.theme.typed.IntegerTypeValidator;
 import org.lastaflute.web.validation.theme.typed.LongTypeValidator;
 
 public interface FessProp {
+
+    public static final String API_SEARCH_ACCEPT_REFERERS = "apiSearchAcceptReferers";
 
     public static final String QUERY_GSA_RESPONSE_FIELDS = "queryGsaResponseFields";
 
@@ -95,6 +92,8 @@ public interface FessProp {
     public static final String API_ADMIN_ACCESS_PERMISSION_SET = "apiAdminAccessPermissionSet";
 
     public static final String CRAWLER_DOCUMENT_SPACE_CHARS = "crawlerDocumentSpaceChars";
+
+    public static final String CRAWLER_DOCUMENT_FULLSTOP_CHARS = "crawlerDocumentFullstopChars";
 
     public static final String INDEX_ADMIN_ARRAY_FIELD_SET = "indexAdminArrayFieldSet";
 
@@ -610,12 +609,21 @@ public interface FessProp {
         return getSystemProperty(Constants.NOTIFICATION_LOGIN, StringUtil.EMPTY);
     }
 
+    public default String getNotificationAdvanceSearch() {
+        return getSystemProperty(Constants.NOTIFICATION_ADVANCE_SEARCH, StringUtil.EMPTY);
+    }
+
     public default void setNotificationSearchTop(final String value) {
         setSystemProperty(Constants.NOTIFICATION_SEARCH_TOP, value);
     }
 
     public default String getNotificationSearchTop() {
         return getSystemProperty(Constants.NOTIFICATION_SEARCH_TOP, StringUtil.EMPTY);
+    }
+
+    public default String getUserAgentName() {
+        return getSystemProperty(Constants.CRAWLING_USER_AGENT_PROPERTY, "Mozilla/5.0 (compatible; Fess/"
+                + ComponentUtil.getSystemHelper().getProductVersion() + "; +http://fess.codelibs.org/bot.html)");
     }
 
     //
@@ -657,7 +665,7 @@ public interface FessProp {
                     final PrunedTag tag = new PrunedTag(matcher.group(1));
                     if (matcher.group(2) != null) {
                         final String attrPair = matcher.group(2).substring(1, matcher.group(2).length() - 1);
-                        final Matcher equalMatcher = Pattern.compile("(\\w+)=(\\w+)").matcher(attrPair);
+                        final Matcher equalMatcher = Pattern.compile("([\\w\\-]+)=(\\S+)").matcher(attrPair);
                         if (equalMatcher.matches()) {
                             tag.setAttr(equalMatcher.group(1), equalMatcher.group(2));
                         }
@@ -1067,25 +1075,6 @@ public interface FessProp {
         return stream(getCrawlerFileProtocolsAsArray()).get(stream -> stream.anyMatch(s -> url.startsWith(s)));
     }
 
-    public default void processSearchPreference(final SearchRequestBuilder searchRequestBuilder, final OptionalThing<FessUserBean> userBean) {
-        userBean.map(user -> {
-            if (user.hasRoles(getAuthenticationAdminRolesAsArray())) {
-                return Constants.SEARCH_PREFERENCE_PRIMARY;
-            }
-            return user.getUserId();
-        }).ifPresent(p -> searchRequestBuilder.setPreference(p)).orElse(() -> LaRequestUtil.getOptionalRequest().map(r -> {
-            final HttpSession session = r.getSession(false);
-            if (session != null) {
-                return session.getId();
-            }
-            final String preference = r.getParameter("preference");
-            if (preference != null) {
-                return Integer.toString(preference.hashCode());
-            }
-            return null;
-        }).ifPresent(p -> searchRequestBuilder.setPreference(p)));
-    }
-
     String getRoleSearchDefaultPermissions();
 
     public default String[] getSearchDefaultPermissionsAsArray() {
@@ -1444,9 +1433,12 @@ public interface FessProp {
     String getCrawlerDocumentSpaceChars();
 
     public default int[] getCrawlerDocumentSpaceCharsAsArray() {
-        int[] spaceChars = (int[]) propMap.get(CRAWLER_DOCUMENT_SPACE_CHARS);
+        return getCrawlerDocumentCharsAsArray(CRAWLER_DOCUMENT_SPACE_CHARS, getCrawlerDocumentSpaceChars());
+    }
+
+    public default int[] getCrawlerDocumentCharsAsArray(final String key, final String spaceStr) {
+        int[] spaceChars = (int[]) propMap.get(key);
         if (spaceChars == null) {
-            final String spaceStr = getCrawlerDocumentSpaceChars();
             if (spaceStr.startsWith("u")) {
                 spaceChars =
                         split(spaceStr, "u").get(
@@ -1459,9 +1451,27 @@ public interface FessProp {
                     spaceChars[i] = spaceStr.codePointAt(i);
                 }
             }
-            propMap.put(CRAWLER_DOCUMENT_SPACE_CHARS, spaceChars);
+            propMap.put(key, spaceChars);
         }
         return spaceChars;
+    }
+
+    String getCrawlerDocumentFullstopChars();
+
+    public default boolean endsWithFullstop(final String s) {
+        if (StringUtil.isBlank(s)) {
+            return false;
+        }
+        for (final int i : getCrawlerDocumentFullstopCharsAsArray()) {
+            if (s.endsWith(String.valueOf(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public default int[] getCrawlerDocumentFullstopCharsAsArray() {
+        return getCrawlerDocumentCharsAsArray(CRAWLER_DOCUMENT_FULLSTOP_CHARS, getCrawlerDocumentFullstopChars());
     }
 
     String getQueryAdditionalResponseFields();
@@ -1470,6 +1480,16 @@ public interface FessProp {
         final List<String> list = new ArrayList<>(fields.length + 10);
         stream(fields).of(stream -> stream.forEach(list::add));
         split(getQueryAdditionalResponseFields(), ",").of(
+                stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).forEach(list::add));
+        return list.toArray(new String[list.size()]);
+    }
+
+    String getQueryAdditionalScrollResponseFields();
+
+    public default String[] getQueryAdditionalScrollResponseFields(final String... fields) {
+        final List<String> list = new ArrayList<>(fields.length + 10);
+        stream(fields).of(stream -> stream.forEach(list::add));
+        split(getQueryAdditionalScrollResponseFields(), ",").of(
                 stream -> stream.filter(StringUtil::isNotBlank).map(s -> s.trim()).forEach(list::add));
         return list.toArray(new String[list.size()]);
     }
@@ -1616,48 +1636,12 @@ public interface FessProp {
 
     String getVirtualHostHeaders();
 
-    public default HtmlNext getVirtualHostPath(final HtmlNext page) {
-        return processVirtualHost(s -> {
-            final String basePath = ComponentUtil.getSystemHelper().getVirtualHostBasePath(s, page);
-            return new HtmlNext(basePath + page.getRoutingPath());
-        }, page);
-    }
-
-    public default String getVirtualHostKey() {
-        return LaRequestUtil.getOptionalRequest().map(req -> (String) req.getAttribute(VIRTUAL_HOST_VALUE)).orElseGet(() -> {
-            final String value = processVirtualHost(s -> s, StringUtil.EMPTY);
-            LaRequestUtil.getOptionalRequest().ifPresent(req -> req.setAttribute(VIRTUAL_HOST_VALUE, value));
-            return value;
-        });
-    }
-
     public default String getVirtualHostHeaderValue() {
         final String value = getVirtualHostValue();
         if (StringUtil.isNotBlank(value)) {
             return value;
         }
         return getVirtualHostHeaders();
-    }
-
-    public default <T> T processVirtualHost(final Function<String, T> func, final T defaultValue) {
-        final Tuple3<String, String, String>[] vHosts = getVirtualHosts();
-        return LaRequestUtil.getOptionalRequest().map(req -> {
-            for (final Tuple3<String, String, String> host : vHosts) {
-                final String headerValue = req.getHeader(host.getValue1());
-                if (host.getValue2().equalsIgnoreCase(headerValue)) {
-                    return func.apply(host.getValue3());
-                }
-            }
-            return defaultValue;
-        }).orElse(defaultValue);
-    }
-
-    public default String[] getVirtualHostKeys() {
-        return stream(getVirtualHosts()).get(stream -> stream.map(h -> h.getValue3()).toArray(n -> new String[n]));
-    }
-
-    public default String[] getVirtualHostPaths() {
-        return stream(getVirtualHosts()).get(stream -> stream.map(h -> "/" + h.getValue3()).toArray(n -> new String[n]));
     }
 
     @SuppressWarnings("unchecked")
@@ -1798,6 +1782,39 @@ public interface FessProp {
             propMap.put(QUERY_GSA_RESPONSE_FIELDS, gsaResponseFieldSet);
         }
         return gsaResponseFieldSet.contains(name.toLowerCase(Locale.ROOT));
+    }
+
+    String getApiSearchAcceptReferers();
+
+    public default boolean isAcceptedSearchReferer(final String referer) {
+        Pattern[] patterns = (Pattern[]) propMap.get(API_SEARCH_ACCEPT_REFERERS);
+        if (patterns == null) {
+            final String refs = getApiSearchAcceptReferers();
+            if (StringUtil.isBlank(refs)) {
+                patterns = new Pattern[0];
+            } else {
+                patterns =
+                        split(refs, "\n").get(
+                                stream -> stream.filter(StringUtil::isNotBlank).map(s -> Pattern.compile(s.trim()))
+                                        .toArray(n -> new Pattern[n]));
+            }
+            propMap.put(API_SEARCH_ACCEPT_REFERERS, patterns);
+        }
+        if (patterns.length == 0) {
+            return true;
+        }
+
+        if (referer == null) {
+            return false;
+        }
+        return Arrays.stream(patterns).anyMatch(p -> p.matcher(referer).matches());
+    }
+
+    String getQueryHighlightContentDescriptionFields();
+
+    public default String[] getQueryHighlightContentDescriptionFieldsAsArray() {
+        return split(getQueryHighlightContentDescriptionFields(), ",").get(
+                stream -> stream.filter(StringUtil::isNotBlank).map(String::trim).toArray(n -> new String[n]));
     }
 
 }

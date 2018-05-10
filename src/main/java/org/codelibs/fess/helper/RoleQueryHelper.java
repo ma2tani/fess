@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,9 +118,7 @@ public class RoleQueryHelper {
                 buildByCookieNameMapping(request, roleSet);
             }
 
-            if (isApiRequest) {
-                processAccessToken(request, roleSet);
-            }
+            final boolean hasAccessToken = processAccessToken(request, roleSet, isApiRequest);
 
             final RequestManager requestManager = ComponentUtil.getRequestManager();
             try {
@@ -130,7 +128,9 @@ public class RoleQueryHelper {
                             if (isApiRequest && ComponentUtil.getFessConfig().getApiAccessTokenRequiredAsBoolean()) {
                                 throw new InvalidAccessTokenException("invalid_token", "Access token is requried.");
                             }
-                            roleSet.addAll(fessConfig.getSearchGuestPermissionList());
+                            if (!hasAccessToken || roleSet.isEmpty()) {
+                                roleSet.addAll(fessConfig.getSearchGuestPermissionList());
+                            }
                         });
             } catch (final RuntimeException e) {
                 try {
@@ -156,20 +156,14 @@ public class RoleQueryHelper {
         return roleSet;
     }
 
-    protected void processAccessToken(final HttpServletRequest request, final Set<String> roleSet) {
-        ComponentUtil.getComponent(AccessTokenService.class).getPermissions(request).ifPresent(p -> p.forEach(roleSet::add));
-    }
-
-    protected String getAccessToken(final HttpServletRequest request) {
-        final String token = request.getHeader("Authorization");
-        if (token != null) {
-            final String[] values = token.trim().split(" ");
-            if (values.length == 2 && "Bearer".equals(values[0])) {
-                return values[1];
-            }
-            throw new InvalidAccessTokenException("invalid_request", "Invalid format: " + token);
+    protected boolean processAccessToken(final HttpServletRequest request, final Set<String> roleSet, final boolean isApiRequest) {
+        if (isApiRequest) {
+            return ComponentUtil.getComponent(AccessTokenService.class).getPermissions(request).map(p -> {
+                p.forEach(roleSet::add);
+                return true;
+            }).orElse(false);
         }
-        return request.getParameter("access_token");
+        return false;
     }
 
     protected void processParameter(final HttpServletRequest request, final Set<String> roleSet) {

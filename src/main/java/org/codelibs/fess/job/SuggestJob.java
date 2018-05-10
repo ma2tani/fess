@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2017 CodeLibs Project and the Others.
+ * Copyright 2012-2018 CodeLibs Project and the Others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,14 @@ import static org.codelibs.core.stream.StreamUtil.stream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.ServletContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.codelibs.core.lang.StringUtil;
 import org.codelibs.fess.Constants;
@@ -110,8 +109,7 @@ public class SuggestJob {
         final StringBuilder resultBuf = new StringBuilder();
 
         if (sessionId == null) { // create session id
-            final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
-            sessionId = sdf.format(new Date());
+            sessionId = RandomStringUtils.randomAlphabetic(15);
         }
         resultBuf.append("Session Id: ").append(sessionId).append("\n");
         if (jobExecutor != null) {
@@ -121,7 +119,7 @@ public class SuggestJob {
         try {
             executeSuggestCreator();
         } catch (final Exception e) {
-            logger.error("Failed to purge user info.", e);
+            logger.error("Failed to create suggest data.", e);
             resultBuf.append(e.getMessage()).append("\n");
         }
 
@@ -146,8 +144,10 @@ public class SuggestJob {
             buf.append(confPath);
             buf.append(cpSeparator);
         }
-        // WEB-INF/suggest/resources
+        // WEB-INF/env/suggest/resources
         buf.append("WEB-INF");
+        buf.append(File.separator);
+        buf.append("env");
         buf.append(File.separator);
         buf.append("suggest");
         buf.append(File.separator);
@@ -166,10 +166,11 @@ public class SuggestJob {
             buf.append(targetClassesDir.getAbsolutePath());
         }
         // WEB-INF/lib
-        appendJarFile(cpSeparator, buf, new File(servletContext.getRealPath("/WEB-INF/lib")), "WEB-INF/lib" + File.separator);
+        appendJarFile(cpSeparator, buf, new File(servletContext.getRealPath("/WEB-INF/lib")), "WEB-INF" + File.separator + "lib"
+                + File.separator);
         // WEB-INF/crawler/lib
-        appendJarFile(cpSeparator, buf, new File(servletContext.getRealPath("/WEB-INF/suggest/lib")), "WEB-INF/suggest" + File.separator
-                + "lib" + File.separator);
+        appendJarFile(cpSeparator, buf, new File(servletContext.getRealPath("/WEB-INF/env/suggest/lib")), "WEB-INF" + File.separator
+                + "env" + File.separator + "suggest" + File.separator + "lib" + File.separator);
         final File targetLibDir = new File(targetDir, "fess" + File.separator + "WEB-INF" + File.separator + "lib");
         if (targetLibDir.isDirectory()) {
             appendJarFile(cpSeparator, buf, targetLibDir, targetLibDir.getAbsolutePath() + File.separator);
@@ -201,6 +202,7 @@ public class SuggestJob {
             cmdList.add("-Dlasta.env=" + lastaEnv);
         }
 
+        addSystemProperty(cmdList, Constants.FESS_CONF_PATH, null, null);
         cmdList.add("-Dfess.suggest.process=true");
         if (logFilePath == null) {
             final String value = System.getProperty("fess.log.path");
@@ -239,7 +241,7 @@ public class SuggestJob {
         File propFile = null;
         try {
             cmdList.add("-p");
-            propFile = File.createTempFile("crawler_", ".properties");
+            propFile = File.createTempFile("suggest_", ".properties");
             cmdList.add(propFile.getAbsolutePath());
             try (FileOutputStream out = new FileOutputStream(propFile)) {
                 final Properties prop = new Properties();
